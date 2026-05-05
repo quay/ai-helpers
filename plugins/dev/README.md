@@ -1,4 +1,4 @@
-# dev-workflow
+# dev
 
 Ralph Loop development lifecycle plugin. Provides the full ticket-to-merge-ready-PR
 workflow as a continuous state machine.
@@ -7,13 +7,13 @@ workflow as a continuous state machine.
 
 | Skill | Purpose |
 |-------|---------|
-| `/dev-workflow:work` | Full tick-loop: assign, branch, implement, test, commit, PR, poll |
-| `/dev-workflow:start` | Begin work on a JIRA ticket |
-| `/dev-workflow:code` | Implement changes following project conventions |
-| `/dev-workflow:pr` | Create PR with validated title and description |
-| `/dev-workflow:poll` | Stateful PR poller for CI, reviews, and feedback |
-| `/dev-workflow:ci` | Quick CI status check |
-| `/dev-workflow:backport` | Trigger cherry-pick robot for backporting |
+| `/dev:work` | Full tick-loop: assign, branch, implement, test, commit, PR, poll |
+| `/dev:start` | Begin work on a JIRA ticket |
+| `/dev:code` | Implement changes following project conventions |
+| `/dev:pr` | Create PR with validated title and description |
+| `/dev:poll` | Stateful PR poller for CI, reviews, and feedback |
+| `/dev:ci` | Quick CI status check |
+| `/dev:backport` | Trigger cherry-pick robot for backporting |
 
 ## Scripts
 

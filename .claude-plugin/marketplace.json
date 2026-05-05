@@ -5,8 +5,8 @@
   },
   "plugins": [
     {
-      "name": "dev-workflow",
-      "source": "./plugins/dev-workflow",
+      "name": "dev",
+      "source": "./plugins/dev",
       "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work"
     },
     {

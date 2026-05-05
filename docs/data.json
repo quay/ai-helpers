@@ -3,7 +3,7 @@
   "owner": "quay",
   "plugins": [
     {
-      "name": "dev-workflow",
+      "name": "dev",
       "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work",
       "version": "0.1.0",
       "commands": [],

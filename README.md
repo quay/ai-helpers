@@ -6,7 +6,7 @@ testing infrastructure.
 
 ## Plugins
 
-### dev-workflow
+### dev
 
 The Ralph Loop: a continuous state machine that takes a JIRA ticket from
 assignment to merge-ready PR. Includes the full skill chain (`start`, `code`,
@@ -46,7 +46,7 @@ See each plugin's README for the full variable list.
 
 ### Hook Setup
 
-Copy `plugins/dev-workflow/templates/settings.json.template` to your project's
+Copy `plugins/dev/templates/settings.json.template` to your project's
 `.claude/settings.json` and adjust script paths to reference the plugin install
 location.
 
@@ -55,7 +55,7 @@ location.
 ```
 ai-helpers/
 ├── plugins/
-│   ├── dev-workflow/           # Ralph Loop + dev lifecycle
+│   ├── dev/           # Ralph Loop + dev lifecycle
 │   │   ├── skills/             # start, code, pr, poll, ci, backport, work
 │   │   ├── scripts/            # Shell scripts for hooks and automation
 │   │   ├── templates/          # PR description, settings.json template
@@ -80,8 +80,8 @@ ai-helpers/
 1. Install the plugin: `claude plugin add quay/ai-helpers`
 2. Set project-specific env vars in your `.claude/settings.json` or shell profile
 3. Copy `templates/AGENTS.md.template` to create your project's `AGENTS.md`
-4. Copy `plugins/dev-workflow/templates/settings.json.template` for hook configuration
-5. Use `/dev-workflow:work PROJQUAY-XXXX` to run the full development lifecycle
+4. Copy `plugins/dev/templates/settings.json.template` for hook configuration
+5. Use `/dev:work PROJQUAY-XXXX` to run the full development lifecycle
 
 ## Development
 

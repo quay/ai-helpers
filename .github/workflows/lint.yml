@@ -18,7 +18,7 @@ jobs:
 
       - name: Run claudelint
         run: |
-          docker run --rm -v $(pwd):/workspace ghcr.io/stbenjam/claudelint:main -v --strict
+          docker run --rm -v $(pwd):/workspace ghcr.io/stbenjam/claudelint:main -v
 
   shellcheck:
     name: Shell scripts

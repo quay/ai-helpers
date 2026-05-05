@@ -9,7 +9,8 @@ on:
       - main
 
 jobs:
-  lint:
+  claudelint:
+    name: Plugin structure
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,3 +19,94 @@ jobs:
       - name: Run claudelint
         run: |
           docker run --rm -v $(pwd):/workspace ghcr.io/stbenjam/claudelint:main -v --strict
+
+  shellcheck:
+    name: Shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check scripts are executable
+        run: |
+          failed=0
+          for f in $(find plugins -name '*.sh' -type f); do
+            if [ ! -x "$f" ]; then
+              echo "ERROR: not executable: $f"
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Shellcheck
+        run: |
+          find plugins -name '*.sh' -type f -print0 | xargs -0 shellcheck -S warning
+
+  docs-sync:
+    name: Docs up to date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check PLUGINS.md and docs/data.json are current
+        run: |
+          cp PLUGINS.md PLUGINS.md.bak
+          cp docs/data.json docs/data.json.bak
+          python3 scripts/generate_plugin_docs.py
+          python3 scripts/build-website.py
+          if ! diff -q PLUGINS.md PLUGINS.md.bak >/dev/null 2>&1; then
+            echo "ERROR: PLUGINS.md is out of date. Run 'make update' and commit."
+            diff PLUGINS.md.bak PLUGINS.md || true
+            exit 1
+          fi
+          if ! diff -q docs/data.json docs/data.json.bak >/dev/null 2>&1; then
+            echo "ERROR: docs/data.json is out of date. Run 'make update' and commit."
+            diff docs/data.json.bak docs/data.json || true
+            exit 1
+          fi
+          echo "Docs are up to date."
+
+  plugin-json:
+    name: Plugin metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate plugin.json files
+        run: |
+          failed=0
+          for pj in $(find plugins -path '*/.claude-plugin/plugin.json'); do
+            plugin_dir=$(dirname "$(dirname "$pj")")
+            plugin_name=$(basename "$plugin_dir")
+
+            if ! python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$pj" 2>/dev/null; then
+              echo "ERROR: invalid JSON: $pj"
+              failed=1
+              continue
+            fi
+
+            name=$(python3 -c "import json, sys; print(json.load(open(sys.argv[1])).get('name',''))" "$pj")
+            if [ -z "$name" ]; then
+              echo "ERROR: missing 'name' field: $pj"
+              failed=1
+            fi
+
+            desc=$(python3 -c "import json, sys; print(json.load(open(sys.argv[1])).get('description',''))" "$pj")
+            if [ -z "$desc" ]; then
+              echo "ERROR: missing 'description' field: $pj"
+              failed=1
+            fi
+
+            if [ ! -f "$plugin_dir/README.md" ]; then
+              echo "ERROR: missing README.md for plugin $plugin_name"
+              failed=1
+            fi
+          done
+          exit $failed

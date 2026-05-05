@@ -16,13 +16,14 @@ from typing import Dict, List, Tuple
 
 class PluginInfo:
     """Information about a plugin."""
-    
+
     def __init__(self, name: str, description: str, version: str):
         self.name = name
         self.description = description
         self.version = version
         self.commands = []
-    
+        self.skills = []
+
     def add_command(self, command_name: str, description: str, argument_hint: str = ""):
         """Add a command to this plugin."""
         self.commands.append({
@@ -31,23 +32,43 @@ class PluginInfo:
             'argument_hint': argument_hint
         })
 
+    def add_skill(self, skill_name: str, description: str):
+        """Add a skill to this plugin."""
+        self.skills.append({
+            'name': skill_name,
+            'description': description
+        })
+
 
 def parse_frontmatter(content: str) -> Dict[str, str]:
-    """Parse YAML frontmatter from a markdown file."""
+    """Parse YAML frontmatter from a markdown file, including multiline > blocks."""
     frontmatter = {}
-    
-    # Match frontmatter between --- markers
+
     match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
     if match:
-        frontmatter_text = match.group(1)
-        
-        # Parse simple YAML key-value pairs
-        for line in frontmatter_text.split('\n'):
-            line = line.strip()
-            if ':' in line:
+        lines = match.group(1).split('\n')
+        current_key = None
+        current_value_lines = []
+
+        for line in lines:
+            # Non-indented line with a colon = new key
+            if not line.startswith(' ') and not line.startswith('\t') and ':' in line:
+                # Save previous key
+                if current_key is not None:
+                    frontmatter[current_key] = ' '.join(current_value_lines).strip()
                 key, value = line.split(':', 1)
-                frontmatter[key.strip()] = value.strip()
-    
+                current_key = key.strip()
+                value = value.strip()
+                if value == '>' or value == '|':
+                    current_value_lines = []
+                else:
+                    current_value_lines = [value]
+            elif current_key is not None:
+                current_value_lines.append(line.strip())
+
+        if current_key is not None:
+            frontmatter[current_key] = ' '.join(current_value_lines).strip()
+
     return frontmatter
 
 
@@ -68,24 +89,40 @@ def get_plugin_info(plugin_dir: Path) -> PluginInfo:
         version=plugin_data.get('version', '0.0.0')
     )
     
+    # Scan skills
+    skills_dir = plugin_dir / 'skills'
+    if skills_dir.exists():
+        for skill_dir in sorted(skills_dir.iterdir()):
+            if not skill_dir.is_dir():
+                continue
+            skill_md = skill_dir / 'SKILL.md'
+            if skill_md.exists():
+                with open(skill_md, 'r') as f:
+                    content = f.read()
+                frontmatter = parse_frontmatter(content)
+                plugin_info.add_skill(
+                    skill_name=skill_dir.name,
+                    description=frontmatter.get('description', '')
+                )
+
     # Scan commands
     commands_dir = plugin_dir / 'commands'
     if commands_dir.exists():
         command_files = sorted(commands_dir.glob('*.md'))
-        
+
         for command_file in command_files:
             with open(command_file, 'r') as f:
                 content = f.read()
-            
+
             frontmatter = parse_frontmatter(content)
             command_name = command_file.stem
-            
+
             plugin_info.add_command(
                 command_name=command_name,
                 description=frontmatter.get('description', ''),
                 argument_hint=frontmatter.get('argument-hint', '')
             )
-    
+
     return plugin_info
 
 
@@ -100,7 +137,7 @@ def generate_plugin_docs(plugins_dir: Path) -> str:
             continue
         
         plugin_info = get_plugin_info(plugin_dir)
-        if plugin_info and plugin_info.commands:
+        if plugin_info and (plugin_info.commands or plugin_info.skills):
             plugins.append(plugin_info)
     
     # Generate markdown
@@ -127,6 +164,15 @@ def generate_plugin_docs(plugins_dir: Path) -> str:
             lines.append(plugin.description)
             lines.append("")
         
+        # Skills list
+        if plugin.skills:
+            lines.append("**Skills:**")
+            for skill in plugin.skills:
+                skill_signature = f"`/{plugin.name}:{skill['name']}`"
+                desc = f" - {skill['description']}" if skill['description'] else ""
+                lines.append(f"- **{skill_signature}**{desc}")
+            lines.append("")
+
         # Commands list
         if plugin.commands:
             lines.append("**Commands:**")

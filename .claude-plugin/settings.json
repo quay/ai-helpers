@@ -1,7 +1,17 @@
 {
   "installedPlugins": [
     {
-      "name": "example-plugin",
+      "name": "dev-workflow",
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "jira-planning",
+      "source": "local",
+      "enabled": true
+    },
+    {
+      "name": "openshift-testing",
       "source": "local",
       "enabled": true
     }

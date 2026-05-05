@@ -1,0 +1,96 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/session-setup.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/check-embargo.sh",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": ".claude/scripts/detect-jira-ticket.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/check-embargo.sh",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'if command -v pre-commit &>/dev/null; then pre-commit install --allow-missing-config 2>/dev/null; fi'",
+            "if": "Bash(git commit *)",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": ".claude/scripts/enforce-pr-skill.sh",
+            "if": "Bash(gh pr create *)",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": ".claude/scripts/validate-commit-msg.sh",
+            "if": "Bash(git commit *)",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/check-target-version.sh",
+            "if": "Bash(git push *)",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/save-session-state.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/workflow-next-step.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

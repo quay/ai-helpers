@@ -33,10 +33,10 @@ JIRA operations (view, assign, transition, check-version) and planning commands 
 - **`/jira-planning:create-plan-from-issue` `<issue-key>`** - Systematically plan a bug or feature based on a JIRA issue
 - **`/jira-planning:create-stories-from-epic` `<epic-key>`** - Generate child stories from a JIRA epic, review them, and create in JIRA with approval
 - **`/jira-planning:estimate-issue` `<issue-key>`** - Estimate complexity and effort for a JIRA issue
-- **`/jira-planning:implement-story`** - 
+- **`/jira-planning:implement-story`** - Implement a JIRA story end-to-end with tests
 - **`/jira-planning:jira-ticket`** - Create or edit JIRA tickets in PROJQUAY or QUAYIO projects
 - **`/jira-planning:quarterly-plan` `<quarter> <must-have-issues> e.g., "2026-Q3 QUAYIO-1234,QUAYIO-5678"`** - Plan the next quarter by tagging JIRA issues with the quarterly label
-- **`/jira-planning:review-pr`** - 
+- **`/jira-planning:review-pr`** - Perform a comprehensive code quality review of a pull request
 
 See [plugins/jira-planning/README.md](plugins/jira-planning/README.md) for detailed documentation.
 

@@ -1,3 +1,7 @@
+---
+description: Implement a JIRA story end-to-end with tests
+---
+
 # Implement JIRA Story
 
 **EXECUTE IMMEDIATELY**: Implement JIRA story `$ARGUMENTS`. Do NOT print examples or describe what you will do - actually DO each step.

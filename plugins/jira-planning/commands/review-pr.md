@@ -1,3 +1,7 @@
+---
+description: Perform a comprehensive code quality review of a pull request
+---
+
 # Code Quality PR Review
 
 Perform a comprehensive review of a pull request **as an expert senior Python and React software engineer**. Apply rigorous code quality standards while also evaluating performance, scaling, and database impact for production environments.

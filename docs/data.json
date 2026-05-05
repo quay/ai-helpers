@@ -80,7 +80,7 @@
         },
         {
           "name": "implement-story",
-          "description": "",
+          "description": "Implement a JIRA story end-to-end with tests",
           "synopsis": "",
           "argument_hint": ""
         },
@@ -98,7 +98,7 @@
         },
         {
           "name": "review-pr",
-          "description": "",
+          "description": "Perform a comprehensive code quality review of a pull request",
           "synopsis": "",
           "argument_hint": ""
         }

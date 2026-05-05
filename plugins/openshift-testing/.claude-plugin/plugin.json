@@ -1,0 +1,8 @@
+{
+  "name": "openshift-testing",
+  "description": "OpenShift cluster provisioning via Gangway API and remote Playwright browser server deployment for E2E testing.",
+  "version": "0.1.0",
+  "author": {
+    "name": "quay"
+  }
+}

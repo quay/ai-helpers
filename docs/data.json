@@ -1,27 +1,141 @@
 {
-  "name": "{{MARKETPLACE_NAME}}",
-  "owner": "{{OWNER_NAME}}",
+  "name": "quay-ai-helpers",
+  "owner": "quay",
   "plugins": [
     {
-      "name": "example-plugin",
-      "description": "Example plugin demonstrating command structure",
-      "version": "0.0.1",
+      "name": "dev",
+      "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work",
+      "version": "0.1.0",
+      "commands": [],
+      "skills": [
+        {
+          "name": "backport",
+          "id": "backport",
+          "description": "Trigger the cherry-pick robot to backport a merged PR to a release branch. Checks Target Version from JIRA if no branch is specified."
+        },
+        {
+          "name": "ci",
+          "id": "ci",
+          "description": "Quick CI status check for a pull request. Shows pass/fail/pending status for all GitHub Actions jobs and other CI checks."
+        },
+        {
+          "name": "code",
+          "id": "code",
+          "description": "Implement changes following project conventions. Reads AGENTS.md and area-specific docs, then guides implementation, quality checks (pre-commit, tests), and commit with proper message format."
+        },
+        {
+          "name": "poll",
+          "id": "poll",
+          "description": "Stateful PR poller: tracks GitHub Actions CI, CodeRabbit, Codecov, and human reviews across polls. Loops with adaptive backoff internally. Run via the Bash tool with run_in_background: true so the platform notifies the agent on exit."
+        },
+        {
+          "name": "pr",
+          "id": "pr",
+          "description": "Create a pull request with the correct title format, filled-in description template, and JIRA reference. Validates the PR title against the CI-enforced regex before creating."
+        },
+        {
+          "name": "start",
+          "id": "start",
+          "description": "Begin work on a JIRA ticket. Assigns the ticket, creates a feature branch, checks if backporting is needed, and loads the relevant agent_docs/ for the ticket's area."
+        },
+        {
+          "name": "work",
+          "id": "work",
+          "description": "Ralph Loop tick-loop for single-ticket development. Replaces the /start -> /code -> /pr -> /poll skill chain with one continuous state machine. Each tick: read state, do one thing, write state, continue."
+        }
+      ],
+      "hooks": [],
+      "agents": [],
+      "has_readme": true,
+      "has_mcp": false
+    },
+    {
+      "name": "jira-planning",
+      "description": "JIRA operations, planning commands, and estimation workflows",
+      "version": "0.1.0",
       "commands": [
         {
-          "name": "hello",
-          "description": "Say hello to someone",
-          "synopsis": "/example-plugin:hello [name]",
-          "argument_hint": "[name]"
+          "name": "create-epic-from-feature",
+          "description": "Generate an epic structure from a JIRA feature and create it in JIRA",
+          "synopsis": "",
+          "argument_hint": "<feature-key>"
+        },
+        {
+          "name": "create-plan-from-issue",
+          "description": "Systematically plan a bug or feature based on a JIRA issue",
+          "synopsis": "",
+          "argument_hint": "<issue-key>"
+        },
+        {
+          "name": "create-stories-from-epic",
+          "description": "Generate child stories from a JIRA epic, review them, and create in JIRA with approval",
+          "synopsis": "",
+          "argument_hint": "<epic-key>"
+        },
+        {
+          "name": "estimate-issue",
+          "description": "Estimate complexity and effort for a JIRA issue",
+          "synopsis": "",
+          "argument_hint": "<issue-key>"
+        },
+        {
+          "name": "implement-story",
+          "description": "Implement a JIRA story end-to-end with tests",
+          "synopsis": "",
+          "argument_hint": ""
+        },
+        {
+          "name": "jira-ticket",
+          "description": "Create or edit JIRA tickets in PROJQUAY or QUAYIO projects",
+          "synopsis": "",
+          "argument_hint": ""
+        },
+        {
+          "name": "quarterly-plan",
+          "description": "Plan the next quarter by tagging JIRA issues with the quarterly label",
+          "synopsis": "",
+          "argument_hint": "<quarter> <must-have-issues> e.g., \"2026-Q3 QUAYIO-1234,QUAYIO-5678\""
+        },
+        {
+          "name": "review-pr",
+          "description": "Perform a comprehensive code quality review of a pull request",
+          "synopsis": "",
+          "argument_hint": ""
         }
       ],
       "skills": [
         {
-          "name": "Example Skill",
-          "id": "example-skill",
-          "description": "Demonstrates how to create a task-specific skill for complex operations"
+          "name": "jira",
+          "id": "jira",
+          "description": "View or update a JIRA ticket. Supports view, assign, transition, check-version, and set-version operations via REST API or acli."
         }
       ],
-      "has_readme": true
+      "hooks": [],
+      "agents": [],
+      "has_readme": true,
+      "has_mcp": false
+    },
+    {
+      "name": "openshift-testing",
+      "description": "OpenShift cluster provisioning and remote Playwright browser testing",
+      "version": "0.1.0",
+      "commands": [],
+      "skills": [
+        {
+          "name": "cluster-provision",
+          "id": "cluster-provision",
+          "description": "Provision an ephemeral OpenShift cluster via the OpenShift CI Gangway API. Claims a cluster from a Hive ClusterPool, downloads and decrypts kubeconfig, and validates connectivity. Requires GANGWAY_TOKEN and KUBECONFIG_ENCRYPTION_KEY env vars. Clusters auto-expire after ~4 hours. Use when you need a real OpenShift cluster for blackbox testing or integration work."
+        },
+        {
+          "name": "remote-playwright",
+          "id": "remote-playwright",
+          "description": "Deploy and connect to a remote Playwright browser on an OpenShift cluster. Sets up a Playwright run-server pod, port-forwarding, and @playwright/cli for interactive browser automation (goto, click, snapshot, screenshot, video recording). Use when you need a remote browser for E2E interaction or visual verification on a cluster."
+        }
+      ],
+      "hooks": [],
+      "agents": [],
+      "has_readme": true,
+      "has_mcp": false
     }
   ]
 }

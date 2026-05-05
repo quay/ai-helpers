@@ -1,0 +1,51 @@
+# AGENTS.md — {{PROJECT_NAME}}
+
+## Project Overview
+
+{{PROJECT_NAME}} is built with {{TECH_STACK}}.
+
+## Quick Commands
+
+| Command | Purpose |
+|---------|---------|
+| `make test` | Run unit tests |
+| `make lint` | Run linters |
+| `make build` | Build the project |
+
+## Key Directories
+
+| Directory | Contents |
+|-----------|----------|
+| `src/` | Main source code |
+| `tests/` | Test files |
+| `docs/` | Documentation |
+
+## Documentation
+
+Based on the ticket's area, read the relevant docs:
+
+| Area | Doc |
+|------|-----|
+| Architecture | `agent_docs/architecture.md` |
+| Testing | `agent_docs/testing.md` |
+| API | `agent_docs/api.md` |
+| Database | `agent_docs/database.md` |
+
+## Conventions
+
+### Code Style
+- Follow existing patterns in the codebase
+- Run linters before committing
+
+### Testing
+- Write tests for new functionality
+- Ensure existing tests pass
+
+### Commits
+```
+<subsystem>: <what changed> (<TICKET-KEY>)
+```
+
+### PR Format
+Title: `<TICKET-KEY>: type(scope): description`
+Types: `fix`, `feat`, `chore`, `refactor`, `docs`, `test`, `ci`

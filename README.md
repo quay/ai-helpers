@@ -1,244 +1,96 @@
-# Claude Marketplace Template
+# quay-ai-helpers
 
-A template repository for creating your own Claude Code plugin marketplace with a beautiful documentation site.
+Shared agent toolkit for the Quay organization. Provides reusable Claude Code
+plugins for JIRA workflow automation, development lifecycle management, and
+testing infrastructure.
 
-## Features
+## Plugins
 
-- 🎨 **Customizable color schemes** - Choose from presets or define your own
-- 📦 **GitHub Pages integration** - Auto-deploy docs on push
-- 🔧 **Plugin scaffolding** - Create new plugins with one command
-- ✅ **Linting** - Validate plugin structure with claudelint
-- 🔄 **Template updates** - Pull updates from this template easily
-- 📚 **Auto-generated docs** - Beautiful documentation site from plugin metadata
+### dev
 
-## Quick Start
+The Ralph Loop: a continuous state machine that takes a JIRA ticket from
+assignment to merge-ready PR. Includes the full skill chain (`start`, `code`,
+`pr`, `poll`, `ci`, `backport`) plus the unified `/work` orchestrator.
 
-### 1. Use This Template
+### jira-planning
 
-Click the "Use this template" button on GitHub to create your own repository.
+JIRA operations (view, assign, transition, check/set Target Version) and
+planning commands for decomposing features into epics, stories, and estimates.
+Includes safety hooks for embargoed tickets.
 
-### 2. Clone and Setup
+### openshift-testing
 
-```bash
-git clone https://github.com/your-username/your-marketplace.git
-cd your-marketplace
-./setup.sh
-```
+Ephemeral OpenShift cluster provisioning via Gangway API and remote Playwright
+browser server deployment for E2E testing.
 
-The setup script will ask you for:
-- Marketplace name
-- Owner name
-- GitHub repository
-- Color scheme (forest-green, ocean-blue, sunset-orange, royal-purple, crimson-red, or custom)
-- Whether to keep the example plugin
-
-### 3. Enable GitHub Pages
-
-1. Go to your repository Settings → Pages
-2. Set Source to "Deploy from a branch"
-3. Select branch: `main` and folder: `/docs`
-4. Click Save
-
-Your docs will be available at: `https://your-username.github.io/your-marketplace/`
-
-After making changes to your plugins, run `make update` to regenerate the docs, then commit and push.
-
-## Usage
-
-### Create a New Plugin
+## Installation
 
 ```bash
-make new-plugin NAME=my-awesome-plugin
-```
-
-This creates:
-- `plugins/my-awesome-plugin/`
-  - `.claude-plugin/plugin.json` - Plugin metadata
-  - `commands/example.md` - Example command
-  - `README.md` - Plugin documentation
-
-Don't forget to add the plugin to `.claude-plugin/marketplace.json`!
-
-### Lint Your Plugins
-
-```bash
-make lint
-```
-
-Validates all plugins against claudelint standards.
-
-### Update Documentation
-
-```bash
-make update
-```
-
-Regenerates plugin documentation and website data.
-
-### Update from Template
-
-Get the latest improvements from this template:
-
-```bash
-make update-from-template
-```
-
-This fetches:
-- Latest `docs/index.html` (docs site)
-- Latest build scripts
-- Re-applies your branding from `.template-config.json`
-
-## Project Structure
-
-```
-your-marketplace/
-├── .claude-plugin/
-│   ├── marketplace.json       # Marketplace metadata
-│   └── settings.json          # Installed plugins
-├── .github/workflows/
-│   └── lint.yml               # Lint plugins on push/PR
-├── .template-config.json      # Your branding configuration
-├── docs/
-│   ├── index.html            # Documentation site (static)
-│   ├── data.json             # Generated plugin data
-│   └── .nojekyll             # Disable Jekyll processing
-├── plugins/
-│   └── example-plugin/       # Example plugin (optional)
-├── scripts/
-│   ├── apply-branding.py     # Apply customizations
-│   ├── build-website.py      # Generate website data
-│   └── generate_plugin_docs.py
-├── Makefile                   # Development commands
-└── README.md
+claude plugin add quay/ai-helpers
 ```
 
 ## Configuration
 
-Edit `.template-config.json` to customize:
+All project-specific values are set via environment variables with Quay defaults.
+See each plugin's README for the full variable list.
 
-```json
-{
-  "template_version": "1.0.0",
-  "marketplace_name": "my-plugins",
-  "owner_name": "myusername",
-  "github_repo": "myusername/my-plugins",
-  "color_scheme": {
-    "primary": "#228B22",
-    "primary_dark": "#1a6b1a",
-    "secondary": "#32CD32"
-  }
-}
+### Core Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `JIRA_DOMAIN` | `redhat.atlassian.net` | JIRA instance |
+| `PRIMARY_BRANCH` | `master` | Main branch name |
+| `DEFAULT_REPO` | `quay/quay` | GitHub org/repo |
+| `PR_TITLE_PATTERN` | PROJQUAY/QUAYIO regex | CI-enforced PR title regex |
+| `JIRA_TARGET_VERSION_FIELD` | `customfield_10855` | Target Version field ID |
+
+### Hook Setup
+
+Copy `plugins/dev/templates/settings.json.template` to your project's
+`.claude/settings.json` and adjust script paths to reference the plugin install
+location.
+
+## Project Structure
+
+```
+ai-helpers/
+├── plugins/
+│   ├── dev/           # Ralph Loop + dev lifecycle
+│   │   ├── skills/             # start, code, pr, poll, ci, backport, work
+│   │   ├── scripts/            # Shell scripts for hooks and automation
+│   │   ├── templates/          # PR description, settings.json template
+│   │   └── hooks/              # Event hooks
+│   ├── jira-planning/          # JIRA ops + planning commands
+│   │   ├── skills/             # jira
+│   │   ├── scripts/            # jira-ops, embargo checks, etc.
+│   │   └── commands/           # 8 planning commands
+│   └── openshift-testing/      # Cluster + browser testing
+│       ├── skills/             # cluster-provision, remote-playwright
+│       └── scripts/            # Provisioning scripts
+├── templates/                  # Starter files for adopting repos
+│   ├── AGENTS.md.template
+│   └── CLAUDE.md.template
+├── docs/                       # Marketplace documentation site
+├── scripts/                    # Build tooling
+└── Makefile
 ```
 
-After editing, run `make update` to apply changes.
+## Adoption Guide
 
-## Color Scheme Presets
+1. Install the plugin: `claude plugin add quay/ai-helpers`
+2. Set project-specific env vars in your `.claude/settings.json` or shell profile
+3. Copy `templates/AGENTS.md.template` to create your project's `AGENTS.md`
+4. Copy `plugins/dev/templates/settings.json.template` for hook configuration
+5. Use `/dev:work PROJQUAY-XXXX` to run the full development lifecycle
 
-| Preset | Primary | Description |
-|--------|---------|-------------|
-| `forest-green` | #228B22 | Classic green |
-| `ocean-blue` | #0077be | Deep blue |
-| `sunset-orange` | #ff6b35 | Warm orange |
-| `royal-purple` | #6a4c93 | Elegant purple |
-| `crimson-red` | #dc143c | Bold red |
-
-## Plugin Development
-
-### Command Structure
-
-Commands are defined in Markdown files under `plugins/{name}/commands/`:
-
-```markdown
----
-description: Brief description
-argument-hint: [optional-args]
----
-
-## Name
-plugin-name:command-name
-
-## Synopsis
-```
-/plugin-name:command-name [args]
-```
-
-## Description
-What this command does...
-
-## Implementation
-1. Step-by-step implementation guide
-
-## Return Value
-What the command outputs
-
-## Examples
-Example usage
-
-## Arguments
-- $1: First argument description
-```
-
-See `plugins/example-plugin/commands/hello.md` for a complete example.
-
-### Plugin Metadata
-
-Edit `plugins/{name}/.claude-plugin/plugin.json`:
-
-```json
-{
-  "name": "plugin-name",
-  "description": "What this plugin does",
-  "version": "0.0.1",
-  "author": {
-    "name": "Your Name"
-  }
-}
-```
-
-## Make Targets
-
-| Command | Description |
-|---------|-------------|
-| `make help` | Show all available commands |
-| `make lint` | Run plugin linter |
-| `make lint-pull` | Pull latest linter image |
-| `make update` | Update docs and website data |
-| `make update-from-template` | Pull template updates |
-| `make new-plugin NAME=foo` | Create a new plugin |
-
-## Installation for Users
-
-Users can install your marketplace in Claude Code:
+## Development
 
 ```bash
-# Add your marketplace
-/plugin marketplace add your-username/your-marketplace
-
-# Install a plugin
-/plugin install my-plugin@your-marketplace
-
-# Use a command
-/my-plugin:hello
+make lint          # Validate plugin structure
+make update        # Regenerate docs
+make new-plugin NAME=foo  # Create a new plugin
 ```
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Run `make lint` before committing
-2. Update documentation when adding features
-3. Follow the existing plugin structure
-
-## Resources
-
-- [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code)
-- [Plugin Development Guide](https://docs.claude.com/en/docs/claude-code/plugins)
-- [claudelint](https://github.com/stbenjam/claudelint)
 
 ## License
 
 MIT
-
----
-
-Built with ❤️ using [Claude Code](https://claude.com/claude-code)

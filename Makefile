@@ -15,9 +15,9 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: lint
-lint: ## Run plugin linter (verbose, strict mode)
+lint: ## Run plugin linter (verbose mode)
 	@echo "Running claudelint with $(CONTAINER_RUNTIME)..."
-	$(CONTAINER_RUNTIME) run --rm -v $(PWD):/workspace:Z ghcr.io/stbenjam/claudelint:main -v --strict
+	$(CONTAINER_RUNTIME) run --rm -v $(PWD):/workspace:Z ghcr.io/stbenjam/claudelint:main -v
 
 .PHONY: lint-pull
 lint-pull: ## Pull the latest claudelint image

@@ -11,16 +11,31 @@ from pathlib import Path
 from typing import Dict, List
 
 def parse_frontmatter(content: str) -> Dict[str, str]:
-    """Extract frontmatter from markdown file"""
+    """Extract frontmatter from markdown file, including multiline > blocks."""
     frontmatter = {}
     if content.startswith('---'):
         parts = content.split('---', 2)
         if len(parts) >= 2:
-            fm_lines = parts[1].strip().split('\n')
-            for line in fm_lines:
-                if ':' in line:
+            lines = parts[1].strip().split('\n')
+            current_key = None
+            current_value_lines: List[str] = []
+
+            for line in lines:
+                if not line.startswith(' ') and not line.startswith('\t') and ':' in line:
+                    if current_key is not None:
+                        frontmatter[current_key] = ' '.join(current_value_lines).strip()
                     key, value = line.split(':', 1)
-                    frontmatter[key.strip()] = value.strip()
+                    current_key = key.strip()
+                    value = value.strip()
+                    if value in ('>', '|'):
+                        current_value_lines = []
+                    else:
+                        current_value_lines = [value]
+                elif current_key is not None:
+                    current_value_lines.append(line.strip())
+
+            if current_key is not None:
+                frontmatter[current_key] = ' '.join(current_value_lines).strip()
     return frontmatter
 
 def extract_synopsis(content: str) -> str:

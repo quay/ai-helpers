@@ -1,0 +1,8 @@
+{
+  "name": "dev",
+  "description": "Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Includes start, code, pr, poll, ci, backport, and the unified /work orchestrator.",
+  "version": "0.1.0",
+  "author": {
+    "name": "quay"
+  }
+}

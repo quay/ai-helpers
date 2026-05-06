@@ -76,14 +76,15 @@ gh api "<comment_url>" --jq '{user: .user.login, body, created_at}'
 
 - If the comment is from `$NOTIFY_USER` itself — skip (self-notifications)
 
-**e) Verify the commenter is a repo collaborator:**
+**e) Verify the commenter is a member of the quay org:**
 
 ```bash
-gh api repos/${repo}/collaborators/<user> --silent 2>/dev/null
-# 204 = collaborator, 404 = not
+ORG=$(echo "${repo}" | cut -d/ -f1)
+gh api "orgs/${ORG}/members/<user>" --silent 2>/dev/null
+# 204 = org member, 404 = not a member
 ```
 
-- If not a collaborator — skip (untrusted user, do not wake session)
+- If not an org member — skip (untrusted user, do not wake session)
 
 ### Step 4: Check session state before waking
 

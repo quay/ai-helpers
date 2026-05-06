@@ -18,6 +18,11 @@
       "name": "openshift-testing",
       "source": "./plugins/openshift-testing",
       "description": "OpenShift cluster provisioning and remote Playwright browser testing"
+    },
+    {
+      "name": "konflux",
+      "source": "./plugins/konflux",
+      "description": "Konflux build cluster interaction: pipeline status, logs, components, and debugging"
     }
   ]
 }

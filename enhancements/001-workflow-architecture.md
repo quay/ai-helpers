@@ -5,14 +5,14 @@
 | **Status** | Draft |
 | **Author** | quay-devel |
 | **Created** | 2026-05-06 |
-| **Dependencies** | [#3](https://github.com/quay/ai-helpers/pull/3) (Konflux plugin), [microsoft/apm](https://github.com/microsoft/apm) |
+| **Dependencies** | [#3](https://github.com/quay/ai-helpers/pull/3) (Konflux plugin), [#4](https://github.com/quay/ai-helpers/pull/4) (Lola support), [RedHatProductSecurity/lola](https://github.com/RedHatProductSecurity/lola) |
 
 ## Summary
 
 Move Ambient Code Platform (ACP) workflow definitions into `quay/ai-helpers`
-alongside the existing plugins. Use [APM](https://github.com/microsoft/apm)
-(Agent Package Manager) to compose reusable plugins into per-project workflows.
-Project-specific documentation (AGENTS.md, agent_docs/) stays in each source repo.
+alongside the existing plugins. Use [Lola](https://github.com/RedHatProductSecurity/lola)
+to compose reusable plugins into per-project workflows. Project-specific
+documentation (AGENTS.md, agent_docs/) stays in each source repo.
 
 ## Motivation
 
@@ -45,30 +45,42 @@ identical.
 4. **Onboarding friction.** Adding workflows for clair, quay-operator, or
    quay-builder means duplicating the entire `.claude/` setup.
 
-## Why APM
+## Why Lola
 
 We evaluated two AI package managers:
 [Lola](https://github.com/RedHatProductSecurity/lola) (Red Hat) and
-[APM](https://github.com/microsoft/apm) (Microsoft). APM was selected for
-three reasons:
+[APM](https://github.com/microsoft/apm) (Microsoft).
 
-1. **Lock file.** `apm.lock.yaml` pins every dependency to exact commit SHAs
-   with content hashes. Reproducible installs are table stakes for CI-adjacent
-   tooling. Lola has no lock file.
+APM has stronger features (lock file, native hook integration, security
+scanning), but requires restructuring the plugin layout — scripts must move
+to `hooks/scripts/`, commands must be renamed to `.prompt.md` format. This
+**breaks compatibility with Claude's native plugin system** (`claude plugin
+add`). Plugins could no longer be installed both ways.
 
-2. **Native Claude Code integration.** APM deploys skills, hooks, commands,
-   and scripts to `.claude/` natively via its target profile system. Lola only
-   manages SKILL.md files — scripts, templates, and commands require custom
-   post-install hooks to bridge the gap.
+Lola was selected because it preserves the existing plugin layout:
 
-3. **Local path dependencies.** APM supports relative paths
-   (`../../plugins/dev`) in `apm.yml` and copies them to `apm_modules/_local/`.
-   This is exactly our monorepo layout. Lola's relative path support is
-   unverified.
+1. **Plugin compatibility.** Lola adds a single `lola.yaml` file alongside
+   the existing `.claude-plugin/plugin.json`, `skills/`, `scripts/`, and
+   `commands/` directories. The plugins remain fully compatible with
+   `claude plugin add` for teams that don't use ACP workflows.
 
-Additional factors: APM ships as a standalone binary (no Python 3.13
-requirement), supports 7 primitive types vs Lola's 1, and has broader
-community adoption (~2,250 stars vs ~71).
+2. **Red Hat alignment.** Lola is built by Red Hat Product Security. We get
+   internal support channels and influence over the roadmap.
+
+3. **Already integrated.** PR #4 adds Lola support to all four plugins with
+   `lola.yaml` manifests and a shared post-install hook. The work is done.
+
+4. **Simple model.** `.lola-req` is a flat list of module paths/URLs.
+   `lola sync` installs them. Post-install hooks copy scripts and templates
+   to `.claude/`. No compilation step, no manifest schema.
+
+**Tradeoffs accepted:**
+
+- No lock file — sessions get whatever the current branch points at. Pin
+  via git tags in `.lola-req` URLs if reproducibility is needed.
+- Scripts and commands are deployed via post-install hooks, not natively.
+  This is handled by the shared `scripts/lola-post-install.sh`.
+- Requires Python 3.13 — available via `uvx --python 3.13 --from lola-ai lola`.
 
 ## Design
 
@@ -76,23 +88,27 @@ community adoption (~2,250 stars vs ~71).
 
 ```
 quay/ai-helpers/
-├── plugins/                            # Reusable APM packages
+├── plugins/                            # Reusable Lola modules
 │   ├── dev/                            # 7 skills, 10 scripts, 2 templates
-│   │   ├── apm.yml
+│   │   ├── .claude-plugin/plugin.json  # Claude native plugin manifest
+│   │   ├── lola.yaml                   # Lola module manifest
 │   │   ├── skills/{start,code,pr,poll,ci,backport,work}/
 │   │   ├── scripts/
 │   │   └── templates/
 │   ├── jira-planning/                  # 1 skill, 5 scripts, 8 commands
-│   │   ├── apm.yml
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── lola.yaml
 │   │   ├── skills/jira/
 │   │   ├── scripts/
 │   │   └── commands/
 │   ├── openshift-testing/              # 2 skills, 2 scripts
-│   │   ├── apm.yml
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── lola.yaml
 │   │   ├── skills/{cluster-provision,remote-playwright}/
 │   │   └── scripts/
 │   └── konflux/                        # 1 skill, 1 script
-│       ├── apm.yml
+│       ├── .claude-plugin/plugin.json
+│       ├── lola.yaml
 │       ├── skills/konflux/
 │       └── scripts/
 │
@@ -100,12 +116,11 @@ quay/ai-helpers/
 │   └── quay/                           # ← ACP activeWorkflow.path
 │       ├── .claude/
 │       │   ├── settings.json           # Hook wiring
-│       │   ├── skills/                 # ← populated by apm install
-│       │   ├── scripts/               # ← populated by apm install
-│       │   ├── commands/              # ← populated by apm install
-│       │   └── templates/             # ← populated by apm install
-│       ├── apm.yml                     # Plugin dependencies + metadata
-│       ├── apm.lock.yaml               # Pinned dependency versions
+│       │   ├── skills/                 # ← populated by lola sync
+│       │   ├── scripts/               # ← populated by lola sync
+│       │   ├── commands/              # ← populated by lola sync
+│       │   └── templates/             # ← populated by lola sync
+│       ├── .lola-req                   # Plugin dependencies
 │       ├── .ambient/
 │       │   ├── ambient.json            # ACP metadata + env vars
 │       │   └── rubric.md               # Quality rubric
@@ -115,47 +130,55 @@ quay/ai-helpers/
 │       └── scripts/                    # Quay-only scripts
 │           └── resolve-github-user.sh
 │
+├── scripts/
+│   └── lola-post-install.sh            # Shared Lola post-install hook
 ├── enhancements/                       # This directory
 └── README.md
 ```
 
-### Plugin Manifest (apm.yml)
+### Dual Distribution Model
 
-Each plugin declares its primitives in an `apm.yml`:
+Each plugin supports two installation paths:
 
-```yaml
-# plugins/dev/apm.yml
-name: quay-dev
-version: 0.1.0
-description: Ralph Loop development lifecycle for Quay projects
+| Method | Command | Who uses it |
+|--------|---------|-------------|
+| Claude native | `claude plugin add quay/ai-helpers --path plugins/dev` | Individual developers |
+| Lola (via ACP) | `lola sync` (reads `.lola-req`) | ACP workflow sessions |
+
+The same plugin directory serves both. Lola adds `lola.yaml` alongside
+`plugin.json` — they don't conflict.
+
+### Plugin Composition
+
+`workflows/quay/.lola-req`:
+
+```
+# Plugins installed at session start
+../../plugins/dev
+../../plugins/jira-planning
+../../plugins/openshift-testing
+../../plugins/konflux
 ```
 
-APM discovers skills from `skills/*/SKILL.md`, scripts from `scripts/*.sh`,
-templates from `templates/*`, and commands from `commands/*.md` within each
-package directory. No explicit listing needed.
+`lola sync` reads this file, installs SKILL.md files to `.claude/skills/`,
+and runs the post-install hook which copies scripts, templates, and commands
+to their expected `.claude/` locations.
 
-### Workflow Manifest
+### Post-Install Hook
 
-`workflows/quay/apm.yml` declares dependencies on the plugins:
+Each plugin's `lola.yaml` declares a post-install hook:
 
 ```yaml
-# workflows/quay/apm.yml
-name: quay-workflow
-version: 0.1.0
-description: ACP workflow for quay/quay
-
-dependencies:
-  apm:
-    - ../../plugins/dev
-    - ../../plugins/jira-planning
-    - ../../plugins/openshift-testing
-    - ../../plugins/konflux
+hooks:
+  post-install: scripts/lola-post-install.sh
 ```
 
-Running `apm install` resolves these local paths, copies plugin content to
-`apm_modules/_local/`, and deploys primitives to `.claude/skills/`,
-`.claude/commands/`, etc. The `apm.lock.yaml` is generated automatically and
-committed to the repo.
+The hook script (symlinked from `scripts/lola-post-install.sh` in the repo
+root) receives `LOLA_MODULE_PATH` and `LOLA_PROJECT_PATH` env vars and copies:
+
+- `scripts/*.sh` → `.claude/scripts/` (with `chmod +x`)
+- `templates/*` → `.claude/templates/`
+- `commands/*.md` → `.claude/commands/`
 
 ### ACP Session Wiring
 
@@ -177,7 +200,7 @@ At session start:
 2. `hydrate.sh` clones quay/quay → `/workspace/repos/quay/`
 3. Claude reads `.claude/settings.json` → discovers hooks
 4. `SessionStart` hook runs `session-setup.sh`:
-   - Runs `apm install` → installs plugins from `apm.yml`
+   - Runs `uvx --python 3.13 --from lola-ai lola sync` → installs plugins
    - Standard bootstrap (pre-commit, gh auth, etc.)
 5. Claude discovers skills, reads `CLAUDE.md` → follows reference to
    `/workspace/repos/quay/AGENTS.md`
@@ -222,25 +245,46 @@ These are **code documentation**, not agent infrastructure.
 | `.ambient/rubric.md` | `workflows/quay/.ambient/rubric.md` |
 
 All shared skills/scripts/commands are **removed** from quay/quay — they're
-installed from plugins via APM at session start.
+installed from plugins via Lola at session start.
+
+## Alternatives Considered
+
+### APM (microsoft/apm)
+
+APM offers a lock file (`apm.lock.yaml` with SHA pinning), native Claude Code
+hook integration (auto-generates `settings.json`), security scanning, and
+broader multi-agent support. However, APM requires restructuring the plugin
+layout:
+
+- Scripts must move from `scripts/` to `hooks/scripts/` with a `hooks.json`
+  manifest
+- Commands must be renamed from `.md` to `.prompt.md` with frontmatter
+- Templates have no native deployment mechanism
+
+This restructuring **breaks compatibility with `claude plugin add`**. Since
+our plugins serve both ACP workflows (via Lola) and individual developers
+(via Claude's native plugin system), maintaining both installation paths is
+a hard requirement. APM's layout is incompatible with Claude's plugin
+conventions.
+
+If Lola adds lock file support in the future, or if Claude's plugin system
+evolves to align with APM's conventions, this decision can be revisited.
 
 ## Migration Plan
 
-### Phase 1: APM manifests for plugins
+### Phase 1: Env var portability
 
-Add `apm.yml` to each plugin (`dev`, `jira-planning`, `openshift-testing`,
-`konflux`). Ensure every project-specific value is externalized via env var
-with a sensible default. The six customized skills and six customized scripts
-need their hardcoded values replaced.
+Audit all plugins and ensure every project-specific value is externalized via
+env var with a sensible default. The six customized skills and six customized
+scripts need their hardcoded values replaced.
 
 ### Phase 2: Create `workflows/quay/`
 
 1. Create the directory structure shown above
 2. Move quay-specific files from quay/quay
-3. Create `apm.yml` with local path dependencies to all four plugins
-4. Run `apm install` and commit the generated `apm.lock.yaml`
-5. Create `CLAUDE.md` with `@/workspace/repos/quay/AGENTS.md` reference
-6. Add `apm_modules/` to `.gitignore`
+3. Create `.lola-req` referencing all four plugins
+4. Create `CLAUDE.md` with `@/workspace/repos/quay/AGENTS.md` reference
+5. Verify `lola sync` installs all plugins correctly
 
 ### Phase 3: Validate with ACP session
 
@@ -259,20 +303,14 @@ need their hardcoded values replaced.
 
 ```bash
 # Example: adding clair
-mkdir -p workflows/clair
-cd workflows/clair
-cat > apm.yml << 'EOF'
-name: clair-workflow
-version: 0.1.0
-dependencies:
-  apm:
-    - ../../plugins/dev
-    - ../../plugins/jira-planning
+mkdir -p workflows/clair/.claude
+cat > workflows/clair/.lola-req << 'EOF'
+../../plugins/dev
+../../plugins/jira-planning
 EOF
-cat > CLAUDE.md << 'EOF'
+cat > workflows/clair/CLAUDE.md << 'EOF'
 @/workspace/repos/clair/AGENTS.md
 EOF
-apm install
 # Configure ACP: activeWorkflow.path = workflows/clair
 ```
 
@@ -281,40 +319,35 @@ apm install
 1. **hydrate.sh subpath extraction** — When `activeWorkflow.path` is
    `workflows/quay`, does hydrate.sh clone the full ai-helpers repo and use
    the subpath as CWD, or does it sparse-checkout? If the full repo is cloned,
-   the `../../plugins/` relative paths in `apm.yml` resolve naturally. If
+   the `../../plugins/` relative paths in `.lola-req` resolve naturally. If
    only the subpath is extracted, we need git URL syntax instead.
 
-2. **APM binary in runner image** — `apm install` requires the `apm` binary.
-   Options: add `apm` to the runner image, or use `pip install apm-cli` in
-   session-setup.sh. The standalone binary has no dependencies beyond
-   glibc 2.35+.
+2. **Python 3.13 in runner image** — Lola requires Python 3.13. Current
+   sessions have `uvx` available which can auto-fetch it. Need to confirm this
+   works reliably in the runner image, or add Python 3.13 to the image.
 
-3. **Git dirty state from apm install** — `apm install` writes to
-   `apm_modules/` and deploys files to `.claude/`. Options:
-   - Add `apm_modules/` and APM-managed `.claude/` subdirectories to
-     `.gitignore` (recommended)
-   - Pre-install in CI and commit the result (eliminates runtime dependency)
+3. **Lola relative path support** — Verify that `.lola-req` supports relative
+   local paths (`../../plugins/dev`). Fallback: use git URLs with
+   `--module-content` syntax.
+
+4. **Git dirty state from lola sync** — `lola sync` writes files to `.claude/`
+   at runtime, creating uncommitted changes. Options:
+   - Add `.claude/skills/`, `.claude/scripts/`, `.claude/commands/`,
+     `.claude/templates/` to `.gitignore`
    - Accept the dirty state (session state is ephemeral)
+   - Pre-install in CI and commit the result (eliminates runtime dependency)
 
-4. **settings.json hook paths** — Hook commands reference `.claude/scripts/X`.
-   After APM installs scripts there, the paths resolve. But if APM fails,
+5. **settings.json hook paths** — Hook commands reference `.claude/scripts/X`.
+   After Lola installs scripts there, the paths resolve. But if Lola fails,
    hooks break. Should session-setup.sh validate the install succeeded?
-
-5. **Lock file with local paths** — `apm.lock.yaml` records local path
-   dependencies differently from remote ones. Need to verify the lock file
-   is portable across environments where the repo is cloned to different
-   absolute paths (it should be, since we use relative paths).
 
 ## Benefits
 
 - **Single source of truth** for all agent infrastructure across the quay org
-- **Reproducible installs** via `apm.lock.yaml` with commit SHA pinning
+- **Dual distribution** — plugins work via both `claude plugin add` and Lola
 - **Automatic updates** — plugin improvements flow to all workflows
 - **Clean separation** — code repos carry only code and documentation
-- **Native integration** — APM deploys skills, hooks, commands, and scripts
-  to `.claude/` without custom post-install scripts
-- **Easy onboarding** — new project workflow = directory + `apm.yml` + env vars
+- **Easy onboarding** — new project workflow = directory + `.lola-req` + env vars
 - **Composable** — each workflow picks only the plugins it needs
 - **Testable** — plugin changes can be tested against all workflows in CI
-- **Security** — content scanning, integrity hashes, and optional policy
-  enforcement via `apm-policy.yml`
+- **Red Hat aligned** — Lola is maintained by Red Hat Product Security

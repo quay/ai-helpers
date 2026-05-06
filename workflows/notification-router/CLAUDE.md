@@ -28,7 +28,7 @@ acp_stop_session(session_name: "<old-session-name>")
 Fetch all unread notifications for the `$NOTIFY_USER` account:
 
 ```bash
-gh api notifications --method GET -F per_page=50 \
+gh api notifications --method GET --paginate \
   --jq '.[] | {
     thread_id: .id,
     reason: .reason,
@@ -62,7 +62,7 @@ PR_NUMBER=$(echo "$pr_url" | grep -oP '/pulls/\K[0-9]+')
 **c) Extract the session ID** from the PR body:
 
 ```bash
-gh api "repos/${WATCHED_REPO}/pulls/${PR_NUMBER}" --jq '.body' \
+gh api "repos/${repo}/pulls/${PR_NUMBER}" --jq '.body' \
   | grep -oP 'Session ID.*?:\s*\K(session-[a-f0-9-]+)'
 ```
 
@@ -79,7 +79,7 @@ gh api "<comment_url>" --jq '{user: .user.login, body, created_at}'
 **e) Verify the commenter is a repo collaborator:**
 
 ```bash
-gh api repos/${WATCHED_REPO}/collaborators/<user> --silent 2>/dev/null
+gh api repos/${repo}/collaborators/<user> --silent 2>/dev/null
 # 204 = collaborator, 404 = not
 ```
 

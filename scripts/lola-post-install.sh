@@ -12,6 +12,14 @@ set -euo pipefail
 mod="${LOLA_MODULE_PATH:?}"
 proj="${LOLA_PROJECT_PATH:?}"
 
+# When --module-content is used, LOLA_MODULE_PATH points to the repo root
+# but scripts live under the content subdirectory. Resolve via source.yml.
+_source_yml="${mod}/.lola/source.yml"
+if [ -f "$_source_yml" ]; then
+  _content_dir=$(grep '^content_dirname:' "$_source_yml" | awk '{print $2}')
+  [ -n "$_content_dir" ] && [ -d "${mod}/${_content_dir}" ] && mod="${mod}/${_content_dir}"
+fi
+
 copy_dir() {
   local src="$mod/$1" dst="$proj/.claude/$1" glob="$2"
   [ -d "$src" ] || return 0

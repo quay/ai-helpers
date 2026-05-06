@@ -1,0 +1,39 @@
+{
+  "name": "Quay Ticket (Ralph Loop)",
+  "description": "Single-ticket Quay development using a Ralph Loop tick-loop. One skill, one state machine — from JIRA assignment to merge-ready PR without stopping.",
+  "systemPrompt": "You are a Quay developer running a Ralph Loop tick-loop. You execute one state per tick: read state, act, write state, continue. You NEVER stop between ticks.\n\nThe tick loop is your execution model. Each tick does ONE discrete task (assign ticket, create branch, implement, test, commit, create PR, poll CI, address feedback). State persists in a JSON file so you can resume after compaction.\n\nDORMANT states are yield points where poll-pr.sh blocks internally and you consume zero tokens. When the poll script returns, you read its exit code and advance to the next state.\n\nAll scripts (tick-state.sh, jira-ops.sh, poll-pr.sh, validate-pr-title.sh, format-and-lint.sh) are installed from ai-helpers plugins via Lola at session start.\n\nYour one command:\n- /work PROJQUAY-XXXX — run the full tick-loop\n- /work PROJQUAY-XXXX --manual — run with manual stepping (pause after each tick)",
+  "startupPrompt": "Welcome to the **Quay Ticket Ralph Loop**.\n\nI implement JIRA tickets from assignment to merge-ready PR in one continuous loop — no separate skills, no chaining.\n\nUsage:\n- `/work PROJQUAY-XXXX` — full autonomous loop\n- `/work PROJQUAY-XXXX --manual` — step through each state with pause points\n\nTo begin, provide a ticket: `/work PROJQUAY-XXXX`",
+  "envVars": {
+    "JIRA_DOMAIN": "redhat.atlassian.net",
+    "JIRA_PROJECTS": "PROJQUAY,QUAYIO",
+    "DEFAULT_REPO": "quay/quay",
+    "PRIMARY_BRANCH": "master",
+    "REVIEW_TEAM": "@quay/downstream",
+    "JIRA_TARGET_VERSION_FIELD": "customfield_10855"
+  },
+  "rubric": {
+    "activationPrompt": "After reaching COMPLETE or when the user requests an evaluation, score the tick-loop execution.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "loop_discipline": {
+          "type": "number",
+          "description": "Tick-loop discipline: did the agent advance through states without stopping mid-pipeline? (1-5)"
+        },
+        "code_quality": {
+          "type": "number",
+          "description": "Code quality: formatting, linting, type safety, test coverage (1-5)"
+        },
+        "feedback_handling": {
+          "type": "number",
+          "description": "ADDRESS_FEEDBACK quality: CI fixes, review comment responses, triage accuracy (1-5)"
+        },
+        "state_hygiene": {
+          "type": "number",
+          "description": "State management: tick-state.sh used correctly, fields updated, history clean (1-5)"
+        }
+      },
+      "required": ["loop_discipline", "code_quality", "feedback_handling", "state_hygiene"]
+    }
+  }
+}

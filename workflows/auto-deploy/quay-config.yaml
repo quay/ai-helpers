@@ -1,0 +1,4 @@
+SETUP_COMPLETE: true
+FEATURE_MAILING: false
+SUPER_USERS:
+  - quayadmin

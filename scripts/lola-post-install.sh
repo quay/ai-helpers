@@ -20,6 +20,7 @@ copy_dir() {
     [ -f "$f" ] || continue
     name=$(basename "$f")
     [ "$name" = "lola-post-install.sh" ] && continue
+    [ "$name" = "session-setup.sh" ] && continue
     cp "$f" "$dst/$name"
     if [ "$1" = "scripts" ]; then chmod +x "$dst/$name"; fi
   done

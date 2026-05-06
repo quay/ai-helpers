@@ -116,8 +116,9 @@ quay/ai-helpers/
 │   └── quay/                           # ← ACP activeWorkflow.path
 │       ├── .claude/
 │       │   ├── settings.json           # Hook wiring
+│       │   ├── scripts/
+│       │   │   └── session-setup.sh   # ← symlink to ../../scripts/session-setup.sh
 │       │   ├── skills/                 # ← populated by lola sync
-│       │   ├── scripts/               # ← populated by lola sync
 │       │   ├── commands/              # ← populated by lola sync
 │       │   └── templates/             # ← populated by lola sync
 │       ├── .lola-req                   # Plugin dependencies
@@ -131,7 +132,8 @@ quay/ai-helpers/
 │           └── resolve-github-user.sh
 │
 ├── scripts/
-│   └── lola-post-install.sh            # Shared Lola post-install hook
+│   ├── lola-post-install.sh            # Shared Lola post-install hook
+│   └── session-setup.sh               # Shared bootstrap script (symlinked)
 ├── enhancements/                       # This directory
 └── README.md
 ```
@@ -153,12 +155,16 @@ The same plugin directory serves both. Lola adds `lola.yaml` alongside
 `workflows/quay/.lola-req`:
 
 ```
-# Plugins installed at session start
-../../plugins/dev
-../../plugins/jira-planning
-../../plugins/openshift-testing
-../../plugins/konflux
+# Plugins installed at session start via lola sync
+https://github.com/quay/ai-helpers.git --module-content=plugins/dev
+https://github.com/quay/ai-helpers.git --module-content=plugins/jira-planning
+https://github.com/quay/ai-helpers.git --module-content=plugins/openshift-testing
+https://github.com/quay/ai-helpers.git --module-content=plugins/konflux
 ```
+
+Git URLs with `--module-content` are required because ACP's `hydrate.sh`
+extracts only the workflow subpath — relative paths like `../../plugins/dev`
+won't resolve at runtime (see [Resolved Questions](#resolved-questions)).
 
 `lola sync` reads this file, installs SKILL.md files to `.claude/skills/`,
 and runs the post-install hook which copies scripts, templates, and commands
@@ -180,6 +186,31 @@ root) receives `LOLA_MODULE_PATH` and `LOLA_PROJECT_PATH` env vars and copies:
 - `templates/*` → `.claude/templates/`
 - `commands/*.md` → `.claude/commands/`
 
+### Bootstrap Script
+
+`session-setup.sh` is the entry point for all workflows. It runs as a
+`SessionStart` hook, installs plugins via Lola, and performs standard
+bootstrap (pre-commit, gh auth, etc.).
+
+Because `settings.json` references `.claude/scripts/session-setup.sh` and
+Lola installs the *other* scripts, `session-setup.sh` itself must exist
+before Lola runs — it cannot be installed by Lola. This is the bootstrap
+script that installs everything else.
+
+The script lives at `scripts/session-setup.sh` in the repo root and is
+symlinked into each workflow:
+
+```
+workflows/quay/.claude/scripts/session-setup.sh → ../../../scripts/session-setup.sh
+workflows/clair/.claude/scripts/session-setup.sh → ../../../scripts/session-setup.sh
+```
+
+The symlink is committed to git. When `hydrate.sh` extracts the workflow
+subpath, the symlink target won't resolve (parent dirs are gone), so
+`session-setup.sh` is copied by hydrate (git archive / cp follows symlinks).
+If this doesn't work, the file can be a plain copy instead of a symlink —
+the content is identical across workflows.
+
 ### ACP Session Wiring
 
 ```yaml
@@ -196,14 +227,17 @@ repos:
 At session start:
 
 1. `hydrate.sh` clones ai-helpers, extracts `workflows/quay/` subpath →
-   `/workspace/workflows/quay/` (CWD)
+   `/workspace/workflows/quay/` (CWD). Only the subpath contents are
+   extracted — parent directories (`plugins/`, `scripts/`) are discarded.
 2. `hydrate.sh` clones quay/quay → `/workspace/repos/quay/`
 3. Claude reads `.claude/settings.json` → discovers hooks
-4. `SessionStart` hook runs `session-setup.sh`:
-   - Runs `uvx --python 3.13 --from lola-ai lola sync` → installs plugins
-   - Standard bootstrap (pre-commit, gh auth, etc.)
-5. Claude discovers skills, reads `CLAUDE.md` → follows reference to
-   `/workspace/repos/quay/AGENTS.md`
+4. `SessionStart` hook runs `.claude/scripts/session-setup.sh` (committed):
+   a. Runs `uvx --python 3.13 --from lola-ai lola sync` → fetches plugins
+      from git URLs in `.lola-req`, installs skills/scripts/commands
+   b. Validates install succeeded (checks `.claude/skills/` is populated)
+   c. Standard bootstrap (pre-commit, gh auth, etc.)
+5. Claude discovers skills from `.claude/skills/`, reads `CLAUDE.md` →
+   follows reference to `/workspace/repos/quay/AGENTS.md`
 
 ### Customization via Environment Variables
 
@@ -303,10 +337,13 @@ scripts need their hardcoded values replaced.
 
 ```bash
 # Example: adding clair
-mkdir -p workflows/clair/.claude
+mkdir -p workflows/clair/.claude/scripts
+# Symlink the shared bootstrap script
+ln -s ../../../scripts/session-setup.sh workflows/clair/.claude/scripts/session-setup.sh
+# Declare plugin dependencies (git URLs required — see Resolved Q1/Q3)
 cat > workflows/clair/.lola-req << 'EOF'
-../../plugins/dev
-../../plugins/jira-planning
+https://github.com/quay/ai-helpers.git --module-content=plugins/dev
+https://github.com/quay/ai-helpers.git --module-content=plugins/jira-planning
 EOF
 cat > workflows/clair/CLAUDE.md << 'EOF'
 @/workspace/repos/clair/AGENTS.md
@@ -314,32 +351,45 @@ EOF
 # Configure ACP: activeWorkflow.path = workflows/clair
 ```
 
+## Resolved Questions
+
+1. **hydrate.sh subpath extraction** — Investigated in the ACP platform
+   source. `hydrate.sh` clones the full repo to a temp directory, then
+   `cp -r` copies **only the subpath** (`workflows/quay/`) to
+   `/workspace/workflows/quay/`. Parent directories are discarded. This
+   means relative paths like `../../plugins/dev` in `.lola-req` won't
+   resolve at runtime. **Resolution:** use git URLs with `--module-content`
+   syntax in `.lola-req` (see [Plugin Composition](#plugin-composition)).
+
+3. **Lola relative path support** — Tested with Lola v0.4.4. Relative
+   paths in `.lola-req` do **not** work — they're treated as module names,
+   not filesystem paths. `lola mod add ../../path` works (resolves against
+   cwd), but `lola sync` reading from `.lola-req` does not. `file://` URLs
+   also fail. **Resolution:** use git URLs with `--module-content` syntax.
+   This also sidesteps the hydrate.sh subpath issue (Q1).
+
+5. **settings.json bootstrap** — `settings.json` references
+   `.claude/scripts/session-setup.sh` as a `SessionStart` hook, but Lola
+   installs scripts at runtime. If `session-setup.sh` itself were installed
+   by Lola, it couldn't call `lola sync` — circular dependency.
+   **Resolution:** `session-setup.sh` is the bootstrap script. It is
+   committed directly (symlinked from `scripts/session-setup.sh` in the
+   repo root) and present before Lola runs. It calls `lola sync` to install
+   everything else, then validates the install succeeded by checking that
+   `.claude/skills/` is populated.
+
 ## Open Questions
 
-1. **hydrate.sh subpath extraction** — When `activeWorkflow.path` is
-   `workflows/quay`, does hydrate.sh clone the full ai-helpers repo and use
-   the subpath as CWD, or does it sparse-checkout? If the full repo is cloned,
-   the `../../plugins/` relative paths in `.lola-req` resolve naturally. If
-   only the subpath is extracted, we need git URL syntax instead.
-
-2. **Python 3.13 in runner image** — Lola requires Python 3.13. Current
+1. **Python 3.13 in runner image** — Lola requires Python 3.13. Current
    sessions have `uvx` available which can auto-fetch it. Need to confirm this
    works reliably in the runner image, or add Python 3.13 to the image.
 
-3. **Lola relative path support** — Verify that `.lola-req` supports relative
-   local paths (`../../plugins/dev`). Fallback: use git URLs with
-   `--module-content` syntax.
-
-4. **Git dirty state from lola sync** — `lola sync` writes files to `.claude/`
+2. **Git dirty state from lola sync** — `lola sync` writes files to `.claude/`
    at runtime, creating uncommitted changes. Options:
    - Add `.claude/skills/`, `.claude/scripts/`, `.claude/commands/`,
      `.claude/templates/` to `.gitignore`
    - Accept the dirty state (session state is ephemeral)
    - Pre-install in CI and commit the result (eliminates runtime dependency)
-
-5. **settings.json hook paths** — Hook commands reference `.claude/scripts/X`.
-   After Lola installs scripts there, the paths resolve. But if Lola fails,
-   hooks break. Should session-setup.sh validate the install succeeded?
 
 ## Benefits
 

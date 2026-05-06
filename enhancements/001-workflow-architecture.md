@@ -197,19 +197,19 @@ Lola installs the *other* scripts, `session-setup.sh` itself must exist
 before Lola runs — it cannot be installed by Lola. This is the bootstrap
 script that installs everything else.
 
-The script lives at `scripts/session-setup.sh` in the repo root and is
-symlinked into each workflow:
+The canonical copy lives at `scripts/session-setup.sh` in the repo root.
+Each workflow commits a **plain copy** (not a symlink) at
+`.claude/scripts/session-setup.sh`. Symlinks don't survive hydrate.sh's
+subpath extraction (`cp -r` preserves the symlink but the target is
+discarded with the parent directories).
 
-```
-workflows/quay/.claude/scripts/session-setup.sh → ../../../scripts/session-setup.sh
-workflows/clair/.claude/scripts/session-setup.sh → ../../../scripts/session-setup.sh
-```
+A CI check validates that workflow copies stay in sync with the canonical
+script:
 
-The symlink is committed to git. When `hydrate.sh` extracts the workflow
-subpath, the symlink target won't resolve (parent dirs are gone), so
-`session-setup.sh` is copied by hydrate (git archive / cp follows symlinks).
-If this doesn't work, the file can be a plain copy instead of a symlink —
-the content is identical across workflows.
+```bash
+diff scripts/session-setup.sh workflows/quay/.claude/scripts/session-setup.sh
+diff scripts/session-setup.sh workflows/clair/.claude/scripts/session-setup.sh
+```
 
 ### ACP Session Wiring
 

@@ -16,7 +16,7 @@ proj="${LOLA_PROJECT_PATH:?}"
 # but scripts live under the content subdirectory. Resolve via source.yml.
 _source_yml="${mod}/.lola/source.yml"
 if [ -f "$_source_yml" ]; then
-  _content_dir=$(grep '^content_dirname:' "$_source_yml" | awk '{print $2}')
+  _content_dir=$(grep '^content_dirname:' "$_source_yml" | awk '{print $2}' || true)
   [ -n "$_content_dir" ] && [ -d "${mod}/${_content_dir}" ] && mod="${mod}/${_content_dir}"
 fi
 

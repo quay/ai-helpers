@@ -9,7 +9,7 @@ Interact with the Konflux build cluster to check pipeline status, view build log
 
 ## Skill: `/konflux`
 
-```
+```bash
 /konflux builds                          # List recent PipelineRuns in quay-eng-tenant
 /konflux builds quay-eng-tenant quay-py3 # Filter by component
 /konflux status <pipelinerun-name>       # Detailed status with TaskRun breakdown

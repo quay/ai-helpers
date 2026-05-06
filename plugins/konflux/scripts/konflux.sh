@@ -21,16 +21,23 @@ KUBECONFIG="${KONFLUX_KUBECONFIG:-/tmp/konflux-kubeconfig}"
 DEFAULT_NS="${KONFLUX_DEFAULT_NS:-quay-eng-tenant}"
 CMD="${1:-help}"
 shift || true
+OC_BIN=""
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
 check_prereqs() {
   [ -f "$KUBECONFIG" ] || die "Kubeconfig not found at ${KUBECONFIG}. Is KONFLUX_KUBECONFIG_DATA set?"
-  command -v oc >/dev/null 2>&1 || die "'oc' not found on PATH."
+  if command -v oc >/dev/null 2>&1; then
+    OC_BIN="$(command -v oc)"
+  elif [ -x "${HOME}/.local/bin/oc" ]; then
+    OC_BIN="${HOME}/.local/bin/oc"
+  else
+    die "'oc' not found on PATH or in ${HOME}/.local/bin."
+  fi
 }
 
 oc_cmd() {
-  oc --kubeconfig="$KUBECONFIG" "$@"
+  "$OC_BIN" --kubeconfig="$KUBECONFIG" "$@"
 }
 
 cmd_builds() {
@@ -50,7 +57,7 @@ COMPONENT:.metadata.labels.appstudio\.openshift\.io/component,\
 STATUS:.status.conditions[0].reason,\
 STARTED:.metadata.creationTimestamp,\
 DURATION:.status.completionTime' \
-    2>/dev/null | tail -20
+    | tail -20
 }
 
 cmd_status() {
@@ -59,7 +66,7 @@ cmd_status() {
   check_prereqs
   echo "=== PipelineRun: ${pr} ==="
   oc_cmd get pipelinerun "$pr" -n "$ns" \
-    -o jsonpath='{.status.conditions[0].reason}{"\t"}{.status.conditions[0].message}{"\n"}' 2>/dev/null
+    -o jsonpath='{.status.conditions[0].reason}{"\t"}{.status.conditions[0].message}{"\n"}'
   echo ""
   echo "--- TaskRuns ---"
   oc_cmd get taskruns -n "$ns" \
@@ -69,7 +76,7 @@ TASK:.metadata.labels.tekton\.dev/pipelineTask,\
 STATUS:.status.conditions[0].reason,\
 STARTED:.status.startTime,\
 COMPLETED:.status.completionTime' \
-    --sort-by='.status.startTime' 2>/dev/null
+    --sort-by='.status.startTime'
 }
 
 cmd_logs() {
@@ -134,7 +141,6 @@ NAME:.metadata.name,\
 APPLICATION:.spec.application,\
 GIT_REPO:.spec.source.git.url,\
 REVISION:.spec.source.git.revision' \
-    2>/dev/null
 }
 
 cmd_apps() {
@@ -142,8 +148,7 @@ cmd_apps() {
   check_prereqs
   echo "=== Applications in ${ns} ==="
   oc_cmd get applications -n "$ns" \
-    -o custom-columns='NAME:.metadata.name,CREATED:.metadata.creationTimestamp' \
-    2>/dev/null
+    -o custom-columns='NAME:.metadata.name,CREATED:.metadata.creationTimestamp'
 }
 
 cmd_snapshots() {
@@ -156,7 +161,7 @@ cmd_snapshots() {
 NAME:.metadata.name,\
 APPLICATION:.spec.application,\
 CREATED:.metadata.creationTimestamp' \
-    2>/dev/null | tail -15
+    | tail -15
 }
 
 cmd_help() {

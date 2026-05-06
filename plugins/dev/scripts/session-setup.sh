@@ -111,26 +111,12 @@ fi
 # ── 5. Konflux kubeconfig ──────────────────────────────────────
 echo "[5/5] Checking Konflux build cluster access..."
 if [ -n "${KONFLUX_KUBECONFIG_DATA:-}" ]; then
-  echo "$KONFLUX_KUBECONFIG_DATA" | base64 -d > "$KONFLUX_KUBECONFIG" 2>/dev/null
-  chmod 600 "$KONFLUX_KUBECONFIG"
-  if command -v oc &>/dev/null; then
-    server=$(oc --kubeconfig="$KONFLUX_KUBECONFIG" whoami --show-server 2>/dev/null || true)
-    if [ -n "$server" ]; then
-      echo "  Konflux cluster reachable: ${server}"
-    else
-      echo "  Warning: Konflux kubeconfig decoded but cluster not reachable."
-    fi
-  else
-    # Install oc
-    arch=$(uname -m); case "$arch" in x86_64) arch="amd64" ;; aarch64) arch="arm64" ;; esac
-    oc_url="https://mirror.openshift.com/pub/openshift-v4/${arch}/clients/ocp/stable/openshift-client-linux.tar.gz"
-    oc_dir="${HOME}/.local/bin"; mkdir -p "$oc_dir"
-    tmpdir=$(mktemp -d)
-    if curl -sL --connect-timeout 10 --max-time 120 -o "${tmpdir}/oc.tar.gz" "$oc_url" && \
-       tar -xzf "${tmpdir}/oc.tar.gz" -C "$tmpdir" oc 2>/dev/null && [ -x "${tmpdir}/oc" ]; then
-      mv "${tmpdir}/oc" "${oc_dir}/oc"
-      export PATH="${oc_dir}:${PATH}"
-      echo "  oc installed to ${oc_dir}/oc"
+  _kc_tmp=$(mktemp "${TMPDIR:-/tmp}/konflux-kubeconfig.XXXXXX")
+  if echo "$KONFLUX_KUBECONFIG_DATA" | base64 -d > "$_kc_tmp" 2>&1 && \
+     grep -q 'apiVersion\|clusters\|kind:' "$_kc_tmp" 2>/dev/null; then
+    chmod 600 "$_kc_tmp"
+    mv "$_kc_tmp" "$KONFLUX_KUBECONFIG"
+    if command -v oc &>/dev/null; then
       server=$(oc --kubeconfig="$KONFLUX_KUBECONFIG" whoami --show-server 2>/dev/null || true)
       if [ -n "$server" ]; then
         echo "  Konflux cluster reachable: ${server}"
@@ -138,9 +124,29 @@ if [ -n "${KONFLUX_KUBECONFIG_DATA:-}" ]; then
         echo "  Warning: Konflux kubeconfig decoded but cluster not reachable."
       fi
     else
-      echo "  Warning: Failed to install oc. Kubeconfig decoded to ${KONFLUX_KUBECONFIG}."
+      arch=$(uname -m); case "$arch" in x86_64) arch="amd64" ;; aarch64) arch="arm64" ;; esac
+      oc_url="https://mirror.openshift.com/pub/openshift-v4/${arch}/clients/ocp/stable/openshift-client-linux.tar.gz"
+      oc_dir="${HOME}/.local/bin"; mkdir -p "$oc_dir"
+      tmpdir=$(mktemp -d)
+      if curl -sL --connect-timeout 10 --max-time 120 -o "${tmpdir}/oc.tar.gz" "$oc_url" && \
+         tar -xzf "${tmpdir}/oc.tar.gz" -C "$tmpdir" oc 2>/dev/null && [ -x "${tmpdir}/oc" ]; then
+        mv "${tmpdir}/oc" "${oc_dir}/oc"
+        export PATH="${oc_dir}:${PATH}"
+        echo "  oc installed to ${oc_dir}/oc"
+        server=$(oc --kubeconfig="$KONFLUX_KUBECONFIG" whoami --show-server 2>/dev/null || true)
+        if [ -n "$server" ]; then
+          echo "  Konflux cluster reachable: ${server}"
+        else
+          echo "  Warning: Konflux kubeconfig decoded but cluster not reachable."
+        fi
+      else
+        echo "  Warning: Failed to install oc. Kubeconfig decoded to ${KONFLUX_KUBECONFIG}."
+      fi
+      rm -rf "$tmpdir"
     fi
-    rm -rf "$tmpdir"
+  else
+    rm -f "$_kc_tmp"
+    echo "  Warning: KONFLUX_KUBECONFIG_DATA did not decode to a valid kubeconfig. Skipping."
   fi
 else
   echo "  KONFLUX_KUBECONFIG_DATA not set, skipping."

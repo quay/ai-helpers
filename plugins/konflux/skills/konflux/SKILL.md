@@ -28,7 +28,7 @@ Available subcommands:
 - `apps [NAMESPACE]` — List Applications
 - `snapshots [NAMESPACE]` — List recent Snapshots
 
-Default namespace: `quay-eng-tenant`. Override with `KONFLUX_DEFAULT_NS` env var. Use `quayio-tenant` for quayio-specific builds.
+Default namespace: `quay-eng-tenant`. Override with `KONFLUX_DEFAULT_NS` env var.
 
 If no subcommand is given or the user's intent is ambiguous, start with `builds` to show recent pipeline activity.
 
@@ -64,4 +64,4 @@ Common resources: `pipelineruns`, `taskruns`, `components`, `applications`, `sna
 | `Kubeconfig not found` | Ensure `KONFLUX_KUBECONFIG_DATA` env var is set. Re-run session setup. |
 | `oc not found` | Run: session-setup.sh to install oc |
 | `Forbidden` | Kubeconfig may lack permissions for that namespace |
-| `No resources found` | Try a different namespace (`quay-eng-tenant`) |
+| `No resources found` | Check the namespace and resource type |

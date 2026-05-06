@@ -173,10 +173,6 @@ cmd_help() {
   echo ""
   echo "Default namespace: ${DEFAULT_NS} (override with KONFLUX_DEFAULT_NS)"
   echo "Kubeconfig: ${KUBECONFIG}"
-  echo ""
-  echo "Known Quay namespaces:"
-  echo "  quay-eng-tenant    — main builds and hermetic builds"
-  echo "  quayio-tenant      — quayio frontend and py3 builds"
 }
 
 case "$CMD" in

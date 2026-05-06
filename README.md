@@ -25,6 +25,60 @@ browser server deployment for E2E testing.
 
 ## Installation
 
+### Via Lola (recommended)
+
+[Lola](https://github.com/RedHatProductSecurity/lola) is a universal AI package
+manager that distributes skills across AI assistants. Each plugin in this repo is
+a Lola-compatible module.
+
+#### One-time setup
+
+```bash
+# Install individual plugins
+uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/dev
+uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/jira-planning
+uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/openshift-testing
+
+# Install to your project
+lola install dev -a claude-code ./my-project
+lola install jira-planning -a claude-code ./my-project
+```
+
+#### Declarative dependencies
+
+Add a `.lola-req` file to your project root:
+
+```
+# .lola-req — AI context modules for this project
+https://github.com/quay/ai-helpers.git@main --module-content=plugins/dev
+https://github.com/quay/ai-helpers.git@main --module-content=plugins/jira-planning
+https://github.com/quay/ai-helpers.git@main --module-content=plugins/openshift-testing
+```
+
+Then sync all modules:
+
+```bash
+uvx --python 3.13 --from lola-ai lola sync
+```
+
+#### What Lola installs
+
+| Asset type | Destination |
+|-----------|-------------|
+| Skills (SKILL.md) | `.claude/skills/{name}/SKILL.md` |
+| Scripts (*.sh) | `.claude/scripts/` (via post-install hook) |
+| Templates | `.claude/templates/` (via post-install hook) |
+| Commands (*.md) | `.claude/commands/` (via post-install hook) |
+
+#### Updating
+
+```bash
+lola mod update dev           # Pull latest from source
+lola install dev -a claude-code --force  # Reinstall
+```
+
+### Via Claude Plugin
+
 ```bash
 claude plugin add quay/ai-helpers
 ```
@@ -55,23 +109,26 @@ location.
 ```
 ai-helpers/
 ├── plugins/
-│   ├── dev/           # Ralph Loop + dev lifecycle
+│   ├── dev/                    # Ralph Loop + dev lifecycle
 │   │   ├── skills/             # start, code, pr, poll, ci, backport, work
 │   │   ├── scripts/            # Shell scripts for hooks and automation
 │   │   ├── templates/          # PR description, settings.json template
-│   │   └── hooks/              # Event hooks
+│   │   └── lola.yaml           # Lola module metadata
 │   ├── jira-planning/          # JIRA ops + planning commands
 │   │   ├── skills/             # jira
 │   │   ├── scripts/            # jira-ops, embargo checks, etc.
-│   │   └── commands/           # 8 planning commands
+│   │   ├── commands/           # 8 planning commands
+│   │   └── lola.yaml           # Lola module metadata
 │   └── openshift-testing/      # Cluster + browser testing
 │       ├── skills/             # cluster-provision, remote-playwright
-│       └── scripts/            # Provisioning scripts
+│       ├── scripts/            # Provisioning scripts
+│       └── lola.yaml           # Lola module metadata
+├── scripts/
+│   └── lola-post-install.sh    # Shared post-install hook (symlinked by plugins)
 ├── templates/                  # Starter files for adopting repos
 │   ├── AGENTS.md.template
 │   └── CLAUDE.md.template
 ├── docs/                       # Marketplace documentation site
-├── scripts/                    # Build tooling
 └── Makefile
 ```
 

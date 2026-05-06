@@ -61,6 +61,26 @@ bash .claude/scripts/deploy-state.sh init $DEPLOY_ID \
 
 If state already exists, this prints the current state and resumes from there.
 
+### Resuming After Context Compaction
+
+If context was compacted and you no longer know the DEPLOY_ID, discover it:
+
+```bash
+bash .claude/scripts/deploy-state.sh list
+```
+
+This lists all active deployments with their ID, state, and FBC image. Pick
+the active (non-COMPLETE) deployment and read its full state:
+
+```bash
+bash .claude/scripts/deploy-state.sh read <DEPLOY_ID>
+```
+
+The state file contains ALL variables needed to resume: `fbc_image`, `channel`,
+`ocp_version`, `kubeconfig_path`, `feature_path`, `mode`, and all recorded
+cluster/operator/route details. Parse these from the state JSON and continue
+the loop from the current state.
+
 ### The State Loop
 
 ```

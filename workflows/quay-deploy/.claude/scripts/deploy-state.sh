@@ -6,6 +6,7 @@
 #
 # Usage:
 #   bash .claude/scripts/deploy-state.sh init <DEPLOY_ID> --fbc-image <IMG> [--channel stable-3.XX] [--ocp-version 4.XX] [--kubeconfig /path] [--feature <path|ticket>] [--mode manual]
+#   bash .claude/scripts/deploy-state.sh list
 #   bash .claude/scripts/deploy-state.sh read <DEPLOY_ID>
 #   bash .claude/scripts/deploy-state.sh current <DEPLOY_ID>
 #   bash .claude/scripts/deploy-state.sh advance <DEPLOY_ID> <NEXT_STATE>
@@ -130,6 +131,24 @@ case "$ACTION" in
     fi
     ;;
 
+  list)
+    # List all active (non-COMPLETE) deployments, most recent first
+    if [ -z "$(ls -A "$STATE_DIR" 2>/dev/null)" ]; then
+      echo "No active deployments."
+      exit 0
+    fi
+    for f in "$STATE_DIR"/*.json; do
+      [ -f "$f" ] || continue
+      local_id=$(jq -r '.deploy_id' "$f")
+      local_state=$(jq -r '.state' "$f")
+      local_image=$(jq -r '.fbc_image' "$f")
+      local_updated=$(jq -r '.last_updated' "$f")
+      local_tick=$(jq '.tick_count' "$f")
+      echo "${local_id}  state=${local_state}  tick=#${local_tick}  updated=${local_updated}"
+      echo "  image=${local_image}"
+    done
+    ;;
+
   read)
     DEPLOY_ID="${1:?Missing deploy ID}"
     FILE=$(state_file "$DEPLOY_ID")
@@ -191,7 +210,7 @@ case "$ACTION" in
 
   *)
     echo "Unknown action: ${ACTION}" >&2
-    echo "Actions: init, read, current, advance, set" >&2
+    echo "Actions: init, list, read, current, advance, set" >&2
     exit 1
     ;;
 esac

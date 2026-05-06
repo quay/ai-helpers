@@ -136,6 +136,23 @@
       "agents": [],
       "has_readme": true,
       "has_mcp": false
+    },
+    {
+      "name": "konflux",
+      "description": "Konflux build cluster interaction: pipeline status, logs, components, and debugging",
+      "version": "0.1.0",
+      "commands": [],
+      "skills": [
+        {
+          "name": "konflux",
+          "id": "konflux",
+          "description": "Interact with the Konflux build cluster. Check pipeline status, view build logs, list components and applications, debug failures. Requires KONFLUX_KUBECONFIG_DATA env var (decoded at session start)."
+        }
+      ],
+      "hooks": [],
+      "agents": [],
+      "has_readme": true,
+      "has_mcp": false
     }
   ]
 }

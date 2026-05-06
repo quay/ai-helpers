@@ -4,6 +4,7 @@ This document lists all available Claude Code plugins and their commands in the 
 
 - [Dev](#dev-plugin)
 - [Jira Planning](#jira-planning-plugin)
+- [Konflux](#konflux-plugin)
 - [Openshift Testing](#openshift-testing-plugin)
 
 ### Dev Plugin
@@ -39,6 +40,15 @@ JIRA operations (view, assign, transition, check-version) and planning commands 
 - **`/jira-planning:review-pr`** - Perform a comprehensive code quality review of a pull request
 
 See [plugins/jira-planning/README.md](plugins/jira-planning/README.md) for detailed documentation.
+
+### Konflux Plugin
+
+Konflux build cluster interaction: pipeline status, logs, components, and debugging.
+
+**Skills:**
+- **`/konflux:konflux`** - Interact with the Konflux build cluster. Check pipeline status, view build logs, list components and applications, debug failures. Requires KONFLUX_KUBECONFIG_DATA env var (decoded at session start).
+
+See [plugins/konflux/README.md](plugins/konflux/README.md) for detailed documentation.
 
 ### Openshift Testing Plugin
 

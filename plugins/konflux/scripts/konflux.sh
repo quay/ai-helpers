@@ -140,7 +140,7 @@ cmd_components() {
 NAME:.metadata.name,\
 APPLICATION:.spec.application,\
 GIT_REPO:.spec.source.git.url,\
-REVISION:.spec.source.git.revision' \
+REVISION:.spec.source.git.revision'
 }
 
 cmd_apps() {

@@ -10,6 +10,7 @@ allowed-tools:
   - Bash(bash .claude/scripts/jira-ops.sh *)
   - Bash(git checkout *)
   - Bash(git pull *)
+  - Bash(git rev-parse *)
   - Read
   - Glob
   - Grep

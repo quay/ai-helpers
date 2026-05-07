@@ -54,7 +54,7 @@ If that fails (403), you're running as a GitHub App:
 gh api /installation/repositories --jq '.repositories[0].owner.login'
 ```
 
-Record `GH_USER` and `AUTH_TYPE` (user-token / github-app / none).
+Record `$GH_USER` and `$AUTH_TYPE` (user-token / github-app / none).
 
 ## Step 1: Pre-flight Checks
 
@@ -64,7 +64,7 @@ Record `GH_USER` and `AUTH_TYPE` (user-token / github-app / none).
 git config user.name && git config user.email
 ```
 
-If missing, set from `GH_USER`.
+If missing, set from `$GH_USER`.
 
 **1b. Inventory remotes:**
 
@@ -78,7 +78,7 @@ git remote -v
 gh repo view --json nameWithOwner,defaultBranchRef --jq '{nameWithOwner, defaultBranch: .defaultBranchRef.name}'
 ```
 
-Record `UPSTREAM_OWNER/REPO` and `DEFAULT_BRANCH`. Do not assume `main`.
+Record `$UPSTREAM_OWNER/$REPO` and `$DEFAULT_BRANCH`. Do not assume `main`.
 
 **1d. Verify changes exist:**
 
@@ -122,7 +122,7 @@ Write the filled template to `/tmp/pr-body.md`.
 ## Step 4: Ensure Fork Exists
 
 ```bash
-gh repo list GH_USER --fork --json nameWithOwner,parent --jq '.[] | select(.parent.owner.login == "UPSTREAM_OWNER" and .parent.name == "REPO") | .nameWithOwner'
+gh repo list "$GH_USER" --fork --json nameWithOwner,parent --jq ".[] | select(.parent.owner.login == \"$UPSTREAM_OWNER\" and .parent.name == \"$REPO\") | .nameWithOwner"
 ```
 
 If no fork exists, ask the user before creating one.
@@ -130,56 +130,53 @@ If no fork exists, ask the user before creating one.
 ## Step 5: Configure Fork Remote
 
 ```bash
-git remote -v | grep FORK_OWNER
+git remote -v | grep "$FORK_OWNER"
 ```
 
 If not present:
 
 ```bash
-git remote add fork https://github.com/FORK_OWNER/REPO.git
+git remote add fork "https://github.com/$FORK_OWNER/$REPO.git"
 ```
 
 ## Step 6: Sync Fork and Push
 
 ```bash
-git fetch FORK_REMOTE && git fetch UPSTREAM_REMOTE
+git fetch "$FORK_REMOTE" && git fetch "$UPSTREAM_REMOTE"
 ```
 
 If workflow file differences exist, attempt automated sync:
 
 ```bash
-gh api --method POST repos/FORK_OWNER/REPO/merge-upstream -f branch=DEFAULT_BRANCH
+gh api --method POST "repos/$FORK_OWNER/$REPO/merge-upstream" -f branch="$DEFAULT_BRANCH"
 ```
 
 Push:
 
 ```bash
 gh auth setup-git
-git push -u FORK_REMOTE BRANCH_NAME
+git push -u "$FORK_REMOTE" "$BRANCH_NAME"
 ```
 
 ## Step 7: Create PR
 
-If `AGENTIC_SESSION_NAME` was set, include `--label`:
-
 ```bash
 gh pr create \
-  --repo UPSTREAM_OWNER/REPO \
-  --head FORK_OWNER:BRANCH_NAME \
-  --base DEFAULT_BRANCH \
+  --repo "$UPSTREAM_OWNER/$REPO" \
+  --head "$FORK_OWNER:$BRANCH_NAME" \
+  --base "$DEFAULT_BRANCH" \
   --title "<TICKET>: type(scope): description" \
-  --body "$(cat /tmp/pr-body.md)" \
-  --label "${AMBIENT_SESSION_LABEL:-ambient-session}"
+  --body "$(cat /tmp/pr-body.md)"
 ```
 
-For manual PRs (no ambient session), omit the `--label` flag.
+If `AGENTIC_SESSION_NAME` is set, add `--label "${AMBIENT_SESSION_LABEL:-ambient-session}"`.
 
 **If `gh pr create` fails (403, "Resource not accessible"):**
 
 Provide the user a pre-filled compare URL:
 
 ```text
-https://github.com/UPSTREAM_OWNER/REPO/compare/DEFAULT_BRANCH...FORK_OWNER:BRANCH_NAME?expand=1&title=URL_ENCODED_TITLE&body=URL_ENCODED_BODY
+https://github.com/$UPSTREAM_OWNER/$REPO/compare/$DEFAULT_BRANCH...$FORK_OWNER:$BRANCH_NAME?expand=1&title=URL_ENCODED_TITLE&body=URL_ENCODED_BODY
 ```
 
 ## Step 8: Post-PR

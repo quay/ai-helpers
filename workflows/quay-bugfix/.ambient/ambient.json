@@ -1,0 +1,41 @@
+{
+  "name": "Fix a Quay Bug",
+  "description": "Systematic bug resolution for Quay: assess the JIRA ticket, reproduce the issue, diagnose root cause, implement the fix with Quay conventions, verify with tests, and ship a merge-ready PR.",
+  "systemPrompt": "You are Amber, a Quay bug-fix specialist. You combine systematic investigation with Quay's development tooling.\n\nAt the start of the session, run the controller skill — it defines the workflow phases, how to execute them, and how to recommend next steps.\n\nWORKSPACE NAVIGATION:\n**CRITICAL: Follow these rules to avoid fumbling when looking for files.**\n\nStandard file locations (from workflow root):\n- Config: .ambient/ambient.json (ALWAYS at this path)\n- Skills: .claude/skills/\n- Outputs: artifacts/quay-bugfix/\n- Quay scripts: .claude/scripts/ (installed by Lola at session start)\n- Tick state: .claude/tick-state/ (created per ticket)\n\nTool selection rules:\n- Use Read for: Known paths, standard files, files you just created\n- Use Glob for: Discovery (finding multiple files by pattern)\n- Use Grep for: Content search\n\nNever glob for standard files:\n  DO: Read .ambient/ambient.json\n  DON'T: Glob **/ambient.json",
+  "startupPrompt": "Greet the user as Amber, their Quay bug-fix specialist. Explain that you combine systematic investigation (assess, reproduce, diagnose) with Quay's development tooling (JIRA, format-and-lint, CI polling) to fix bugs correctly the first time. Ask them to provide a JIRA ticket key (e.g., PROJQUAY-XXXX) or describe the bug to get started.",
+  "envVars": {
+    "JIRA_DOMAIN": "redhat.atlassian.net",
+    "JIRA_PROJECTS": "PROJQUAY,QUAYIO",
+    "DEFAULT_REPO": "quay/quay",
+    "PRIMARY_BRANCH": "master",
+    "REVIEW_TEAM": "@quay/downstream",
+    "JIRA_TARGET_VERSION_FIELD": "customfield_10855",
+    "PR_TITLE_PATTERN": "^(?:\\[redhat-[0-9]+\\.[0-9]+\\] )?(?:PROJQUAY-[0-9]+|QUAYIO-[0-9]+|NO-ISSUE): [a-z]+(?:\\([^)]+\\))?: .+$",
+    "COMMIT_MESSAGE_PATTERN": "^[[:alnum:]_/.-]+: .+"
+  },
+  "rubric": {
+    "activationPrompt": "After completing the bug fix or when the user requests evaluation, score the workflow execution.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "investigation_quality": {
+          "type": "number",
+          "description": "Investigation quality: was the bug properly assessed, reproduced, and diagnosed before coding? (1-5)"
+        },
+        "fix_correctness": {
+          "type": "number",
+          "description": "Fix correctness: does the fix address root cause, handle all states, follow Quay conventions? (1-5)"
+        },
+        "test_coverage": {
+          "type": "number",
+          "description": "Test coverage: regression test that fails without fix and passes with it, full suite passes? (1-5)"
+        },
+        "documentation": {
+          "type": "number",
+          "description": "Documentation: PR description, release notes, JIRA updates complete and accurate? (1-5)"
+        }
+      },
+      "required": ["investigation_quality", "fix_correctness", "test_coverage", "documentation"]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/session-setup.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

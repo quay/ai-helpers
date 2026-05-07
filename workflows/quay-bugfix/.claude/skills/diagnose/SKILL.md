@@ -83,8 +83,8 @@ List all potential root causes based on evidence:
 
 ### Step 5: Hypothesis Testing
 
-- Add targeted logging or debugging to test hypotheses
-- Create minimal test cases to validate or disprove each hypothesis
+- Identify where targeted logging or debugging would confirm/refute each hypothesis (note locations for the fix phase)
+- Design minimal test cases that would validate or disprove each hypothesis (document them for the test phase)
 - Use binary search (`git bisect`) if the change was introduced gradually
 - Narrow down to the definitive root cause
 

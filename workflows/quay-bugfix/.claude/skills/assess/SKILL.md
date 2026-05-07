@@ -9,7 +9,9 @@ allowed-tools:
   - Bash(gh issue view *)
   - Bash(gh pr list *)
   - Bash(gh search prs *)
+  - Bash(gh repo clone *)
   - Bash(git log *)
+  - Bash(ls *)
   - Read
   - Glob
   - Grep
@@ -19,7 +21,8 @@ allowed-tools:
 # Assess Bug Report
 
 Understand the bug before taking any action. This phase produces an assessment
-report — no code execution, no file modifications.
+report — no code execution, no project code modifications (writing assessment
+artifacts and cloning repositories is allowed).
 
 ## Your Role
 
@@ -174,7 +177,7 @@ Save to `artifacts/quay-bugfix/reports/assessment.md`:
 
 - Assessment presented directly to the user (inline)
 - Assessment saved to `artifacts/quay-bugfix/reports/assessment.md`
-- No code is executed, no files in the project are modified
+- No project code is modified (only assessment artifacts are written)
 
 ## When This Phase Is Done
 

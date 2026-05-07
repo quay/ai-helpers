@@ -5,8 +5,6 @@ description: >
   applies the minimal correct fix, and runs format-and-lint.sh.
 allowed-tools:
   - Bash(bash .claude/scripts/format-and-lint.sh *)
-  - Bash(bash .claude/scripts/tick-state.sh *)
-  - Bash(bash .claude/scripts/jira-ops.sh *)
   - Bash(git *)
   - Bash(make *)
   - Bash(pytest *)
@@ -41,7 +39,9 @@ Apply the minimal correct fix based on the diagnosis.
 ### Step 2: Create Feature Branch
 
 ```bash
-git checkout ${PRIMARY_BRANCH:-master} && git pull origin ${PRIMARY_BRANCH:-master}
+DEFAULT_BRANCH="${PRIMARY_BRANCH:-$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|origin/||')}"
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-master}"
+git checkout "$DEFAULT_BRANCH" && git pull origin "$DEFAULT_BRANCH"
 git checkout -b $TICKET-short-description
 ```
 

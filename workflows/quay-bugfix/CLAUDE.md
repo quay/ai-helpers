@@ -14,7 +14,7 @@
 | Medium | 70-89% | Proceed with caveats noted |
 | Low | <70% | Escalate to user |
 
-Escalate when: root cause unclear, multiple valid solutions with different trade-offs, architectural decisions needed, security implications, confidence < 80%.
+Escalate when: root cause unclear, multiple valid solutions with different trade-offs, architectural decisions needed, security implications, confidence < 70%.
 
 ## Safety
 

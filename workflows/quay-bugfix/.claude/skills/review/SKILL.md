@@ -7,6 +7,7 @@ allowed-tools:
   - Bash(git diff *)
   - Bash(git log *)
   - Read
+  - Write
   - Glob
   - Grep
   - AskUserQuestion

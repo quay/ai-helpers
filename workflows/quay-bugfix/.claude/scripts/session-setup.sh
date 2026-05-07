@@ -46,7 +46,8 @@ while IFS= read -r line || [ -n "$line" ]; do
   $LOLA install "$name" -a claude-code --scope project --force "$REPO_ROOT" 2>&1
 done < "$LOLA_REQ"
 
-if [ -z "$(ls -A "${CLAUDE_DIR}/scripts" 2>/dev/null)" ]; then
+installed_count="$(find "${CLAUDE_DIR}/scripts" -maxdepth 1 -type f ! -name 'session-setup.sh' | wc -l | tr -d ' ')"
+if [ "${installed_count}" = "0" ]; then
   echo "ERROR: .claude/scripts/ is empty after plugin install — check .lola-req"
   exit 1
 fi

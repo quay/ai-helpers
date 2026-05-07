@@ -114,7 +114,7 @@ After each phase, recommend the natural next step but present alternatives:
 - After **diagnose**: "Recommend: fix. Or: re-assess if diagnosis revealed a
   different bug."
 - After **fix**: "Recommend: test. Always test before PR."
-- After **test**: "Recommend: review. Or: skip to PR if tests are comprehensive."
+- After **test**: "Recommend: review."
 - After **review**:
   - Verdict "solid" → "Recommend: document"
   - Verdict "tests incomplete" → "Recommend: test (add missing coverage)"

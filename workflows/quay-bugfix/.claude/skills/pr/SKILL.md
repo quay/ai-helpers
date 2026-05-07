@@ -188,15 +188,16 @@ If `AGENTIC_SESSION_NAME` is set, add `--label "${AMBIENT_SESSION_LABEL:-ambient
 This is expected for GitHub App bots. Provide the user a pre-filled compare
 URL:
 
-```
+```text
 https://github.com/UPSTREAM_OWNER/REPO/compare/DEFAULT_BRANCH...FORK_OWNER:BRANCH_NAME?expand=1&title=URL_ENCODED_TITLE&body=URL_ENCODED_BODY
 ```
 
 ### Step 10: Start CI Polling
 
-After PR creation, poll for CI status:
+After PR creation, capture the PR number and poll for CI status:
 
 ```bash
+PR_NUMBER=$(gh pr view --repo UPSTREAM_OWNER/REPO --json number -q .number)
 bash .claude/scripts/poll-pr.sh $PR_NUMBER --once
 ```
 
@@ -237,6 +238,7 @@ git diff > artifacts/quay-bugfix/changes.patch
 ## Output
 
 - PR URL printed to the user
+- PR URL saved to `artifacts/quay-bugfix/pr/url.txt`
 - `artifacts/quay-bugfix/docs/pr-description.md` (if not already written)
 
 ## When This Phase Is Done

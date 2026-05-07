@@ -7,6 +7,7 @@ allowed-tools:
   - Bash(find artifacts/quay-bugfix/ *)
   - Bash(ls artifacts/quay-bugfix/ *)
   - Read
+  - Write
   - Glob
   - Grep
 ---

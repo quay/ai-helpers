@@ -39,7 +39,7 @@ This workflow follows the [centralized workflow architecture](../../enhancements
 Scripts are not bundled — they are installed at session start from shared
 plugins via [Lola](https://github.com/redhat-ai-tools/lola):
 
-```
+```text
 .lola-req              # declares plugin dependencies
 .ambient/ambient.json  # workflow metadata + envVars + rubric
 .claude/

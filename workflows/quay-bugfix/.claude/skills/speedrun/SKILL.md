@@ -79,7 +79,7 @@ first phase that is NOT done.
 | test | `test` | `artifacts/quay-bugfix/tests/verification.md` exists |
 | review | `review` | `artifacts/quay-bugfix/review/verdict.md` exists |
 | document | `document` | `artifacts/quay-bugfix/docs/pr-description.md` exists |
-| pr | `pr` | A PR URL has been shared in conversation |
+| pr | `pr` | `artifacts/quay-bugfix/pr/url.txt` exists |
 | summary | `summary` | `artifacts/quay-bugfix/summary.md` exists |
 
 ### Rules

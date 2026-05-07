@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/session-setup.sh",
+            "timeout": 180
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "notebooklm-mcp": {
+      "command": "notebooklm-mcp"
+    }
+  }
+}

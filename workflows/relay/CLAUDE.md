@@ -32,16 +32,16 @@ For each result where `name != $AGENTIC_SESSION_NAME`, stop it:
 acp_stop_session(session_name: "<old-session-name>")
 ```
 
-### Step 2: Read unread GitHub notifications
+### Step 2: Fetch PR notifications
 
-Fetch all unread notifications for the authenticated account:
+Fetch unread notifications, pre-filtered to PR threads with comments:
 
 ```bash
 gh api notifications --method GET --paginate \
-  --jq '.[] | {
+  -f participating=true \
+  --jq '[.[] | select(.subject.type == "PullRequest") | select(.subject.latest_comment_url != null)] | .[] | {
     thread_id: .id,
     reason: .reason,
-    type: .subject.type,
     title: .subject.title,
     pr_url: .subject.url,
     comment_url: .subject.latest_comment_url,
@@ -50,21 +50,22 @@ gh api notifications --method GET --paginate \
   }'
 ```
 
+This filters server-side to threads where the bot is directly involved
+(`participating`), then client-side to PR threads with a comment URL.
+Issues, releases, CI-only threads, and subscription noise never reach
+the agent.
+
 ### Step 3: For each notification, extract context
 
 For each notification:
 
-**a) Skip non-routable notifications early:**
-- If `subject.type` is not `PullRequest` — skip
-- If `comment_url` is null or empty — skip
-
-**b) Get the PR number** from the subject URL:
+**a) Get the PR number** from the subject URL:
 
 ```bash
 PR_NUMBER=$(echo "$pr_url" | grep -oP '/pulls/\K[0-9]+')
 ```
 
-**c) Extract the session ID** from the PR body:
+**b) Extract the session ID** from the PR body:
 
 ```bash
 gh api "repos/${repo}/pulls/${PR_NUMBER}" --jq '.body' \
@@ -73,7 +74,7 @@ gh api "repos/${repo}/pulls/${PR_NUMBER}" --jq '.body' \
 
 - If no session ID found — skip (not an Ambient-managed PR)
 
-**d) Validate session ownership before routing:**
+**c) Validate session ownership before routing:**
 
 Look up the target session and verify it is bound to this repo and PR:
 
@@ -86,7 +87,7 @@ messages) references the same `repo` and `PR_NUMBER` from this notification.
 If the session does not match, skip and log: "ownership mismatch: session
 <id> does not match <repo>#<PR_NUMBER>".
 
-**e) Fetch the actual comment** that triggered the notification:
+**d) Fetch the actual comment** that triggered the notification:
 
 ```bash
 gh api "<comment_url>" --jq '{user: .user.login, body, created_at}'
@@ -94,7 +95,7 @@ gh api "<comment_url>" --jq '{user: .user.login, body, created_at}'
 
 - If the comment is from `BOT_USER` — skip (self-notification)
 
-**f) Verify the commenter is a repo collaborator:**
+**e) Verify the commenter is a repo collaborator:**
 
 ```bash
 gh api repos/${repo}/collaborators/<user> --silent 2>/dev/null
@@ -200,14 +201,14 @@ acp_stop_session(session_name: "$AGENTIC_SESSION_NAME")
 
 ## Notification Reasons
 
+With `participating=true`, only direct-involvement notifications arrive:
+
 | Reason | Meaning | Route? |
 |--------|---------|--------|
-| `mention` | Bot account mentioned | Yes |
-| `review_requested` | Review requested | Yes |
-| `comment` | Comment on subscribed PR | Yes |
+| `mention` | Bot account @mentioned | Yes |
+| `review_requested` | Review requested from bot | Yes |
+| `comment` | Comment on a PR the bot participated in | Yes |
 | `state_change` | PR merged/closed | Maybe — inform session |
-| `subscribed` | Activity on watched repo | Yes if PR has session ID |
-| `ci_activity` | CI status change | Yes — tell session to `/poll` |
 
 ## Session Naming
 

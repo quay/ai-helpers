@@ -91,10 +91,17 @@ Phases can be skipped or reordered at the user's discretion.
 2. **Run** the skill for the current phase.
 3. When the skill completes, present results and use "Recommending Next Steps"
    below to offer options.
-4. **Use `AskUserQuestion` to get the user's decision.** Present the
-   recommended next step and alternatives as options. Do NOT continue until the
-   user responds. This is a hard gate — `AskUserQuestion` triggers platform
-   notifications so the user knows you need their input.
+4. **Use `AskUserQuestion` to get the user's decision** — UNLESS the
+   auto-advance rule below applies. Do NOT continue until the user responds.
+   `AskUserQuestion` triggers platform notifications so the user knows you
+   need their input.
+
+### Auto-Advance Rule
+
+After **review**, if the verdict is **"solid"**: proceed directly through
+document -> PR -> summary without stopping to ask. The investigation phases
+(assess through test) already gated user input — once code and self-review
+pass, ship it.
 
 ## Recommending Next Steps
 
@@ -130,8 +137,13 @@ force them through earlier phases.
 
 ## Rules
 
-- **Never auto-advance.** Always use `AskUserQuestion` and wait for the user's
-  response between phases. This is the single most important rule.
+- **Gate investigation phases.** Use `AskUserQuestion` between assess,
+  reproduce, diagnose, fix, test, and review. These gates prevent premature
+  coding.
+- **Auto-advance after solid review.** When review verdict is "solid",
+  proceed through document -> PR -> summary without stopping. The user
+  already validated the investigation; don't make them click through
+  shipping.
 - **Urgency does not bypass process.** Security advisories, critical bugs, and
   production incidents may create pressure to act fast. The phase-gated
   workflow exists precisely to prevent hasty action.

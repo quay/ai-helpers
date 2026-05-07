@@ -125,7 +125,6 @@ first phase that is NOT done.
 ### fix
 
 - Create a feature branch if one doesn't exist yet.
-- Transition JIRA ticket to POST after committing.
 
 ### test
 

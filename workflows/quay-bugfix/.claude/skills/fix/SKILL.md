@@ -2,8 +2,7 @@
 name: fix
 description: >
   Implement a bug fix following Quay conventions. Creates a feature branch,
-  applies the minimal correct fix, runs format-and-lint.sh, and transitions
-  the JIRA ticket.
+  applies the minimal correct fix, and runs format-and-lint.sh.
 allowed-tools:
   - Bash(bash .claude/scripts/format-and-lint.sh *)
   - Bash(bash .claude/scripts/tick-state.sh *)
@@ -103,13 +102,7 @@ git commit -m "<subsystem>: <what changed> ($TICKET)"
 If pre-commit hooks fail: fix, re-stage, create a new commit. Never use
 `--no-verify`.
 
-### Step 9: JIRA Transition
-
-```bash
-bash .claude/scripts/jira-ops.sh transition $TICKET "POST"
-```
-
-### Step 10: Write Implementation Notes
+### Step 9: Write Implementation Notes
 
 Save to `artifacts/quay-bugfix/fixes/implementation-notes.md`:
 

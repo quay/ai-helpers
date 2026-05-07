@@ -30,11 +30,7 @@ Create `artifacts/quay-bugfix/docs/issue-update.md` with:
 - Test coverage added
 - Any breaking changes
 
-Transition the ticket:
-
-```bash
-bash .claude/scripts/jira-ops.sh transition $TICKET "ON_QA"
-```
+Do NOT transition the JIRA ticket — automation handles state transitions.
 
 ### Step 2: Create Release Notes Entry
 

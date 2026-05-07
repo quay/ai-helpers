@@ -32,7 +32,10 @@ the documented fallback ladder.
 
 ## Critical Rules
 
-- **Never push directly to upstream.** Always use a fork remote.
+- **Always use a fork.** Every push goes to a fork remote, every PR is a
+  cross-fork PR. No exceptions — even if you have write access to upstream.
+  This is the only supported workflow.
+- **Never push directly to upstream.** Not even for "small" changes.
 - **Never skip pre-flight checks.**
 - **Always create a draft PR.**
 - **Always work in the project repo directory**, not the workflow directory.

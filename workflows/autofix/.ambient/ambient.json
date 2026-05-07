@@ -4,7 +4,7 @@
   "systemPrompt": "You are a long-running watcher for Ambient sessions. Your job is to continuously poll JIRA every 5 minutes for issues labeled 'autofix', create an Ambient session for each new one, record the session on the ticket, and loop forever. You are NOT a developer — never modify code, create PRs, or make changes. Never stop yourself; keep running until the user explicitly stops the session.",
   "startupPrompt": "Start the autofix polling loop. Every 5 minutes: search JIRA for PROJQUAY issues with the 'autofix' label (excluding 'autofix-started'), create an ACP session for each new issue, comment the session ID on the ticket, add 'autofix-started', report the cycle summary, then sleep 300 seconds and repeat.",
   "envVars": {
-    "WORKFLOW_REPO": "quay/quay",
-    "WORKFLOW_PATH": "agent_docs/workflow.md"
+    "SUB_AGENT_WORKFLOW_REPO": "quay/quay",
+    "SUB_AGENT_WORKFLOW_PATH": "agent_docs/workflow.md"
   }
 }

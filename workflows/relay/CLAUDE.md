@@ -19,29 +19,32 @@ gh api user --jq '.login'
 
 Store this as `BOT_USER` for self-notification filtering in later steps.
 
-Then prevent session spam. List sessions matching "relay-" and stop any
-that are NOT this current session:
+Then prevent session spam. List ALL relay sessions, including stopped ones:
 
 ```text
-acp_list_sessions(search: "relay-", include_completed: false)
+acp_list_sessions(search: "relay-", include_completed: true)
 ```
 
-For each result where `name != $AGENTIC_SESSION_NAME`, stop it:
+For each result where `name != $AGENTIC_SESSION_NAME`:
+- If phase is **Running** or **Pending** — stop it:
 
-```text
-acp_stop_session(session_name: "<old-session-name>")
-```
+  ```text
+  acp_stop_session(session_name: "<old-session-name>")
+  ```
 
-### Step 2: Read unread GitHub notifications
+- If phase is **Stopped**, **Completed**, or **Failed** — already done,
+  log it in the report but take no action.
 
-Fetch all unread notifications for the authenticated account:
+### Step 2: Fetch PR notifications
+
+Fetch unread notifications, pre-filtered to PR threads only:
 
 ```bash
 gh api notifications --method GET --paginate \
-  --jq '.[] | {
+  -f participating=true \
+  --jq '[.[] | select(.subject.type == "PullRequest")] | .[] | {
     thread_id: .id,
     reason: .reason,
-    type: .subject.type,
     title: .subject.title,
     pr_url: .subject.url,
     comment_url: .subject.latest_comment_url,
@@ -50,21 +53,24 @@ gh api notifications --method GET --paginate \
   }'
 ```
 
+This filters server-side to threads where the bot is directly involved
+(`participating`), then client-side to PR threads only. Issues, releases,
+and subscription noise never reach the agent.
+
+Note: `comment_url` may be null for `review_requested` and `state_change`
+notifications — that is expected and handled in Step 3.
+
 ### Step 3: For each notification, extract context
 
 For each notification:
 
-**a) Skip non-routable notifications early:**
-- If `subject.type` is not `PullRequest` — skip
-- If `comment_url` is null or empty — skip
-
-**b) Get the PR number** from the subject URL:
+**a) Get the PR number** from the subject URL:
 
 ```bash
 PR_NUMBER=$(echo "$pr_url" | grep -oP '/pulls/\K[0-9]+')
 ```
 
-**c) Extract the session ID** from the PR body:
+**b) Extract the session ID** from the PR body:
 
 ```bash
 gh api "repos/${repo}/pulls/${PR_NUMBER}" --jq '.body' \
@@ -73,7 +79,7 @@ gh api "repos/${repo}/pulls/${PR_NUMBER}" --jq '.body' \
 
 - If no session ID found — skip (not an Ambient-managed PR)
 
-**d) Validate session ownership before routing:**
+**c) Validate session ownership before routing:**
 
 Look up the target session and verify it is bound to this repo and PR:
 
@@ -86,22 +92,35 @@ messages) references the same `repo` and `PR_NUMBER` from this notification.
 If the session does not match, skip and log: "ownership mismatch: session
 <id> does not match <repo>#<PR_NUMBER>".
 
-**e) Fetch the actual comment** that triggered the notification:
+**d) Branch by notification reason:**
 
-```bash
-gh api "<comment_url>" --jq '{user: .user.login, body, created_at}'
-```
+- **`mention` or `comment`** (has `comment_url`):
+  Fetch the actual comment that triggered the notification:
 
-- If the comment is from `BOT_USER` — skip (self-notification)
+  ```bash
+  gh api "<comment_url>" --jq '{user: .user.login, body, created_at}'
+  ```
 
-**f) Verify the commenter is a repo collaborator:**
+  - If the comment is from `BOT_USER` — skip (self-notification)
+  - Verify the commenter is a repo collaborator:
 
-```bash
-gh api repos/${repo}/collaborators/<user> --silent 2>/dev/null
-# 204 = collaborator, 404 = not
-```
+    ```bash
+    gh api repos/${repo}/collaborators/<user> --silent 2>/dev/null
+    # 204 = collaborator, 404 = not
+    ```
 
-- If not a collaborator — skip (untrusted user)
+  - If not a collaborator — skip (untrusted user)
+
+- **`review_requested`** (no `comment_url`):
+  Route directly — the notification itself is the context. No comment
+  to fetch or collaborator to verify (GitHub controls who can request reviews).
+
+- **`state_change`** (no `comment_url`):
+  Fetch the PR state to include in the wake-up message:
+
+  ```bash
+  gh api "repos/${repo}/pulls/${PR_NUMBER}" --jq '{state: .state, merged: .merged}'
+  ```
 
 ### Step 4: Check session state before waking
 
@@ -124,7 +143,15 @@ Decision matrix:
 
 ### Step 5: Wake up sessions
 
-Send a targeted message with full notification context:
+If the session was Stopped, restart it first:
+
+```text
+acp_restart_session(session_name: "<session-id>")
+```
+
+Then send a targeted message based on the notification reason:
+
+**For `mention` or `comment`:**
 
 ```text
 acp_send_message(
@@ -138,10 +165,26 @@ Please run `/poll <NUMBER>` to check status and act on feedback."
 )
 ```
 
-If the session was Stopped, restart it first:
+**For `review_requested`:**
 
 ```text
-acp_restart_session(session_name: "<session-id>")
+acp_send_message(
+  session_name: "<session-id>",
+  message: "Review requested on your PR #<NUMBER> (<title>).
+
+Please run `/poll <NUMBER>` to check review status and respond."
+)
+```
+
+**For `state_change`:**
+
+```text
+acp_send_message(
+  session_name: "<session-id>",
+  message: "PR #<NUMBER> (<title>) state changed: <state> (merged: <merged>).
+
+Please run `/poll <NUMBER>` to check status."
+)
 ```
 
 ### Step 6: Mark notifications as read
@@ -200,14 +243,14 @@ acp_stop_session(session_name: "$AGENTIC_SESSION_NAME")
 
 ## Notification Reasons
 
+With `participating=true`, only direct-involvement notifications arrive:
+
 | Reason | Meaning | Route? |
 |--------|---------|--------|
-| `mention` | Bot account mentioned | Yes |
-| `review_requested` | Review requested | Yes |
-| `comment` | Comment on subscribed PR | Yes |
+| `mention` | Bot account @mentioned | Yes |
+| `review_requested` | Review requested from bot | Yes |
+| `comment` | Comment on a PR the bot participated in | Yes |
 | `state_change` | PR merged/closed | Maybe — inform session |
-| `subscribed` | Activity on watched repo | Yes if PR has session ID |
-| `ci_activity` | CI status change | Yes — tell session to `/poll` |
 
 ## Session Naming
 

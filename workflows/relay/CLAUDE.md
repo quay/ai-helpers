@@ -19,18 +19,21 @@ gh api user --jq '.login'
 
 Store this as `BOT_USER` for self-notification filtering in later steps.
 
-Then prevent session spam. List sessions matching "relay-" and stop any
-that are NOT this current session:
+Then prevent session spam. List ALL relay sessions, including stopped ones:
 
 ```text
-acp_list_sessions(search: "relay-", include_completed: false)
+acp_list_sessions(search: "relay-", include_completed: true)
 ```
 
-For each result where `name != $AGENTIC_SESSION_NAME`, stop it:
+For each result where `name != $AGENTIC_SESSION_NAME`:
+- If phase is **Running** or **Pending** — stop it:
 
-```text
-acp_stop_session(session_name: "<old-session-name>")
-```
+  ```text
+  acp_stop_session(session_name: "<old-session-name>")
+  ```
+
+- If phase is **Stopped**, **Completed**, or **Failed** — already done,
+  log it in the report but take no action.
 
 ### Step 2: Fetch PR notifications
 

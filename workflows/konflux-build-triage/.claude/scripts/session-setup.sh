@@ -2,9 +2,10 @@
 # SessionStart hook for konflux-build-triage workflow.
 #
 # 1. Installs kubectl and configures kubeconfig from KONFLUX_KUBECONFIG_DATA
-# 2. Installs notebooklm-mcp-cli for NotebookLM MCP access
-# 3. Installs plugins via Lola (.lola-req: konflux-ci/skills + dev plugin)
-# 4. Discovers Konflux components and caches the component-to-repo map
+# 2. Installs kubectl-ka (KubeArchive plugin) for historical PipelineRun data
+# 3. Installs notebooklm-mcp-cli for NotebookLM MCP access
+# 4. Installs plugins via Lola (.lola-req: konflux-ci/skills + dev plugin)
+# 5. Discovers Konflux components and caches the component-to-repo map
 #
 # Must be committed directly — symlinks do not survive ACP hydrate.sh.
 
@@ -57,7 +58,44 @@ else
   echo "WARNING: KONFLUX_KUBECONFIG_DATA not set — cluster access unavailable"
 fi
 
-# ── 3. Install notebooklm-mcp-cli ───────────────────────────────────────────
+# ── 3. Install kubectl-ka (KubeArchive) ─────────────────────────────────────
+
+if ! kubectl ka version &>/dev/null 2>&1; then
+  echo "[session-setup] Installing kubectl-ka (KubeArchive plugin)..."
+  KA_VERSION=$(curl -sL "https://api.github.com/repos/kubearchive/kubearchive/releases/latest" \
+    | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"//;s/".*//' || echo "")
+  if [ -n "$KA_VERSION" ]; then
+    KA_URL="https://github.com/kubearchive/kubearchive/releases/download/${KA_VERSION}/kubectl-ka-linux-amd64.tar.gz"
+    if curl -sL "$KA_URL" | tar xz -C /tmp kubectl-ka 2>/dev/null; then
+      chmod +x /tmp/kubectl-ka
+      mv /tmp/kubectl-ka /usr/local/bin/kubectl-ka 2>/dev/null || {
+        mkdir -p ~/.local/bin
+        mv /tmp/kubectl-ka ~/.local/bin/kubectl-ka
+        export PATH="$HOME/.local/bin:$PATH"
+      }
+      echo "[session-setup] kubectl-ka ${KA_VERSION} installed"
+    else
+      echo "WARNING: Failed to download kubectl-ka — KubeArchive fallback unavailable"
+    fi
+  else
+    echo "WARNING: Could not determine kubectl-ka version — KubeArchive fallback unavailable"
+  fi
+else
+  echo "[session-setup] kubectl-ka already available"
+fi
+
+# Configure KubeArchive host from the cluster's ConfigMap
+if command -v kubectl &>/dev/null && [ -f ~/.kube/config ]; then
+  KA_HOST=$(kubectl get cm -n product-kubearchive kubearchive-api-url -o jsonpath='{.data.URL}' 2>/dev/null || echo "")
+  if [ -n "$KA_HOST" ]; then
+    kubectl ka config set host "$KA_HOST" 2>/dev/null || true
+    echo "[session-setup] KubeArchive configured: ${KA_HOST}"
+  else
+    echo "WARNING: Could not discover KubeArchive host — historical log retrieval unavailable"
+  fi
+fi
+
+# ── 4. Install notebooklm-mcp-cli ───────────────────────────────────────────
 
 if ! command -v notebooklm-mcp &>/dev/null; then
   echo "[session-setup] Installing notebooklm-mcp-cli..."
@@ -71,7 +109,7 @@ if [ -z "${NOTEBOOKLM_COOKIES:-}" ]; then
   echo "WARNING: NOTEBOOKLM_COOKIES not set — NotebookLM consultation will be skipped (graceful degradation)"
 fi
 
-# ── 4. Install plugins via Lola ──────────────────────────────────────────────
+# ── 5. Install plugins via Lola ──────────────────────────────────────────────
 
 if [ ! -f "$LOLA_REQ" ]; then
   echo "[session-setup] No .lola-req found, skipping plugin install"
@@ -100,16 +138,14 @@ else
   done < "$LOLA_REQ"
 
   if [ -n "$(ls -A "${CLAUDE_DIR}/skills" 2>/dev/null)" ]; then
-    echo "[session-setup] Skills installed: $(ls "${CLAUDE_DIR}/skills" 2>/dev/null | tr '
-' ' ')"
+    echo "[session-setup] Skills installed: $(ls "${CLAUDE_DIR}/skills" 2>/dev/null | tr '\n' ' ')"
   fi
   if [ -n "$(ls -A "${CLAUDE_DIR}/scripts" 2>/dev/null)" ]; then
-    echo "[session-setup] Scripts installed: $(ls "${CLAUDE_DIR}/scripts" 2>/dev/null | tr '
-' ' ')"
+    echo "[session-setup] Scripts installed: $(ls "${CLAUDE_DIR}/scripts" 2>/dev/null | tr '\n' ' ')"
   fi
 fi
 
-# ── 5. Discover Konflux components ──────────────────────────────────────────
+# ── 6. Discover Konflux components ──────────────────────────────────────────
 
 if command -v kubectl &>/dev/null && [ -f ~/.kube/config ]; then
   echo "[session-setup] Discovering Konflux components..."

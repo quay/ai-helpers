@@ -10,6 +10,9 @@
 #   KONFLUX_NAMESPACE       — Kubernetes namespace (default: quay-eng-tenant)
 #   FAILURE_LOOKBACK_HOURS  — How far back to look (default: 24)
 #
+# Data sources: Queries both the live cluster and KubeArchive (if available)
+# to catch PipelineRuns that have been garbage collected.
+#
 # Output: JSON array of failure records to stdout.
 # Kubeconfig: Expects ~/.kube/config to be set up by session-setup.sh.
 
@@ -23,6 +26,11 @@ QUERY_TYPE="${1:?Usage: query-failed-pipelines.sh <builds|ec-tests|all>}"
 # Calculate cutoff timestamp (GNU date)
 CUTOFF=$(date -u -d "${FAILURE_LOOKBACK_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || \
          date -u -v-${FAILURE_LOOKBACK_HOURS}H +%Y-%m-%dT%H:%M:%SZ)
+
+HAS_KA=false
+if kubectl ka version &>/dev/null 2>&1; then
+  HAS_KA=true
+fi
 
 # kubectl wrapper: log warning and retry once on failure
 kubectl_get_pipelineruns() {
@@ -43,6 +51,29 @@ kubectl_get_pipelineruns() {
 
   echo "WARNING: kubectl get pipelineruns failed after retry (labels: ${labels}), skipping." >&2
   echo '{"items":[]}'
+}
+
+# KubeArchive wrapper: query archived PipelineRuns
+ka_get_pipelineruns() {
+  local labels="$1"
+  if [ "$HAS_KA" = true ]; then
+    kubectl ka get pipelineruns -l "$labels" -o json -n "$KONFLUX_NAMESPACE" 2>/dev/null || echo '{"items":[]}'
+  else
+    echo '{"items":[]}'
+  fi
+}
+
+# Merge live + archived results, deduplicating by PipelineRun name (live takes precedence)
+merge_results() {
+  local live="$1"
+  local archived="$2"
+  jq -s '
+    (.[0] // []) as $live |
+    (.[1] // []) as $archived |
+    ($live | map({key: .name, value: .}) | from_entries) as $live_map |
+    ($archived | [.[] | select(.name as $n | $live_map[$n] == null)]) as $new_from_archive |
+    ($live + $new_from_archive) | sort_by(.created) | reverse
+  ' <(echo "$live") <(echo "$archived")
 }
 
 JQ_FILTER_BUILDS='
@@ -70,8 +101,8 @@ JQ_FILTER_BUILDS='
         .metadata.labels["pipelinesascode.tekton.dev/url-repository"] //
         "unknown"
       ),
-      reason: (.status.conditions[] | select(.type == "Succeeded") | .reason),
-      message: (.status.conditions[] | select(.type == "Succeeded") | .message),
+      reason: (first(.status.conditions[] | select(.type == "Succeeded")) | .reason),
+      message: (first(.status.conditions[] | select(.type == "Succeeded")) | .message),
       child_references: [.status.childReferences[]? | {name: .name, kind: .kind}]
     }
   ] | sort_by(.created) | reverse'
@@ -99,22 +130,26 @@ JQ_FILTER_EC='
         .metadata.labels["pipelinesascode.tekton.dev/url-repository"] //
         "unknown"
       ),
-      reason: (.status.conditions[] | select(.type == "Succeeded") | .reason),
-      message: (.status.conditions[] | select(.type == "Succeeded") | .message),
+      reason: (first(.status.conditions[] | select(.type == "Succeeded")) | .reason),
+      message: (first(.status.conditions[] | select(.type == "Succeeded")) | .message),
       child_references: [.status.childReferences[]? | {name: .name, kind: .kind}]
     }
   ] | sort_by(.created) | reverse'
 
 query_failed_builds() {
-  kubectl_get_pipelineruns \
-    "pipelines.appstudio.openshift.io/type=build,pipelinesascode.tekton.dev/event-type=push" \
-  | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_BUILDS"
+  local labels="pipelines.appstudio.openshift.io/type=build,pipelinesascode.tekton.dev/event-type=push"
+  local live archived
+  live=$(kubectl_get_pipelineruns "$labels" | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_BUILDS")
+  archived=$(ka_get_pipelineruns "$labels" | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_BUILDS")
+  merge_results "$live" "$archived"
 }
 
 query_failed_ec_tests() {
-  kubectl_get_pipelineruns \
-    "test.appstudio.openshift.io/scenario" \
-  | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_EC"
+  local labels="test.appstudio.openshift.io/scenario"
+  local live archived
+  live=$(kubectl_get_pipelineruns "$labels" | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_EC")
+  archived=$(ka_get_pipelineruns "$labels" | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_EC")
+  merge_results "$live" "$archived"
 }
 
 case "$QUERY_TYPE" in

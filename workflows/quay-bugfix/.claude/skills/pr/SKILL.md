@@ -22,7 +22,7 @@ allowed-tools:
 
 # Create Pull Request
 
-Get the changes submitted as a draft pull request. This skill handles the
+Get the changes submitted as a pull request. This skill handles the
 full git workflow: validate, push, and PR creation with Quay conventions.
 
 ## IMPORTANT: Follow This Skill Exactly
@@ -37,7 +37,6 @@ the documented fallback ladder.
   This is the only supported workflow.
 - **Never push directly to upstream.** Not even for "small" changes.
 - **Never skip pre-flight checks.**
-- **Always create a draft PR.**
 - **Always work in the project repo directory**, not the workflow directory.
 
 ## Process
@@ -169,11 +168,10 @@ Check for ambient session metadata:
 echo $AGENTIC_SESSION_NAME
 ```
 
-### Step 9: Create Draft PR
+### Step 9: Create PR
 
 ```bash
 gh pr create \
-  --draft \
   --repo UPSTREAM_OWNER/REPO \
   --head FORK_OWNER:BRANCH_NAME \
   --base DEFAULT_BRANCH \

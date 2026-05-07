@@ -73,7 +73,20 @@ gh api "repos/${repo}/pulls/${PR_NUMBER}" --jq '.body' \
 
 - If no session ID found — skip (not an Ambient-managed PR)
 
-**d) Fetch the actual comment** that triggered the notification:
+**d) Validate session ownership before routing:**
+
+Look up the target session and verify it is bound to this repo and PR:
+
+```text
+acp_get_session_status(session_name: "<session-id>", max_messages: 1)
+```
+
+Check that the session's context (display name, initial prompt, or recent
+messages) references the same `repo` and `PR_NUMBER` from this notification.
+If the session does not match, skip and log: "ownership mismatch: session
+<id> does not match <repo>#<PR_NUMBER>".
+
+**e) Fetch the actual comment** that triggered the notification:
 
 ```bash
 gh api "<comment_url>" --jq '{user: .user.login, body, created_at}'
@@ -81,7 +94,7 @@ gh api "<comment_url>" --jq '{user: .user.login, body, created_at}'
 
 - If the comment is from `BOT_USER` — skip (self-notification)
 
-**e) Verify the commenter is a repo collaborator:**
+**f) Verify the commenter is a repo collaborator:**
 
 ```bash
 gh api repos/${repo}/collaborators/<user> --silent 2>/dev/null

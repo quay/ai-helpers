@@ -153,6 +153,7 @@ case "$ACTION" in
       [ -f "$f" ] || continue
       local_id=$(jq -r '.deploy_id' "$f")
       local_state=$(jq -r '.state' "$f")
+      [[ "$local_state" == "COMPLETE" ]] && continue
       local_image=$(jq -r '.fbc_image' "$f")
       local_updated=$(jq -r '.last_updated' "$f")
       local_tick=$(jq '.tick_count' "$f")

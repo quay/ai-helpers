@@ -35,7 +35,7 @@ tested Quay instance.
 Parse `$ARGUMENTS`: the first token is the FBC image reference (required).
 Remaining tokens are parsed for flags.
 
-```
+```text
 FBC_IMAGE  = first token of $ARGUMENTS (required)
 CHANNEL    = --channel value or auto-detected from image ref
 OCP_VERSION = --ocp-version value or "4.18"
@@ -83,7 +83,7 @@ the loop from the current state.
 
 ### The State Loop
 
-```
+```text
 while state != COMPLETE:
     1. READ   — bash .claude/scripts/deploy-state.sh read $DEPLOY_ID
     2. ACT    — execute the handler for the current state (below)
@@ -485,7 +485,7 @@ bash .claude/scripts/remote-playwright.sh down "$KUBECONFIG_PATH" playwright
 
 Terminal state. Print the final deployment summary:
 
-```
+```text
 ═══════════════════════════════════════════════════════════
   COMPLETE — Quay RC Deployment + Validation
 ═══════════════════════════════════════════════════════════
@@ -533,7 +533,7 @@ If any script subcommand exits non-zero:
 
 When `mode` is `"manual"` in the state file, pause after each tick and ask:
 
-```
+```text
 ───────────────────────────────────────
   Tick #N: CURRENT_STATE → NEXT_STATE
   Completed: <brief summary of what was done>

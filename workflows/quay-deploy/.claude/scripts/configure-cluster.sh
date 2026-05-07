@@ -22,7 +22,7 @@ ACTION="${1:?Usage: configure-cluster.sh <action> [args]}"
 shift
 
 die() { echo "ERROR: $*" >&2; exit 1; }
-info() { echo "==> $*"; }
+info() { echo "==> $*" >&2; }
 
 oc_cmd() {
   oc --kubeconfig="$KC" "$@"
@@ -60,6 +60,7 @@ cmd_patch_pull_secret() {
   info "Merging image-rbac-proxy credentials into global pull secret..."
   local merged tmpfile
   tmpfile=$(mktemp)
+  trap 'rm -f "$tmpfile"' RETURN
   merged=$(echo "$existing_secret" | jq --arg host "$proxy_host" --arg auth "$auth_b64" \
     '.auths[$host] = {"auth": $auth}')
   echo "$merged" > "$tmpfile"
@@ -68,6 +69,7 @@ cmd_patch_pull_secret() {
   oc_cmd set data secret/pull-secret -n openshift-config \
     --from-file=.dockerconfigjson="$tmpfile"
   rm -f "$tmpfile"
+  trap - RETURN
 
   info "Pull secret patched with image-rbac-proxy credentials."
 }
@@ -252,7 +254,7 @@ spec:
 EOF
 
   info "Waiting for ODF CSV to succeed..."
-  local start elapsed
+  local start elapsed csv_ready=false
   start=$(date +%s)
   for _ in $(seq 1 60); do
     elapsed=$(( $(date +%s) - start ))
@@ -262,10 +264,12 @@ EOF
       -o jsonpath='{.items[*].status.phase}' 2>/dev/null || true)
     if [[ "$phase" == "Succeeded" ]]; then
       info "ODF operator installed (${elapsed}s)"
+      csv_ready=true
       break
     fi
     sleep 10
   done
+  [[ "$csv_ready" == "true" ]] || die "ODF CSV did not reach Succeeded within 10 minutes"
 
   info "Creating NooBaa object storage..."
   oc_cmd apply -f - <<EOF
@@ -287,28 +291,34 @@ spec:
 EOF
 
   info "Waiting for NooBaa to be ready..."
+  local noobaa_ready=false
   for _ in $(seq 1 60); do
     local phase
     phase=$(oc_cmd get noobaas noobaa -n openshift-storage \
       -o jsonpath='{.status.phase}' 2>/dev/null || true)
     if [[ "$phase" == "Ready" ]]; then
       info "NooBaa ready."
+      noobaa_ready=true
       break
     fi
     sleep 10
   done
+  [[ "$noobaa_ready" == "true" ]] || die "NooBaa did not reach Ready within 10 minutes"
 
   info "Waiting for backing store..."
+  local backing_ready=false
   for _ in $(seq 1 60); do
     local phase
     phase=$(oc_cmd get backingstore noobaa-default-backing-store -n openshift-storage \
       -o jsonpath='{.status.phase}' 2>/dev/null || true)
     if [[ "$phase" == "Ready" ]]; then
       info "Backing store ready."
+      backing_ready=true
       break
     fi
     sleep 10
   done
+  [[ "$backing_ready" == "true" ]] || die "Backing store did not reach Ready within 10 minutes"
 
   info "Object storage installation complete."
 }
@@ -495,12 +505,6 @@ cmd_verify() {
   route=$(oc_cmd get route -n "$ns" \
     -l "quay-operator/quayregistry=${name}" \
     -o jsonpath='{.items[0].spec.host}' 2>/dev/null || true)
-
-  if [[ -z "$route" ]]; then
-    # Fallback: try to find any quay route
-    route=$(oc_cmd get route -n "$ns" \
-      -o jsonpath='{.items[0].spec.host}' 2>/dev/null || true)
-  fi
 
   if [[ -z "$route" ]]; then
     die "No route found for QuayRegistry in namespace ${ns}"

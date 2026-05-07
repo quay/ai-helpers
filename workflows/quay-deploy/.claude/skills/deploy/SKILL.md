@@ -320,8 +320,12 @@ bash .claude/scripts/deploy-state.sh set $DEPLOY_ID playwright_deployed true
 
 **Step 2: Navigate to Quay**
 
+Read the route from persisted state (handles resume after compaction and avoids
+double-prefixing `https://`):
+
 ```bash
-npx @playwright/cli goto "https://$QUAY_ROUTE"
+QUAY_URL=$(bash .claude/scripts/deploy-state.sh read $DEPLOY_ID | jq -r '.quay_route')
+npx @playwright/cli goto "$QUAY_URL"
 ```
 
 **Step 3: Validate login page**

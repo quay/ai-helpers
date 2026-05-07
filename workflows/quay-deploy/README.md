@@ -30,7 +30,7 @@ automates all of them — including frontend validation with Playwright.
 
 ## State Machine
 
-```
+```text
 PROVISION ──→ CONFIGURE_PULL_SECRETS ──→ APPLY_MIRRORS ──→ WAIT_MCP
                                                               │
                                                               ▼

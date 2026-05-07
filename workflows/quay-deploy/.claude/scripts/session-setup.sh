@@ -23,4 +23,11 @@ if [ -z "$(ls -A "${CLAUDE_DIR}/skills" 2>/dev/null)" ]; then
   exit 1
 fi
 
+for required in cluster-provision.sh remote-playwright.sh; do
+  if [ ! -x "${CLAUDE_DIR}/scripts/${required}" ]; then
+    echo "ERROR: missing required plugin script ${CLAUDE_DIR}/scripts/${required}" >&2
+    exit 1
+  fi
+done
+
 echo "[session-setup] Plugins installed: $(ls "${CLAUDE_DIR}/skills" | tr '\n' ' ')"

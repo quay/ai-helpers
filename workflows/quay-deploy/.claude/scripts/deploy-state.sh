@@ -20,7 +20,15 @@ mkdir -p "$STATE_DIR"
 ACTION="${1:?Usage: deploy-state.sh <action> [args]}"
 shift
 
+validate_deploy_id() {
+  [[ "$1" =~ ^[A-Za-z0-9._-]+$ ]] || {
+    echo "ERROR: invalid deploy ID: $1" >&2
+    exit 1
+  }
+}
+
 state_file() {
+  validate_deploy_id "$1"
   echo "${STATE_DIR}/${1}.json"
 }
 
@@ -78,6 +86,10 @@ case "$ACTION" in
     # Auto-detect channel if not provided
     if [[ -z "$CHANNEL" ]]; then
       CHANNEL=$(detect_channel "$FBC_IMAGE")
+      if [[ -z "$CHANNEL" ]]; then
+        echo "ERROR: could not detect channel from FBC image; pass --channel explicitly" >&2
+        exit 1
+      fi
     fi
 
     jq -n \

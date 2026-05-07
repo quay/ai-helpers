@@ -5,28 +5,5 @@
   "startupPrompt": "Execute the notification routing cycle immediately. Read CLAUDE.md and follow every step in order. Process all unread notifications, route them to the appropriate sessions, write the routing report, and stop yourself.",
   "results": {
     "Routing Report": "artifacts/relay/routing-report.md"
-  },
-  "schedule": {
-    "interval": "30m",
-    "description": "Creates an ephemeral Relay session every 30 minutes to process pending GitHub notifications. Each session self-stops after completing its routing cycle.",
-    "session": {
-      "namePattern": "relay-{YYYYMMDD-HHmm}",
-      "displayName": "Relay",
-      "workflow": {
-        "gitUrl": "https://github.com/quay/ai-helpers",
-        "branch": "main",
-        "path": "workflows/relay"
-      },
-      "repos": [
-        {
-          "url": "https://github.com/quay/quay",
-          "branch": "master"
-        }
-      ],
-      "env": {
-        "NOTIFY_USER": "SET_BOT_USERNAME_HERE",
-        "WATCHED_REPO": "quay/quay"
-      }
-    }
   }
 }

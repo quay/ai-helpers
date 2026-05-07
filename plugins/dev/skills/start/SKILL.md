@@ -53,7 +53,9 @@ If Target Version is set, note that **backporting will be required** after merge
 ## Step 3: Create Branch
 
 ```bash
-git checkout ${PRIMARY_BRANCH:-master} && git pull origin ${PRIMARY_BRANCH:-master}
+DEFAULT_BRANCH="${PRIMARY_BRANCH:-$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|origin/||')}"
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-master}"
+git checkout "$DEFAULT_BRANCH" && git pull origin "$DEFAULT_BRANCH"
 git checkout -b $ARGUMENTS-short-description
 ```
 

@@ -52,20 +52,22 @@ plugins via [Lola](https://github.com/redhat-ai-tools/lola):
     assess/            # JIRA ticket analysis
     reproduce/         # bug reproduction
     diagnose/          # root cause analysis
-    fix/               # implementation
     test/              # verification
     review/            # self-review gate
     document/          # release documentation
-    pr/                # PR creation
     summary/           # artifact synthesis
 ```
+
+Implementation (`/dev:code`), PR creation (`/dev:pr`), and CI polling
+(`/dev:poll`) are provided by the dev plugin — not duplicated here.
 
 ### Plugin dependencies
 
 Declared in `.lola-req`:
 
-- **plugins/dev** — format-and-lint.sh, poll-pr.sh, validate-pr-title.sh,
-  tick-state.sh, and other dev tooling
+- **plugins/dev** — `/dev:code`, `/dev:pr`, `/dev:poll`, `/dev:ci`,
+  `/dev:backport` skills; format-and-lint.sh, poll-pr.sh,
+  validate-pr-title.sh, and other dev tooling scripts
 - **plugins/jira-planning** — jira-ops.sh and JIRA integration scripts
 
 ### Bootstrap

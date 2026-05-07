@@ -75,11 +75,11 @@ first phase that is NOT done.
 | assess | `assess` | `artifacts/quay-bugfix/reports/assessment.md` exists |
 | reproduce | `reproduce` | `artifacts/quay-bugfix/reports/reproduction.md` exists |
 | diagnose | `diagnose` | `artifacts/quay-bugfix/analysis/root-cause.md` exists |
-| fix | `fix` | `artifacts/quay-bugfix/fixes/implementation-notes.md` exists |
+| fix | `/dev:code` | `artifacts/quay-bugfix/fixes/implementation-notes.md` exists |
 | test | `test` | `artifacts/quay-bugfix/tests/verification.md` exists |
 | review | `review` | `artifacts/quay-bugfix/review/verdict.md` exists |
 | document | `document` | `artifacts/quay-bugfix/docs/pr-description.md` exists |
-| pr | `pr` | `artifacts/quay-bugfix/pr/url.txt` exists |
+| pr | `/dev:pr` + `/dev:poll` | `artifacts/quay-bugfix/pr/url.txt` exists |
 | summary | `summary` | `artifacts/quay-bugfix/summary.md` exists |
 
 ### Rules
@@ -124,7 +124,9 @@ first phase that is NOT done.
 
 ### fix
 
-- Create a feature branch if one doesn't exist yet.
+- Create a `bugfix/` feature branch if one doesn't exist yet.
+- Read root cause analysis, then invoke `/dev:code` for implementation.
+- Write implementation notes to `artifacts/quay-bugfix/fixes/implementation-notes.md`.
 
 ### test
 
@@ -140,7 +142,9 @@ first phase that is NOT done.
 
 ### pr
 
-- Follow the PR skill's full process.
+- Invoke `/dev:pr` to create the pull request.
+- Then invoke `/dev:poll <PR#>` for CI monitoring.
+- Save PR URL to `artifacts/quay-bugfix/pr/url.txt`.
 - If PR creation fails after exhausting fallbacks, report and stop.
 
 ### summary

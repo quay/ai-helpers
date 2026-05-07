@@ -65,8 +65,9 @@ bash .claude/scripts/session-setup.sh
 3. **Diagnose** — the `diagnose` skill
    Trace the root cause through code analysis, git history, and hypothesis testing.
 
-4. **Fix** — the `fix` skill
-   Implement the minimal code change that resolves the root cause.
+4. **Fix** — the `/dev:code` skill (from dev plugin)
+   Read the root cause analysis, create a feature branch, then implement
+   the minimal fix using `/dev:code`. Write implementation notes afterward.
 
 5. **Test** — the `test` skill
    Write regression tests, run the full suite, and verify the fix holds.
@@ -77,11 +78,13 @@ bash .claude/scripts/session-setup.sh
 7. **Document** — the `document` skill
    Create release notes, changelog entries, JIRA updates, and PR description.
 
-8. **PR** — the `pr` skill
-   Push the branch and create a draft pull request with Quay conventions.
+8. **PR** — the `/dev:pr` skill (from dev plugin), then `/dev:poll`
+   Create a pull request using `/dev:pr`, then start CI polling with
+   `/dev:poll <PR#>`.
 
 9. **Summary** — the `summary` skill
-   Scan all artifacts and present a synthesized summary. Can also be invoked mid-workflow.
+   Scan all artifacts and present a synthesized summary. It can also be
+   invoked mid-workflow.
 
 Phases can be skipped or reordered at the user's discretion.
 

@@ -8,10 +8,11 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-CLAUDE_DIR="${REPO_ROOT}/.claude"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+WORKFLOW_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"  # .claude/scripts → .claude → workflow root
+CLAUDE_DIR="${WORKFLOW_ROOT}/.claude"
 
-if [ ! -f "${REPO_ROOT}/.lola-req" ]; then
+if [ ! -f "${WORKFLOW_ROOT}/.lola-req" ]; then
   exit 0
 fi
 
@@ -19,7 +20,7 @@ echo "[session-setup] Running lola sync..."
 uvx --python 3.13 --from lola-ai lola sync
 
 if [ -z "$(ls -A "${CLAUDE_DIR}/skills" 2>/dev/null)" ]; then
-  echo "ERROR: .claude/skills/ is empty after lola sync — check .lola-req"
+  echo "ERROR: .claude/skills/ is empty after lola sync — check .lola-req" >&2
   exit 1
 fi
 

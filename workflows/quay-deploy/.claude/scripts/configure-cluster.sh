@@ -197,17 +197,21 @@ cmd_wait_mcp() {
     fi
 
     local all_ready=true
+    local mcp_json
+    mcp_json=$(oc_cmd get mcp -o json) || { info "Failed to fetch MachineConfigPools"; all_ready=false; sleep "$interval"; continue; }
+
     while IFS= read -r line; do
-      local name updated updating
+      local name updated updating degraded
       name=$(echo "$line" | jq -r '.metadata.name')
       updated=$(echo "$line" | jq -r '[.status.conditions[] | select(.type=="Updated")] | .[0].status // "Unknown"')
       updating=$(echo "$line" | jq -r '[.status.conditions[] | select(.type=="Updating")] | .[0].status // "Unknown"')
+      degraded=$(echo "$line" | jq -r '[.status.conditions[] | select(.type=="Degraded")] | .[0].status // "Unknown"')
 
-      if [[ "$updated" != "True" || "$updating" != "False" ]]; then
+      if [[ "$updated" != "True" || "$updating" != "False" || "$degraded" != "False" ]]; then
         all_ready=false
-        info "MCP ${name}: Updated=${updated} Updating=${updating} (${elapsed}s elapsed)"
+        info "MCP ${name}: Updated=${updated} Updating=${updating} Degraded=${degraded} (${elapsed}s elapsed)"
       fi
-    done < <(oc_cmd get mcp -o json | jq -c '.items[]')
+    done < <(jq -c '.items[]' <<<"$mcp_json")
 
     if [[ "$all_ready" == "true" ]]; then
       info "All MachineConfigPools are ready."
@@ -537,11 +541,12 @@ cmd_verify() {
   local health_status
   health_status=$(curl -sk --connect-timeout 10 --max-time 30 \
     "${quay_url}/health/instance") || die "Health endpoint unreachable at ${quay_url}/health/instance"
-  if echo "$health_status" | jq -e '.data // .status' >/dev/null 2>&1; then
-    info "Health check: OK"
-    echo "$health_status" | jq -r '.data // .status' 2>/dev/null || true
+  local parsed_status
+  parsed_status=$(echo "$health_status" | jq -r '.data // .status' 2>/dev/null || true)
+  if [[ "$parsed_status" == "true" || "$parsed_status" == "healthy" || "$parsed_status" == "OK" ]]; then
+    info "Health check: OK (${parsed_status})"
   else
-    die "Health check returned unexpected payload: ${health_status}"
+    die "Health check returned unhealthy status: ${parsed_status:-unparseable} — full response: ${health_status}"
   fi
 
   # Login page — fail fast if unreachable or Quay not present

@@ -84,12 +84,14 @@ case "$ACTION" in
     fi
 
     # Auto-detect channel if not provided
+    local channel_source="explicit"
     if [[ -z "$CHANNEL" ]]; then
       CHANNEL=$(detect_channel "$FBC_IMAGE")
       if [[ -z "$CHANNEL" ]]; then
         echo "ERROR: could not detect channel from FBC image; pass --channel explicitly" >&2
         exit 1
       fi
+      channel_source="auto-detected"
     fi
 
     jq -n \
@@ -138,9 +140,7 @@ case "$ACTION" in
       }' > "$FILE"
 
     echo "Deploy state initialized: ${DEPLOY_ID} → PROVISION (mode: ${MODE})"
-    if [[ -n "$CHANNEL" ]]; then
-      echo "Channel: ${CHANNEL} (auto-detected from image)"
-    fi
+    echo "Channel: ${CHANNEL} (${channel_source})"
     ;;
 
   list)

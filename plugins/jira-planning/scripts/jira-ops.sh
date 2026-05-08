@@ -5,6 +5,7 @@
 #   bash scripts/jira-ops.sh view <ISSUE_KEY>
 #   bash scripts/jira-ops.sh assign <ISSUE_KEY> [assignee]
 #   bash scripts/jira-ops.sh transition <ISSUE_KEY> <status>
+#   bash scripts/jira-ops.sh comment <ISSUE_KEY> <comment_text>
 #   bash scripts/jira-ops.sh check-version <ISSUE_KEY>
 #   bash scripts/jira-ops.sh set-version <ISSUE_KEY> <version>
 #
@@ -212,9 +213,31 @@ case "$ACTION" in
     echo "Target Version set to '${VERSION}'."
     ;;
 
+  comment)
+    COMMENT_TEXT="${1:?Usage: jira-ops.sh comment <ISSUE_KEY> <comment_text>}"
+    echo "Adding comment to ${ISSUE_KEY}..."
+    DATA=$(jq -n --arg body "$COMMENT_TEXT" '{
+      body: {
+        type: "doc",
+        version: 1,
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              { type: "text", text: $body }
+            ]
+          }
+        ]
+      }
+    }')
+    jira_rest POST "issue/${ISSUE_KEY}/comment" "$DATA" && \
+      echo "Comment added to ${ISSUE_KEY}." || \
+      { echo "ERROR: Failed to add comment to ${ISSUE_KEY}." >&2; exit 1; }
+    ;;
+
   *)
     echo "Unknown action: ${ACTION}"
-    echo "Usage: jira-ops.sh <view|assign|transition|check-version|set-version> <ISSUE_KEY> [args...]"
+    echo "Usage: jira-ops.sh <view|assign|transition|comment|check-version|set-version> <ISSUE_KEY> [args...]"
     exit 1
     ;;
 esac

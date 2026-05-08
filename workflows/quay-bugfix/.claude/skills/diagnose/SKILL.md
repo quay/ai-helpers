@@ -148,6 +148,23 @@ Save to `artifacts/quay-bugfix/analysis/root-cause.md`:
 <Other solutions with pros/cons>
 ```
 
+## Confidence Assessment
+
+Include this section at the end of your root cause artifact:
+
+```markdown
+## Confidence Assessment
+- **Level**: high | medium | low
+- **Score**: <0-100 integer>
+- **Score rationale**: <1-2 sentences>
+- **Open questions**: <bullet list, or "None">
+```
+
+Confidence signals for this phase:
+- **High**: Single root cause identified with strong code evidence and git history
+- **Medium**: Primary root cause identified but alternative explanations not fully ruled out
+- **Low**: Multiple plausible causes, insufficient evidence to distinguish, or root cause in unfamiliar subsystem
+
 ## When This Phase Is Done
 
 Report: the identified root cause, confidence level, and where the analysis

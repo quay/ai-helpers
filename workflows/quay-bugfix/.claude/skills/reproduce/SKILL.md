@@ -130,6 +130,22 @@ Save to `artifacts/quay-bugfix/reports/reproduction.md`:
 <Any observations, workarounds, or additional context>
 ```
 
+## Confidence Assessment
+
+Include this section at the end of your reproduction artifact:
+
+```markdown
+## Confidence Assessment
+- **Level**: high | medium | low
+- **Score rationale**: <1-2 sentences>
+- **Open questions**: <bullet list, or "None">
+```
+
+Confidence signals for this phase:
+- **High**: Bug reproduced consistently with minimal steps
+- **Medium**: Bug reproduced with extra setup or specific configuration, or intermittent but follows a pattern
+- **Low**: Cannot reproduce, fully intermittent, or environment-dependent
+
 ## Output
 
 - `artifacts/quay-bugfix/reports/reproduction.md`

@@ -8,11 +8,15 @@
 
 ## Confidence and Escalation
 
+The workflow operates in confidence-gated autonomous mode. Confidence is
+assessed per-phase via artifact footers, and the controller reads these to
+determine phase advancement.
+
 | Level | Threshold | Action |
 |-------|-----------|--------|
-| High | 90-100% | Proceed autonomously |
-| Medium | 70-89% | Proceed with caveats noted |
-| Low | <70% | Escalate to user |
+| High | >=90% | Advance to next phase automatically |
+| Medium | 70-89% | Post JIRA comment with findings and open questions, then advance |
+| Low | <70% | Post JIRA comment, stop and escalate via AskUserQuestion |
 
 Escalate when: root cause unclear, multiple valid solutions with different trade-offs, architectural decisions needed, security implications, confidence < 70%.
 

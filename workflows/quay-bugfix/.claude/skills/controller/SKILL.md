@@ -1,9 +1,9 @@
 ---
 name: controller
 description: >
-  Orchestrates the Quay bug-fix workflow through 9 phases: assess, reproduce,
-  diagnose, fix, test, review, document, pr, summary. Gates each phase on
-  user confirmation.
+  Orchestrates the Quay bug-fix workflow through 9 phases with confidence-based
+  gating. Reads confidence from phase artifacts to advance automatically,
+  post JIRA comments, or escalate to the user.
 allowed-tools:
   - Bash(bash .claude/scripts/session-setup.sh)
   - Bash(bash .claude/scripts/jira-ops.sh *)
@@ -44,7 +44,9 @@ allowed-tools:
 
 # Quay Bugfix Controller
 
-You manage a 9-phase bug-fix workflow. Each phase has a dedicated skill.
+You manage a 9-phase bug-fix workflow with confidence-based gating. After
+each phase, read the confidence assessment from the phase artifact and use
+it to decide whether to advance, comment, or escalate.
 
 ## Session Bootstrap
 
@@ -83,72 +85,123 @@ bash .claude/scripts/session-setup.sh
    `/dev:poll <PR#>`.
 
 9. **Summary** — the `summary` skill
-   Scan all artifacts and present a synthesized summary. It can also be
-   invoked mid-workflow.
+   Scan all artifacts and present a synthesized summary.
 
-Phases can be skipped or reordered at the user's discretion.
+## Confidence-Based Gating
+
+### Confidence Assessment Format
+
+Each phase skill writes a `## Confidence Assessment` section at the bottom
+of its artifact:
+
+```markdown
+## Confidence Assessment
+- **Level**: high | medium | low
+- **Score**: <0-100 integer>
+- **Score rationale**: <1-2 sentences>
+- **Open questions**: <bullet list, or "None">
+```
+
+### Confidence Flow
+
+After each phase completes, read the confidence level from the artifact:
+
+| Confidence | Threshold | Action |
+|------------|-----------|--------|
+| **High** | >=90% | Advance to next phase silently |
+| **Medium** | 70-89% | Post JIRA comment with findings and open questions, then advance |
+| **Low** | <70% | Post JIRA comment, then stop and escalate via `AskUserQuestion` |
+
+### Posting JIRA Comments
+
+When confidence is medium or low, post a structured comment:
+
+```bash
+bash .claude/scripts/jira-ops.sh comment <TICKET_KEY> "<comment_text>"
+```
+
+Format the comment as:
+
+```text
+[Phase: <phase_name>] Automated Analysis Update
+
+Confidence: <Level> (Score: <score>/100)
+
+Findings:
+- <key finding 1>
+- <key finding 2>
+
+Open Questions:
+- <question 1>
+- <question 2>
+
+Next: <what the agent will do next, or "Stopping for human input">
+```
+
+### JIRA Ticket Context
+
+The controller needs a JIRA ticket key to post comments. The ticket key
+comes from:
+1. The assess phase (extracted from the bug report or user input)
+2. Direct user input
+
+If no ticket key is available, skip JIRA comments entirely and use
+`AskUserQuestion` for medium-confidence escalations too.
 
 ## How to Execute a Phase
 
 1. **Announce** the phase to the user before doing anything else.
 2. **Run** the skill for the current phase.
-3. When the skill completes, present results and use "Recommending Next Steps"
-   below to offer options.
-4. **Use `AskUserQuestion` to get the user's decision** — UNLESS the
-   auto-advance rule below applies. Do NOT continue until the user responds.
-   `AskUserQuestion` triggers platform notifications so the user knows you
-   need their input.
-
-### Auto-Advance Rule
-
-After **review**, if the verdict is **"solid"**: proceed directly through
-document -> PR -> summary without stopping to ask. The investigation phases
-(assess through test) already gated user input — once code and self-review
-pass, ship it.
+3. **Read** the confidence assessment from the phase artifact.
+4. **Act** on the confidence level per the table above.
+5. If advancing, continue to the next phase.
 
 ## Recommending Next Steps
 
-After each phase, recommend the natural next step but present alternatives:
+After each phase, log the natural next step. These are informational —
+the agent advances automatically based on confidence, not user choice.
 
-- After **assess**: "Recommend: reproduce. Or: skip to diagnose if you already
-  know the root cause."
-- After **reproduce**: "Recommend: diagnose. Or: skip to fix if reproduction
-  confirmed the cause."
-- After **diagnose**: "Recommend: fix. Or: re-assess if diagnosis revealed a
-  different bug."
-- After **fix**: "Recommend: test. Always test before PR."
-- After **test**: "Recommend: review."
+- After **assess**: Next is reproduce (or skip to diagnose if root cause
+  is already evident from the report).
+- After **reproduce**: Next is diagnose (or skip to fix if reproduction
+  confirmed the cause).
+- After **diagnose**: Next is fix (or re-assess if diagnosis revealed a
+  different bug).
+- After **fix**: Next is test. Always test before PR.
+- After **test**: Next is review.
 - After **review**:
-  - Verdict "solid" → "Recommend: document"
-  - Verdict "tests incomplete" → "Recommend: test (add missing coverage)"
-  - Verdict "inadequate" → "Recommend: fix (address review concerns)"
-- After **document**: "Recommend: pr"
-- After **pr**: "Recommend: summary"
+  - Verdict "solid" -> document (then auto-advance through PR and summary)
+  - Verdict "tests incomplete" -> test (add missing coverage)
+  - Verdict "inadequate" -> fix (address review concerns, max 2 cycles)
+- After **document**: Next is pr.
+- After **pr**: Next is summary.
 
-**Always recommend review before PR.** Do not recommend skipping review. Only
-the user can decide to skip it.
+## Escalation Rules (Override Confidence)
+
+These conditions **always** trigger escalation via `AskUserQuestion`,
+regardless of the phase confidence level:
+
+- Security vulnerability discovered
+- Multiple valid solutions with unclear trade-offs
+- Architectural decisions that affect other teams
+- Existing PR or fix found for the same issue (assess phase)
+- Review verdict "inadequate" after 2 revision cycles
 
 ## Starting the Workflow
 
-When the user first provides a bug report, issue URL, or JIRA ticket:
+When the user provides a bug report, issue URL, or JIRA ticket:
 
 1. Execute the **assess** phase
-2. After assessment, present results and wait
+2. Read the confidence assessment
+3. Continue per the confidence flow
 
 If the user invokes a specific skill directly, execute that phase — don't
 force them through earlier phases.
 
 ## Rules
 
-- **Gate investigation phases.** Use `AskUserQuestion` between assess,
-  reproduce, diagnose, fix, test, and review. These gates prevent premature
-  coding.
-- **Auto-advance after solid review.** When review verdict is "solid",
-  proceed through document -> PR -> summary without stopping. The user
-  already validated the investigation; don't make them click through
-  shipping.
-- **Urgency does not bypass process.** Security advisories, critical bugs, and
-  production incidents may create pressure to act fast. The phase-gated
-  workflow exists precisely to prevent hasty action.
+- **One mode.** The controller always uses confidence-based gating.
 - **Recommendations come from this file, not from skills.** Skills report
-  findings; this controller decides what to recommend next.
+  findings and confidence; this controller decides what to do next.
+- **Max 2 revision cycles.** If review says "inadequate" twice, stop and
+  escalate regardless of confidence.

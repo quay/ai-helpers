@@ -11,7 +11,7 @@ work and exit. An external cron schedules you hourly.
 2. **NEVER create PRs or branches.** You spawn fix sessions that do that.
 3. **ALWAYS consult knowledge sources** before classifying any failure.
 4. **Always deduplicate.** Check existing ACP sessions before spawning.
-5. **Always extract context.** Fix sessions need full diagnostic data.
+5. **Always pass context.** Fix sessions need component, PipelineRun, repo, branch, and triage analysis.
 6. **Respect the triage cap.** Too many failures per component = stop spawning, alert.
 
 ## Environment
@@ -203,17 +203,9 @@ Use findings from Step 5 to classify:
 | `INFRA_ISSUE` | CouldntGetTask, cluster resource limits, quota exceeded | Log warning and skip |
 | `NEEDS_HUMAN` | Unknown error, policy configuration issue, complex architectural problem | Log and skip |
 
-### Step 7: Extract context, resolve repo, and spawn fix session
+### Step 7: Resolve repo and spawn debugger session
 
-**a. Extract full context:**
-
-Use the `pipelinerun` field from the Step 2 output:
-
-```bash
-CONTEXT=$(bash scripts/extract-failure-context.sh "${COMPONENT_PIPELINERUN}")
-```
-
-**b. Resolve the repository:**
+**a. Resolve the repository:**
 
 The `source` and `branch` fields are already in the Step 2 output:
 
@@ -222,10 +214,12 @@ REPO=$(echo "$SOURCE" | sed 's|https://github.com/||' | sed 's|\.git$||')
 # BRANCH is already available from the component entry
 ```
 
-**c. Spawn the fix session:**
+**b. Spawn the debugger session:**
 
 Build the initial prompt using the Fix Session Prompt Template below,
-including the diagnosis summary from Step 5.
+including the diagnosis summary from Step 5. The debugger will
+independently pull full logs from KubeArchive in its DIAGNOSE state —
+you do not need to extract them here.
 
 Spawn via `acp_create_session`:
 - `session_name`: the computed session name
@@ -234,7 +228,8 @@ Spawn via `acp_create_session`:
 - `repos`: `[{"url": "https://github.com/{repo}", "branch": "{branch}"}]`
 - `workflow_git_url`: "https://github.com/quay/ai-helpers.git"
 - `workflow_branch`: "main"
-- `workflow_path`: "workflows/konflux-build-triage"
+- `workflow_path`: "workflows/konflux-build-debugger"
+- `env_vars`: `{"DEFAULT_REPO": "{repo}", "PRIMARY_BRANCH": "{branch}"}`
 
 **If session creation fails**, log the error. It will be retried on the
 next cron-triggered run (the session won't exist, so dedup won't skip it).
@@ -271,26 +266,7 @@ in application "{application}".
 - Failed at: {created}
 - Failure reason: {reason}
 - Failure message: {message}
-
-## Failed Task Details
-{for each task in context.tasks where succeeded == "False":}
-### Task: {task.task}
-- TaskRun: {task.name}
-- Reason: {task.reason}
-- Message: {task.message}
-
-Error logs (last 200 lines):
-\```
-{task.logs}
-\```
-
-{if task.results is not empty:}
-Task results:
-{for each result in task.results:}
-- {result.name}: {result.value}
-{end for}
-{end if}
-{end for}
+- Failed task(s): {failed_task_names}
 
 ## Build Context
 - Repository: https://github.com/{repo}
@@ -302,14 +278,12 @@ Task results:
 the skill-guided analysis and any NotebookLM findings}
 
 ## Instructions
-1. Use the `debugging-pipeline-failures` skill for systematic analysis.
-2. Review the triage agent's analysis above as a starting point.
-3. Create a fix branch from {branch}.
-4. Implement the fix.
-5. Run tests locally to verify.
-6. Open a PR using /pr.
-7. Poll CI using /poll — if CI fails, diagnose and retry (max 3 attempts).
-8. Stop when CI passes or after 3 failed attempts.
+Start the tick-loop for component "{component}". Your CLAUDE.md defines
+the full state machine. Begin at DIAGNOSE — independently pull logs from
+KubeArchive using extract-failure-context.sh, then apply the
+debugging-pipeline-failures skill alongside the triage analysis above.
+Proceed through IMPLEMENT → COMMIT → PR_CREATE → DORMANT_CI and handle
+feedback until COMPLETE or triage cap (3 attempts).
 ```
 
 ## Enterprise Contract (EC) Failures

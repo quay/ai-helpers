@@ -143,7 +143,8 @@ Include this section at the end of your reproduction artifact:
 
 Confidence signals for this phase:
 - **High**: Bug reproduced consistently with minimal steps
-- **Low**: Cannot reproduce, intermittent, or environment-dependent
+- **Medium**: Bug reproduced with extra setup or specific configuration, or intermittent but follows a pattern
+- **Low**: Cannot reproduce, fully intermittent, or environment-dependent
 
 ## Output
 

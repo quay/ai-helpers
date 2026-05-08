@@ -103,12 +103,14 @@ Include this section at the end of your PR description artifact:
 ```markdown
 ## Confidence Assessment
 - **Level**: high | medium | low
+- **Score**: <0-100 integer>
 - **Score rationale**: <1-2 sentences>
 - **Open questions**: <bullet list, or "None">
 ```
 
 Confidence signals for this phase:
 - **High**: All prior artifacts complete and consistent, documentation covers all areas
+- **Medium**: Most artifacts complete but some sections have gaps or inconsistencies
 - **Low**: Missing artifacts, inconsistencies between phases, unclear communication
 
 ## When This Phase Is Done

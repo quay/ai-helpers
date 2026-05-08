@@ -216,7 +216,20 @@ case "$ACTION" in
   comment)
     COMMENT_TEXT="${1:?Usage: jira-ops.sh comment <ISSUE_KEY> <comment_text>}"
     echo "Adding comment to ${ISSUE_KEY}..."
-    DATA=$(jq -n --arg body "$COMMENT_TEXT" '{"body": $body}')
+    DATA=$(jq -n --arg body "$COMMENT_TEXT" '{
+      body: {
+        type: "doc",
+        version: 1,
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              { type: "text", text: $body }
+            ]
+          }
+        ]
+      }
+    }')
     jira_rest POST "issue/${ISSUE_KEY}/comment" "$DATA" && \
       echo "Comment added to ${ISSUE_KEY}." || \
       { echo "ERROR: Failed to add comment to ${ISSUE_KEY}." >&2; exit 1; }

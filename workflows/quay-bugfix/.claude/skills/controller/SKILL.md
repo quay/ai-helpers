@@ -97,6 +97,7 @@ of its artifact:
 ```markdown
 ## Confidence Assessment
 - **Level**: high | medium | low
+- **Score**: <0-100 integer>
 - **Score rationale**: <1-2 sentences>
 - **Open questions**: <bullet list, or "None">
 ```
@@ -124,7 +125,7 @@ Format the comment as:
 ```text
 [Phase: <phase_name>] Automated Analysis Update
 
-Confidence: <Level> (<percentage estimate>%)
+Confidence: <Level> (Score: <score>/100)
 
 Findings:
 - <key finding 1>
@@ -206,8 +207,7 @@ force them through earlier phases.
 
 ## Rules
 
-- **One mode.** There is no interactive vs speedrun distinction. The
-  controller always uses confidence-based gating.
+- **One mode.** The controller always uses confidence-based gating.
 - **Recommendations come from this file, not from skills.** Skills report
   findings and confidence; this controller decides what to do next.
 - **Max 2 revision cycles.** If review says "inadequate" twice, stop and

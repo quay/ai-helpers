@@ -141,12 +141,14 @@ Include this section at the end of your verdict artifact:
 ```markdown
 ## Confidence Assessment
 - **Level**: high | medium | low
+- **Score**: <0-100 integer>
 - **Score rationale**: <1-2 sentences>
 - **Open questions**: <bullet list, or "None">
 ```
 
 Confidence signals for this phase:
 - **High**: Verdict "solid" — fix addresses root cause, tests prove it, no concerns
+- **Medium**: Fix is likely correct but has minor concerns or incomplete coverage
 - **Low**: Verdict "inadequate" — fundamental concerns about the approach or coverage
 
 ## When This Phase Is Done

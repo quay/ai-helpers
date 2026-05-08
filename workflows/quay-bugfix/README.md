@@ -26,12 +26,9 @@ PR → Summary
 Start by providing a JIRA ticket key or describing the bug. The controller
 skill guides you through each phase with decision points between them.
 
-The workflow supports two execution modes:
-
-- **Interactive** (default) — the controller gates each phase on your
-  confirmation via `AskUserQuestion`
-- **Speedrun** — runs remaining phases without stopping for unattended
-  execution
+The workflow uses **confidence-based gating**: each phase writes a confidence
+assessment to its artifact, and the controller advances automatically (high),
+posts a JIRA comment then advances (medium), or stops and escalates (low).
 
 ## Architecture
 
@@ -47,8 +44,7 @@ plugins via [Lola](https://github.com/redhat-ai-tools/lola):
     session-setup.sh   # bootstrap: installs plugins via lola
   settings.json        # SessionStart hook for bootstrap
   skills/
-    controller/        # phase orchestrator
-    speedrun/          # unattended execution
+    controller/        # confidence-gated phase orchestrator
     assess/            # JIRA ticket analysis
     reproduce/         # bug reproduction
     diagnose/          # root cause analysis

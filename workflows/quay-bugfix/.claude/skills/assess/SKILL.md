@@ -93,8 +93,7 @@ If an open PR appears to directly address this bug, **stop and use
 - "PR #N is related but doesn't fully cover it — continue with assessment"
 - "Not sure if PR #N is relevant — continue with assessment"
 
-This gate applies in both normal and speedrun mode. Do not continue until the
-user responds.
+Do not continue until the user responds.
 
 ### Step 4: Check Backport Requirement
 
@@ -180,12 +179,14 @@ Include this section at the end of your assessment artifact:
 ```markdown
 ## Confidence Assessment
 - **Level**: high | medium | low
+- **Score**: <0-100 integer>
 - **Score rationale**: <1-2 sentences>
 - **Open questions**: <bullet list, or "None">
 ```
 
 Confidence signals for this phase:
 - **High**: Clear bug report with reproduction steps, single component identified, good logs/traces available
+- **Medium**: Bug report has some details but missing reproduction steps or unclear component
 - **Low**: Vague report, multiple possible components, missing critical details, no reproduction steps
 
 ## Output

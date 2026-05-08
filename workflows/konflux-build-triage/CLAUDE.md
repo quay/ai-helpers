@@ -22,7 +22,6 @@ work and exit. An external cron schedules you hourly.
 | `KONFLUX_KUBECONFIG_DATA` | Base64-encoded kubeconfig (decoded at session start) |
 | `NOTEBOOKLM_COOKIES` | Google auth cookies for NotebookLM MCP (optional, degrades gracefully) |
 | `NOTEBOOKLM_NOTEBOOK_ID` | ID of the Konflux knowledge notebook |
-| `FAILURE_LOOKBACK_HOURS` | How far back to query (default: 24) |
 | `MAX_TRIAGE_PER_COMPONENT` | Triage cap per component (default: 3) |
 | `EXCLUDE_APP_REGEX` | Regex to exclude applications by name (default: `-dev$`) |
 
@@ -30,28 +29,26 @@ work and exit. An external cron schedules you hourly.
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/query-failed-pipelines.sh` | Query K8s + KubeArchive for failed PipelineRuns |
-| `scripts/extract-failure-context.sh` | Extract TaskRun logs and error details (with KubeArchive fallback) |
-| `scripts/discover-components.sh` | Auto-discover component → repo mapping from CRD |
+| `scripts/check-build-health.sh` | Check latest on-push build status for all components (via KubeArchive REST API) |
+| `scripts/extract-failure-context.sh` | Extract TaskRun logs and error details for a specific PipelineRun |
 
 ## Data Sources
 
-The triage agent pulls PipelineRun data from two sources:
+### KubeArchive REST API (primary)
 
-### Live Cluster (primary)
+`check-build-health.sh` queries the KubeArchive REST API directly using
+`curl` and bearer token auth. KubeArchive archives all PipelineRuns,
+TaskRuns, and pod logs after they are garbage-collected from the live
+cluster (which happens within hours). The API mirrors Kubernetes
+conventions and supports label selectors for filtering.
 
-Standard `kubectl get pipelineruns` queries against the Konflux namespace.
-PipelineRuns and pods are **garbage collected within hours**, so the live
-cluster often lacks historical data.
+The script queries the **latest on-push PipelineRun per component** to
+determine current build health — no time window needed.
 
-### KubeArchive (fallback)
+### Live Cluster + KubeArchive (for context extraction)
 
-KubeArchive archives PipelineRuns, TaskRuns, and logs after GC. It exposes
-a REST API mirroring K8s conventions via the `kubectl-ka` plugin. The
-scripts automatically fall back to KubeArchive when live data is missing.
-
-If `kubectl-ka` is not installed or the KubeArchive host cannot be
-discovered, the scripts degrade to live-cluster-only mode.
+`extract-failure-context.sh` tries the live cluster first via `kubectl`,
+then falls back to `kubectl-ka` for archived TaskRuns and pod logs.
 
 ## Knowledge Sources
 
@@ -128,11 +125,35 @@ failed, stopped). Store this list for deduplication in later steps.
 ### Step 2: Query for failures
 
 ```bash
-FAILURES=$(bash scripts/query-failed-pipelines.sh all)
+HEALTH=$(bash scripts/check-build-health.sh --failed-only)
 ```
 
-Parse the JSON array. If empty, report "No new failures found in the
-last ${FAILURE_LOOKBACK_HOURS} hours" and proceed to Step 8 (report).
+This returns JSON grouped by application:
+
+```json
+{
+  "applications": [
+    {
+      "name": "quay-v3-18",
+      "components": [
+        {
+          "name": "quay-quay-v3-18",
+          "build_failed": true,
+          "source": "https://github.com/quay/quay-konflux-components.git",
+          "branch": "redhat-3.18",
+          "last_build": "2026-05-05T16:18:28Z",
+          "pipelinerun": "quay-quay-v3-18-on-push-ppm9z"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Flatten the components from all applications into a list of failures.
+If empty, report "All components building successfully" and proceed to
+Step 8 (report). Each component entry already contains the `source`,
+`branch`, and `pipelinerun` fields needed for later steps.
 
 ### Step 3: For each failure — deduplicate
 
@@ -186,24 +207,19 @@ Use findings from Step 5 to classify:
 
 **a. Extract full context:**
 
+Use the `pipelinerun` field from the Step 2 output:
+
 ```bash
-CONTEXT=$(bash scripts/extract-failure-context.sh "<pipelinerun-name>")
+CONTEXT=$(bash scripts/extract-failure-context.sh "${COMPONENT_PIPELINERUN}")
 ```
 
 **b. Resolve the repository:**
 
-Look up the component in the cached component map:
+The `source` and `branch` fields are already in the Step 2 output:
 
 ```bash
-COMPONENT_MAP=".claude/triage-state/component-map.json"
-REPO_URL=$(jq -r --arg comp "$COMPONENT" '.[] | select(.name == $comp) | .repo' "$COMPONENT_MAP")
-BRANCH=$(jq -r --arg comp "$COMPONENT" '.[] | select(.name == $comp) | .branch' "$COMPONENT_MAP")
-```
-
-If not found in the map, parse `repo_url` from the failure record:
-
-```bash
-REPO=$(echo "$REPO_URL" | sed 's|https://github.com/||' | sed 's|\.git$||')
+REPO=$(echo "$SOURCE" | sed 's|https://github.com/||' | sed 's|\.git$||')
+# BRANCH is already available from the component entry
 ```
 
 **c. Spawn the fix session:**
@@ -298,6 +314,10 @@ the skill-guided analysis and any NotebookLM findings}
 
 ## Enterprise Contract (EC) Failures
 
+> **Note:** EC test monitoring is not yet automated in this workflow.
+> The `check-build-health.sh` script monitors on-push build failures
+> only. EC integration test monitoring is planned as a future addition.
+
 EC test failures are integration test PipelineRuns that run AFTER a
 successful build. They verify policy compliance.
 
@@ -305,11 +325,6 @@ For EC failures, the fix is often in:
 - `.tekton/` pipeline definitions (adding missing tasks)
 - Dockerfile (switching to allowed base images)
 - Component configuration in Konflux
-
-The fix session prompt should include:
-- The IntegrationTestScenario name (from the `scenario` field)
-- The specific EC policy violations (from `verify-enterprise-contract`
-  task results)
 
 If the EC failure is a policy configuration issue (not a code/Dockerfile
 issue), classify as `NEEDS_HUMAN`.
@@ -325,11 +340,9 @@ This makes session names deterministic and enables cross-run dedup via
 ## Error Handling
 
 - **kubectl fails**: Log warning, retry once, then skip the entry.
-- **KubeArchive unavailable**: Degrade to live-cluster-only mode.
+- **KubeArchive unavailable**: `check-build-health.sh` will fail — KubeArchive is required.
 - **jq parse error**: Log the raw output for debugging, skip the entry.
 - **ACP session creation fails**: Log error. Will be retried next run.
 - **ACP session listing fails**: Log error. Run without dedup (risk of
   duplicate sessions is acceptable as a fallback).
 - **NotebookLM unavailable**: Log warning, continue with skills only.
-- **Component not in map**: Parse from PipelineRun annotations. If
-  still unknown, log and skip.

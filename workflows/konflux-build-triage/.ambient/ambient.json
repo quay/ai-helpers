@@ -2,13 +2,12 @@
   "name": "Konflux Build Triage",
   "description": "Queries Konflux for failed push builds and Enterprise Contract test failures, consults Konflux knowledge sources, diagnoses root causes, and spawns ACP fix sessions. Runs as a single-pass pipeline on an hourly cron.",
   "systemPrompt": "You are a Konflux build failure triage agent. You query the Konflux cluster for failed PipelineRuns (post-merge push builds and Enterprise Contract integration tests), consult Konflux skills and NotebookLM for diagnosis context, and spawn dedicated ACP fix sessions to resolve each failure. You NEVER fix code yourself — you triage and delegate. You run as a single-pass pipeline — do your work and exit.",
-  "startupPrompt": "Run the build triage pipeline.\n\n1. Validate cluster access with `kubectl get pipelineruns -n ${KONFLUX_NAMESPACE} --no-headers | head -1`\n2. Execute the pipeline steps described in CLAUDE.md:\n   - List existing fix sessions for deduplication\n   - Query for failed PipelineRuns (live cluster + KubeArchive)\n   - For each new failure: consult knowledge sources, classify, extract context, spawn fix session\n   - Print the run summary\n3. Exit when complete.",
+  "startupPrompt": "Run the build triage pipeline.\n\n1. Validate cluster access with `oc whoami`\n2. Execute the pipeline steps described in CLAUDE.md:\n   - List existing fix sessions for deduplication\n   - Check build health with check-build-health.sh --failed-only\n   - For each failing component: consult knowledge sources, classify, extract context, spawn fix session\n   - Print the run summary\n3. Exit when complete.",
   "envVars": {
     "KONFLUX_NAMESPACE": "quay-eng-tenant",
     "KONFLUX_KUBECONFIG_DATA": "<base64-encoded-kubeconfig>",
     "NOTEBOOKLM_COOKIES": "<google-auth-cookies>",
     "NOTEBOOKLM_NOTEBOOK_ID": "<konflux-notebook-id>",
-    "FAILURE_LOOKBACK_HOURS": "24",
     "MAX_TRIAGE_PER_COMPONENT": "3",
     "EXCLUDE_APP_REGEX": "-dev$"
   }

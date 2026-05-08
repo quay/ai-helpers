@@ -5,11 +5,10 @@ Automated Konflux build failure triage workflow for the
 
 ## What it does
 
-Queries the Konflux cluster for:
-- Failed post-merge (push) build PipelineRuns
-- Failed Enterprise Contract (EC) integration test PipelineRuns
+Checks the build health of all Konflux components by querying the
+**latest on-push PipelineRun** for each component via KubeArchive.
 
-For each new failure, it:
+For each failing component, it:
 1. Consults Konflux skills and a NotebookLM knowledge notebook for diagnosis context
 2. Extracts diagnostic context (TaskRun logs, error messages, task results)
 3. Classifies the failure (fixable, needs retry, needs human)
@@ -29,7 +28,8 @@ Each run is a fresh ACP session — no persistent loop.
 │   List existing fix sessions     │
 │   (ACP deduplication)            │
 │         │                        │
-│   Query K8s API + KubeArchive    │
+│   check-build-health.sh          │
+│   (KubeArchive REST API)         │
 │         │                        │
 │   Consult knowledge sources      │
 │   ├─ Konflux skills (local)      │
@@ -48,12 +48,13 @@ Each run is a fresh ACP session — no persistent loop.
 
 | Source | Purpose |
 |--------|---------|
-| Live K8s cluster | Primary source for PipelineRuns and pod logs |
-| KubeArchive | Fallback for GC'd PipelineRuns and historical logs |
+| KubeArchive REST API | Primary source for build status (`check-build-health.sh`) |
+| Live K8s cluster + KubeArchive | TaskRun logs and diagnostics (`extract-failure-context.sh`) |
 
 PipelineRuns and pods are garbage collected from the live cluster within
-hours. KubeArchive preserves them and exposes a REST API via `kubectl-ka`.
-Scripts fall back to KubeArchive automatically when live data is missing.
+hours. KubeArchive preserves them and exposes a REST API. The build
+health script queries KubeArchive directly via `curl` for the latest
+on-push PipelineRun per component.
 
 ## Knowledge Sources
 
@@ -83,8 +84,8 @@ triaged in a previous run. No external state file is needed.
 | `KONFLUX_KUBECONFIG_DATA` | — | Base64-encoded kubeconfig |
 | `NOTEBOOKLM_COOKIES` | — | Google auth cookies for NotebookLM (optional) |
 | `NOTEBOOKLM_NOTEBOOK_ID` | — | ID of the Konflux knowledge notebook |
-| `FAILURE_LOOKBACK_HOURS` | `24` | Query window (hours) |
 | `MAX_TRIAGE_PER_COMPONENT` | `3` | Cap sessions per component |
+| `EXCLUDE_APP_REGEX` | — | Regex to exclude applications (e.g. `-dev$`) |
 
 ## Usage
 
@@ -121,9 +122,8 @@ environment variables.
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/query-failed-pipelines.sh` | Query K8s + KubeArchive for failed push builds + EC tests |
+| `scripts/check-build-health.sh` | Check latest on-push build status for all components (via KubeArchive REST API) |
 | `scripts/extract-failure-context.sh` | Extract TaskRun logs from a failed PipelineRun (with KubeArchive fallback) |
-| `scripts/discover-components.sh` | Auto-discover component → repo mapping from CRD |
 
 ## Plugin Dependencies
 

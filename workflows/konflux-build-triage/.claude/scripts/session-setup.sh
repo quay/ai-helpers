@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # SessionStart hook for konflux-build-triage workflow.
 #
-# 1. Installs kubectl and configures kubeconfig from KONFLUX_KUBECONFIG_DATA
-# 2. Installs kubectl-ka (KubeArchive plugin) for historical PipelineRun data
-# 3. Installs notebooklm-mcp-cli for NotebookLM MCP access
-# 4. Installs plugins via Lola (.lola-req: konflux-ci/skills + dev plugin)
-# 5. Discovers Konflux components and caches the component-to-repo map
+# 1. Installs oc (OpenShift CLI) for cluster auth and component queries
+# 2. Installs kubectl and configures kubeconfig from KONFLUX_KUBECONFIG_DATA
+# 3. Installs kubectl-ka (KubeArchive plugin) for historical PipelineRun data
+# 4. Installs notebooklm-mcp-cli for NotebookLM MCP access
+# 5. Installs plugins via Lola (.lola-req: konflux-ci/skills + dev plugin)
 #
 # Must be committed directly — symlinks do not survive ACP hydrate.sh.
 
@@ -17,7 +17,27 @@ LOLA_REQ="${REPO_ROOT}/.lola-req"
 LOLA="uvx --python 3.13 --from lola-ai lola"
 NAMESPACE="${KONFLUX_NAMESPACE:-quay-eng-tenant}"
 
-# ── 1. Install kubectl ──────────────────────────────────────────────────────
+# ── 1. Install oc (OpenShift CLI) ────────────────────────────────────────────
+
+if ! command -v oc &>/dev/null; then
+  echo "[session-setup] Installing oc (OpenShift CLI)..."
+  OC_URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz"
+  if curl -sL "$OC_URL" | tar xz -C /tmp oc 2>/dev/null; then
+    chmod +x /tmp/oc
+    mv /tmp/oc /usr/local/bin/oc 2>/dev/null || {
+      mkdir -p ~/.local/bin
+      mv /tmp/oc ~/.local/bin/oc
+      export PATH="$HOME/.local/bin:$PATH"
+    }
+    echo "[session-setup] oc $(oc version --client -o json 2>/dev/null | jq -r '.releaseClientVersion // "installed"') installed"
+  else
+    echo "WARNING: Failed to download oc CLI — check-build-health.sh requires oc"
+  fi
+else
+  echo "[session-setup] oc already available"
+fi
+
+# ── 2. Install kubectl ──────────────────────────────────────────────────────
 
 if ! command -v kubectl &>/dev/null; then
   echo "[session-setup] Installing kubectl..."
@@ -41,7 +61,7 @@ else
   echo "[session-setup] kubectl already available"
 fi
 
-# ── 2. Decode kubeconfig ─────────────────────────────────────────────────────
+# ── 3. Decode kubeconfig ─────────────────────────────────────────────────────
 
 if [ -n "${KONFLUX_KUBECONFIG_DATA:-}" ]; then
   echo "[session-setup] Configuring kubeconfig..."
@@ -58,7 +78,7 @@ else
   echo "WARNING: KONFLUX_KUBECONFIG_DATA not set — cluster access unavailable"
 fi
 
-# ── 3. Install kubectl-ka (KubeArchive) ─────────────────────────────────────
+# ── 4. Install kubectl-ka (KubeArchive) ─────────────────────────────────────
 
 if ! kubectl ka version &>/dev/null 2>&1; then
   echo "[session-setup] Installing kubectl-ka (KubeArchive plugin)..."
@@ -95,7 +115,7 @@ if command -v kubectl &>/dev/null && [ -f ~/.kube/config ]; then
   fi
 fi
 
-# ── 4. Install notebooklm-mcp-cli ───────────────────────────────────────────
+# ── 5. Install notebooklm-mcp-cli ───────────────────────────────────────────
 
 if ! command -v notebooklm-mcp &>/dev/null; then
   echo "[session-setup] Installing notebooklm-mcp-cli..."
@@ -109,7 +129,7 @@ if [ -z "${NOTEBOOKLM_COOKIES:-}" ]; then
   echo "WARNING: NOTEBOOKLM_COOKIES not set — NotebookLM consultation will be skipped (graceful degradation)"
 fi
 
-# ── 5. Install plugins via Lola ──────────────────────────────────────────────
+# ── 6. Install plugins via Lola ──────────────────────────────────────────────
 
 if [ ! -f "$LOLA_REQ" ]; then
   echo "[session-setup] No .lola-req found, skipping plugin install"
@@ -143,15 +163,6 @@ else
   if [ -n "$(ls -A "${CLAUDE_DIR}/scripts" 2>/dev/null)" ]; then
     echo "[session-setup] Scripts installed: $(ls "${CLAUDE_DIR}/scripts" 2>/dev/null | tr '\n' ' ')"
   fi
-fi
-
-# ── 6. Discover Konflux components ──────────────────────────────────────────
-
-if command -v kubectl &>/dev/null && [ -f ~/.kube/config ]; then
-  echo "[session-setup] Discovering Konflux components..."
-  bash "${REPO_ROOT}/scripts/discover-components.sh" 2>&1
-else
-  echo "[session-setup] Skipping component discovery (no cluster access)"
 fi
 
 echo "[session-setup] Setup complete"

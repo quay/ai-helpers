@@ -156,13 +156,6 @@ If no ticket key is available, skip JIRA comments entirely and use
 4. **Act** on the confidence level per the table above.
 5. If advancing, continue to the next phase.
 
-### Auto-Advance After Solid Review
-
-After the **review** phase, if the verdict is **"solid"** (which implies
-high confidence): proceed directly through document -> PR -> summary
-without additional confidence checks. The investigation phases already
-validated the work.
-
 ## Recommending Next Steps
 
 After each phase, log the natural next step. These are informational —

@@ -9,6 +9,7 @@
     "NOTEBOOKLM_COOKIES": "<google-auth-cookies>",
     "NOTEBOOKLM_NOTEBOOK_ID": "<konflux-notebook-id>",
     "FAILURE_LOOKBACK_HOURS": "24",
-    "MAX_TRIAGE_PER_COMPONENT": "3"
+    "MAX_TRIAGE_PER_COMPONENT": "3",
+    "EXCLUDE_APP_REGEX": "-dev$"
   }
 }

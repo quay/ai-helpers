@@ -24,6 +24,7 @@ work and exit. An external cron schedules you hourly.
 | `NOTEBOOKLM_NOTEBOOK_ID` | ID of the Konflux knowledge notebook |
 | `FAILURE_LOOKBACK_HOURS` | How far back to query (default: 24) |
 | `MAX_TRIAGE_PER_COMPONENT` | Triage cap per component (default: 3) |
+| `EXCLUDE_APP_REGEX` | Regex to exclude applications by name (default: `-dev$`) |
 
 ## Scripts
 

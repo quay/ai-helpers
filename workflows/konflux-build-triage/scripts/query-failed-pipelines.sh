@@ -9,6 +9,7 @@
 # Environment:
 #   KONFLUX_NAMESPACE       — Kubernetes namespace (default: quay-eng-tenant)
 #   FAILURE_LOOKBACK_HOURS  — How far back to look (default: 24)
+#   EXCLUDE_APP_REGEX       — Regex to exclude applications by name (default: -dev$)
 #
 # Data sources: Queries both the live cluster and KubeArchive (if available)
 # to catch PipelineRuns that have been garbage collected.
@@ -20,6 +21,7 @@ set -euo pipefail
 
 : "${KONFLUX_NAMESPACE:=quay-eng-tenant}"
 : "${FAILURE_LOOKBACK_HOURS:=24}"
+: "${EXCLUDE_APP_REGEX:=-dev$}"
 
 QUERY_TYPE="${1:?Usage: query-failed-pipelines.sh <builds|ec-tests|all>}"
 
@@ -136,12 +138,20 @@ JQ_FILTER_EC='
     }
   ] | sort_by(.created) | reverse'
 
+filter_excluded_apps() {
+  if [ -z "$EXCLUDE_APP_REGEX" ]; then
+    cat
+  else
+    jq --arg pattern "$EXCLUDE_APP_REGEX" '[.[] | select(.application | test($pattern) | not)]'
+  fi
+}
+
 query_failed_builds() {
   local labels="pipelines.appstudio.openshift.io/type=build,pipelinesascode.tekton.dev/event-type=push"
   local live archived
   live=$(kubectl_get_pipelineruns "$labels" | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_BUILDS")
   archived=$(ka_get_pipelineruns "$labels" | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_BUILDS")
-  merge_results "$live" "$archived"
+  merge_results "$live" "$archived" | filter_excluded_apps
 }
 
 query_failed_ec_tests() {
@@ -149,7 +159,7 @@ query_failed_ec_tests() {
   local live archived
   live=$(kubectl_get_pipelineruns "$labels" | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_EC")
   archived=$(ka_get_pipelineruns "$labels" | jq --arg cutoff "$CUTOFF" "$JQ_FILTER_EC")
-  merge_results "$live" "$archived"
+  merge_results "$live" "$archived" | filter_excluded_apps
 }
 
 case "$QUERY_TYPE" in

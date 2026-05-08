@@ -11,6 +11,7 @@
 set -euo pipefail
 
 : "${KONFLUX_NAMESPACE:=quay-eng-tenant}"
+: "${EXCLUDE_APP_REGEX:=-dev$}"
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 STATE_DIR="${REPO_ROOT}/.claude/triage-state"
@@ -24,13 +25,25 @@ COMPONENTS=$(kubectl get components -n "$KONFLUX_NAMESPACE" -o json 2>/dev/null)
   exit 0
 }
 
-echo "$COMPONENTS" | jq '[.items[] | {
-  name: .metadata.name,
-  application: (.metadata.labels["appstudio.openshift.io/application"] // "unknown"),
-  repo: (.spec.source.git.url // "unknown"),
-  branch: (.spec.source.git.revision // "main"),
-  context: (.spec.source.git.context // ".")
-}]' > "$OUTPUT"
+if [ -n "$EXCLUDE_APP_REGEX" ]; then
+  echo "$COMPONENTS" | jq --arg pattern "$EXCLUDE_APP_REGEX" '[.items[] |
+    select((.metadata.labels["appstudio.openshift.io/application"] // "unknown") | test($pattern) | not) |
+    {
+      name: .metadata.name,
+      application: (.metadata.labels["appstudio.openshift.io/application"] // "unknown"),
+      repo: (.spec.source.git.url // "unknown"),
+      branch: (.spec.source.git.revision // "main"),
+      context: (.spec.source.git.context // ".")
+    }]' > "$OUTPUT"
+else
+  echo "$COMPONENTS" | jq '[.items[] | {
+    name: .metadata.name,
+    application: (.metadata.labels["appstudio.openshift.io/application"] // "unknown"),
+    repo: (.spec.source.git.url // "unknown"),
+    branch: (.spec.source.git.revision // "main"),
+    context: (.spec.source.git.context // ".")
+  }]' > "$OUTPUT"
+fi
 
 COUNT=$(jq 'length' "$OUTPUT")
 echo "[discover-components] Discovered ${COUNT} components, cached to ${OUTPUT}"

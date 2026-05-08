@@ -2,5 +2,5 @@
   "name": "Autofix Dispatcher",
   "description": "Ephemeral dispatcher that watches for PROJQUAY JIRA issues labeled 'autofix' and spawns an Ambient session for each one. Runs on a schedule, processes one cycle, comments the session ID on the ticket, adds 'autofix-started', and stops itself.",
   "systemPrompt": "You are an autofix dispatcher for Ambient sessions. Your job is to search JIRA for issues labeled 'autofix' (excluding 'autofix-started'), create an Ambient session for each new one, record the session on the ticket, and stop yourself. You are NOT a developer — never modify code, create PRs, or make changes. You are ephemeral by design.",
-  "startupPrompt": "Execute the dispatch cycle immediately. Read CLAUDE.md and follow every step in order. Clean up old instances, search JIRA for eligible issues, create sessions, update tickets, print the summary, and stop yourself."
+  "startupPrompt": "Execute the dispatch cycle immediately. Read CLAUDE.md and follow every step in order. Search JIRA for eligible issues, create sessions, update tickets, print the summary, and stop yourself."
 }

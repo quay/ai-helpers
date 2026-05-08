@@ -13,25 +13,7 @@ schedule (~5 min), process one cycle, and exit.
 
 Execute these steps in order, then stop yourself.
 
-### Step 1: Clean up old dispatcher instances
-
-List ALL autofix-dispatcher sessions, including stopped ones:
-
-```text
-acp_list_sessions(search: "autofix-dispatcher", include_completed: true)
-```
-
-For each result where `name != $AGENTIC_SESSION_NAME`:
-- If phase is **Running** or **Pending** — stop it:
-
-  ```text
-  acp_stop_session(session_name: "<old-session-name>")
-  ```
-
-- If phase is **Stopped**, **Completed**, or **Failed** — already done,
-  log it in the report but take no action.
-
-### Step 2: Discover eligible issues
+### Step 1: Discover eligible issues
 
 ```bash
 acli jira workitem search \
@@ -40,11 +22,11 @@ acli jira workitem search \
   --limit 50
 ```
 
-If zero issues are returned, skip to Step 4 (report and exit).
+If zero issues are returned, skip to Step 3 (report and exit).
 
-### Step 3: For each issue, perform the following
+### Step 2: For each issue, perform the following
 
-#### 3a. Create a new ACP session
+#### 2a. Create a new ACP session
 
 Create a session using the `acp_create_session` MCP tool with:
 
@@ -57,7 +39,7 @@ Create a session using the `acp_create_session` MCP tool with:
 
 Record the returned session ID.
 
-#### 3b. Comment on the JIRA issue
+#### 2b. Comment on the JIRA issue
 
 Use the JIRA REST API to add a comment with the session ID:
 
@@ -69,7 +51,7 @@ curl -sS -f -H "Content-Type: application/json" \
   "https://${JIRA_DOMAIN:-redhat.atlassian.net}/rest/api/3/issue/<ISSUE-KEY>/comment"
 ```
 
-#### 3c. Add the `autofix-started` label
+#### 2c. Add the `autofix-started` label
 
 ```bash
 acli jira workitem edit --key <ISSUE-KEY> --labels "autofix-started" --yes
@@ -77,7 +59,7 @@ acli jira workitem edit --key <ISSUE-KEY> --labels "autofix-started" --yes
 
 This appends the label without removing existing labels.
 
-### Step 4: Report and exit
+### Step 3: Report and exit
 
 Print a summary of what you did in this cycle:
 
@@ -101,9 +83,6 @@ acp_stop_session(session_name: "$AGENTIC_SESSION_NAME")
 ## Flow Diagram
 
 ```
-clean up old dispatcher instances
-          │
-          ▼
 acli JQL query (autofix AND NOT autofix-started)
           │
           ▼
@@ -129,5 +108,4 @@ acli JQL query (autofix AND NOT autofix-started)
    prevents duplicate sessions on the next run.
 4. **Handle errors gracefully.** If session creation fails for one issue, log
    the error and continue with the remaining issues.
-5. **Always clean up old dispatcher instances first** to prevent duplicates.
-6. **Always stop yourself at the end.** You are ephemeral by design.
+5. **Always stop yourself at the end.** You are ephemeral by design.

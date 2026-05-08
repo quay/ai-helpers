@@ -8,25 +8,7 @@ run on a schedule (~10 min), process one cycle, and exit.
 
 Execute these steps in order, then stop yourself.
 
-### Step 1: Clean up old dispatcher instances
-
-List ALL auto-deploy-dispatcher sessions, including stopped ones:
-
-```text
-acp_list_sessions(search: "auto-deploy-dispatcher", include_completed: true)
-```
-
-For each result where `name != $AGENTIC_SESSION_NAME`:
-- If phase is **Running** or **Pending** — stop it:
-
-  ```text
-  acp_stop_session(session_name: "<old-session-name>")
-  ```
-
-- If phase is **Stopped**, **Completed**, or **Failed** — already done,
-  log it in the report but take no action.
-
-### Step 2: Find recently labeled PRs
+### Step 1: Find recently labeled PRs
 
 List all open PRs with the label:
 
@@ -45,7 +27,7 @@ Only proceed with PRs where the label was added within the last 10 minutes.
 Compare the `created_at` timestamp against the current time. Discard any PR
 whose label was added more than 10 minutes ago.
 
-### Step 3: Check existing sessions
+### Step 2: Check existing sessions
 
 Use the `acp_list_sessions` tool (`include_completed: false`) to list active
 sessions. Search for sessions whose display name contains the PR number
@@ -55,7 +37,7 @@ if any active session's display name matches `PR #<PR_NUMBER> Auto Deploy`.
 Do NOT rely on `session_name` for matching — the platform assigns its own
 session names. Always match by display name.
 
-### Step 4: Launch child sessions for new PRs
+### Step 3: Launch child sessions for new PRs
 
 For each PR that has no existing active session, call `acp_create_session` with:
 
@@ -66,7 +48,7 @@ For each PR that has no existing active session, call `acp_create_session` with:
 - **workflow_branch**: `auto-deploy`
 - **workflow_path**: `workflows/auto-deploy`
 
-### Step 5: Report and exit
+### Step 4: Report and exit
 
 Print a timestamped summary of the cycle:
 
@@ -91,9 +73,6 @@ acp_stop_session(session_name: "$AGENTIC_SESSION_NAME")
 ## Flow Diagram
 
 ```
-clean up old dispatcher instances
-          │
-          ▼
 gh pr list (ambient-demo, open)
           │
           ▼
@@ -121,5 +100,4 @@ gh pr list (ambient-demo, open)
    UUID-based names that don't match the requested session_name.
 4. **Handle errors gracefully.** If session creation fails for one PR, log the
    error and continue with the remaining PRs.
-5. **Always clean up old dispatcher instances first** to prevent duplicates.
-6. **Always stop yourself at the end.** You are ephemeral by design.
+5. **Always stop yourself at the end.** You are ephemeral by design.

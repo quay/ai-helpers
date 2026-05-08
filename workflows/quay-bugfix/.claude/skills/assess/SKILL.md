@@ -173,6 +173,21 @@ Save to `artifacts/quay-bugfix/reports/assessment.md`:
 <Yes/No — based on Target Version field>
 ```
 
+## Confidence Assessment
+
+Include this section at the end of your assessment artifact:
+
+```markdown
+## Confidence Assessment
+- **Level**: high | medium | low
+- **Score rationale**: <1-2 sentences>
+- **Open questions**: <bullet list, or "None">
+```
+
+Confidence signals for this phase:
+- **High**: Clear bug report with reproduction steps, single component identified, good logs/traces available
+- **Low**: Vague report, multiple possible components, missing critical details, no reproduction steps
+
 ## Output
 
 - Assessment presented directly to the user (inline)

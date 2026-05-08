@@ -143,6 +143,21 @@ Save to `artifacts/quay-bugfix/tests/verification.md`:
 - Known limitations: <any gaps>
 ```
 
+## Confidence Assessment
+
+Include this section at the end of your verification artifact:
+
+```markdown
+## Confidence Assessment
+- **Level**: high | medium | low
+- **Score rationale**: <1-2 sentences>
+- **Open questions**: <bullet list, or "None">
+```
+
+Confidence signals for this phase:
+- **High**: All tests pass, regression test directly covers the fix, full suite green
+- **Low**: Test failures, unable to write targeted regression test, or partial suite run
+
 ## Output
 
 - New test files in the project repository

@@ -1,6 +1,10 @@
 dependencies:
   - source: https://github.com/patternfly/ai-helpers.git
     module: plugins/react
+  - source: https://github.com/patternfly/ai-helpers.git
+    module: plugins/a11y
+  - source: https://github.com/patternfly/ai-helpers.git
+    module: plugins/design-foundations
 
 hooks:
   post-install: scripts/lola-post-install.sh

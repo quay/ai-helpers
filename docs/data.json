@@ -24,6 +24,11 @@
           "description": "Implement changes following project conventions. Reads AGENTS.md and area-specific docs, then guides implementation, quality checks (pre-commit, tests), and commit with proper message format."
         },
         {
+          "name": "frontend",
+          "id": "frontend",
+          "description": "Load Quay React frontend context. Covers data flow, testing, and where Quay conventions override PatternFly defaults. Auto-invoked by /code when the ticket touches web/."
+        },
+        {
           "name": "poll",
           "id": "poll",
           "description": "Stateful PR poller: tracks GitHub Actions CI, CodeRabbit, Codecov, and human reviews across polls. Loops with adaptive backoff internally. Run via the Bash tool with run_in_background: true so the platform notifies the agent on exit."

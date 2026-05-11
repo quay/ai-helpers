@@ -34,6 +34,7 @@
           {
             "type": "command",
             "command": ".claude/scripts/check-embargo.sh",
+            "if": "Bash(git *)",
             "timeout": 30
           },
           {
@@ -69,7 +70,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); RESPONSE=$(echo \"$INPUT\" | jq -r \".tool_response.stdout // empty\"); PR_URL=$(echo \"$RESPONSE\" | sed -n \"s|.*\\(https://github\\.com/[^/][^/]*/[^/][^/]*/pull/[0-9][0-9]*\\).*|\\1|p\" | head -1 || true); if [ -n \"$PR_URL\" ]; then PR_NUM=$(echo \"$PR_URL\" | sed \"s|.*/||\"); jq -n --arg pr \"$PR_NUM\" \"{hookSpecificOutput:{hookEventName:\\\"PostToolUse\\\",additionalContext:(\\\"PR #\\\" + \\$pr + \\\" created. You MUST now run the poll skill for PR #\\\" + \\$pr + \\\" immediately.\\\")}}\"; fi'",
+            "command": ".claude/scripts/notify-pr-created.sh",
             "if": "Bash(gh pr create *)",
             "timeout": 10
           },
@@ -81,7 +82,7 @@
           },
           {
             "type": "command",
-            "command": "bash -c 'PR_NUM=$(gh pr view --json number,state -q \"select(.state==\\\"OPEN\\\") | .number\" 2>/dev/null || true); if [ -n \"$PR_NUM\" ]; then jq -n --arg pr \"$PR_NUM\" \"{hookSpecificOutput:{hookEventName:\\\"PostToolUse\\\",additionalContext:(\\\"Push detected for open PR #\\\" + \\$pr + \\\". You MUST now run the poll skill for PR #\\\" + \\$pr + \\\" immediately. Do NOT continue other work until poll is running.\\\")}}\"; fi'",
+            "command": ".claude/scripts/notify-push.sh",
             "if": "Bash(git push *)",
             "timeout": 15
           }

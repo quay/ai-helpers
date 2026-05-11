@@ -12,7 +12,8 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 SETUP_MARKER="${HOME}/.session-setup-done"
 
 : "${ACLI_DOWNLOAD_URL:=https://acli.atlassian.com/linux/latest/acli_linux_amd64/acli}"

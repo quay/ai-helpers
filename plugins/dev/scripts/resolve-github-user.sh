@@ -4,18 +4,6 @@
 #
 # Usage:  bash .claude/scripts/resolve-github-user.sh <userId>
 # Output: matched GitHub username (stdout), or nothing if no mapping found.
-#
-# The user-map.yaml file lives at <workflow-root>/.claude/user-map.yaml and
-# must be created manually per project (it is gitignored by default since it
-# may contain org-internal usernames). Supported formats:
-#
-#   # Simple string value
-#   jdoe: jdoe-github
-#
-#   # Dict with explicit github key
-#   jdoe:
-#     github: jdoe-github
-#     slack: jdoe-slack
 
 set -euo pipefail
 
@@ -24,8 +12,8 @@ if [ -z "$USER_ID" ]; then
   exit 0
 fi
 
-REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-MAP_FILE="${REPO_ROOT}/.claude/user-map.yaml"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+MAP_FILE="${SCRIPT_DIR}/../user-map.yaml"
 
 if [ ! -f "$MAP_FILE" ]; then
   exit 0

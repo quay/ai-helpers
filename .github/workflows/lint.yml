@@ -114,6 +114,26 @@ jobs:
           done
           exit $failed
 
+  settings-sync:
+    name: Workflow settings in sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check workflow settings.json match template
+        run: |
+          template=plugins/dev/templates/settings.json.template
+          failed=0
+          for f in workflows/quay-ticket/.claude/settings.json workflows/quay-bugfix/.claude/settings.json; do
+            if ! diff -q "$template" "$f" >/dev/null 2>&1; then
+              echo "ERROR: $f is out of sync with $template"
+              diff "$template" "$f" || true
+              failed=1
+            fi
+          done
+          exit $failed
+
   tests:
     name: Python tests
     runs-on: ubuntu-latest

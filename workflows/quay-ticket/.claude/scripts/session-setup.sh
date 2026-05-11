@@ -6,11 +6,14 @@
 # `lola sync` which does not yet parse --module-content from .lola-req.
 #
 # Must be committed directly in each workflow's .claude/scripts/
-# directory — symlinks do not survive ACP's hydrate.sh subpath extraction.
+# directory -- symlinks do not survive ACP's hydrate.sh subpath extraction.
 
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# Derive REPO_ROOT from the script's own path so this works regardless of
+# CWD or git context. The script always lives at <root>/.claude/scripts/.
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 CLAUDE_DIR="${REPO_ROOT}/.claude"
 LOLA_REQ="${REPO_ROOT}/.lola-req"
 LOLA="uvx --python 3.13 --from lola-ai lola"
@@ -47,7 +50,7 @@ while IFS= read -r line || [ -n "$line" ]; do
 done < "$LOLA_REQ"
 
 if [ -z "$(ls -A "${CLAUDE_DIR}/scripts" 2>/dev/null)" ]; then
-  echo "ERROR: .claude/scripts/ is empty after plugin install — check .lola-req"
+  echo "ERROR: .claude/scripts/ is empty after plugin install -- check .lola-req"
   exit 1
 fi
 

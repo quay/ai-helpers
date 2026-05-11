@@ -27,6 +27,24 @@ Only proceed with PRs where the label was added within the last 10 minutes.
 Compare the `created_at` timestamp against the current time. Discard any PR
 whose label was added more than 10 minutes ago.
 
+### Step 1b: Validate label author
+
+For each PR that passed the recency check, run the validation script:
+
+```bash
+.claude/scripts/validate-label-author.sh quay/quay <PR_NUMBER> ambient-demo
+```
+
+This script checks the GitHub issue events to find who added the
+`ambient-demo` label and verifies they are a collaborator on the repository.
+
+- **Exit 0** — authorized. The actor's login is printed to stdout. Proceed to
+  Step 2.
+- **Non-zero** — unauthorized or no event entry found. The reason is printed
+  to stderr. The script automatically removes the label to prevent the PR
+  from being picked up again. Skip this PR and log it in the Step 4 summary
+  as skipped due to insufficient permissions.
+
 ### Step 2: Check existing sessions
 
 Use the `acp_list_sessions` tool (`include_completed: false`) to list active
@@ -57,11 +75,13 @@ Print a timestamped summary of the cycle:
 PRs discovered: N
 Sessions created: K
 Already covered: J
+Skipped (unauthorized): S
 Errors: E
 
 Details:
 - PR #XXXX (<title> by @author): created session auto-deploy-pr-XXXX
 - PR #YYYY (<title> by @author): already has session
+- PR #ZZZZ (<title> by @author): skipped — label added by <user> (no write access)
 ```
 
 Then stop yourself:
@@ -85,8 +105,14 @@ gh pr list (ambient-demo, open)
           │
           ▼
    for each new PR:
-     1. Check active sessions by display name
-     2. If no session exists, create one
+     1. Validate label author has write access
+     2. [authorized?] -- no --> log as unauthorized, skip
+          │
+         yes
+          │
+          ▼
+     3. Check active sessions by display name
+     4. If no session exists, create one
           │
           ▼
    report & stop

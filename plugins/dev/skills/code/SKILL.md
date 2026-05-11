@@ -30,6 +30,10 @@ Implement code changes following project conventions.
 Read the project's `AGENTS.md` for universal conventions, then load area-specific
 docs as identified in `/start`.
 
+**Frontend auto-detect:** If the ticket touches `web/` files (check the branch
+diff or ticket description), invoke `/frontend` to load Quay React + PatternFly
+context before implementing.
+
 ## Step 2: Implement
 
 Follow `AGENTS.md` conventions. Common rules:

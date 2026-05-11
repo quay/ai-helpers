@@ -37,3 +37,30 @@ copy_dir() {
 copy_dir scripts "*.sh"
 copy_dir templates "*"
 copy_dir commands "*.md"
+
+# Install settings.json from template if the project doesn't have one yet,
+# or if it only has the minimal bootstrap stub (SessionStart only).
+install_settings() {
+  local template="$mod/templates/settings.json.template"
+  local dst="$proj/.claude/settings.json"
+  [ -f "$template" ] || return 0
+
+  if [ ! -f "$dst" ]; then
+    cp "$template" "$dst"
+    echo "[lola-post-install] Installed .claude/settings.json from plugin template"
+    return 0
+  fi
+
+  if command -v jq &>/dev/null; then
+    local hook_count
+    hook_count=$(jq '.hooks | keys | length' "$dst" 2>/dev/null || echo 99)
+    if [ "$hook_count" -le 1 ]; then
+      cp "$template" "$dst"
+      echo "[lola-post-install] Replaced bootstrap stub with full plugin settings.json (takes effect next session)"
+    else
+      echo "[lola-post-install] .claude/settings.json already has custom hooks — skipping template install"
+    fi
+  fi
+}
+
+install_settings

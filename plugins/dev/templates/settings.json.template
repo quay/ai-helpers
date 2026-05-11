@@ -50,6 +50,12 @@
           },
           {
             "type": "command",
+            "command": ".claude/scripts/coderabbit-review-gate.sh",
+            "if": "Bash(gh pr create *)",
+            "timeout": 120
+          },
+          {
+            "type": "command",
             "command": ".claude/scripts/validate-commit-msg.sh",
             "if": "Bash(git commit *)",
             "timeout": 5
@@ -63,7 +69,19 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash -c 'INPUT=$(cat); RESPONSE=$(echo \"$INPUT\" | jq -r \".tool_response.stdout // empty\"); PR_URL=$(echo \"$RESPONSE\" | grep -oP \"https://github.com/[^/]+/[^/]+/pull/\\d+\" | head -1 || true); if [ -n \"$PR_URL\" ]; then PR_NUM=$(echo \"$PR_URL\" | grep -oP \"\\d+$\"); jq -n --arg pr \"$PR_NUM\" \"{hookSpecificOutput:{hookEventName:\\\"PostToolUse\\\",additionalContext:(\\\"PR #\\\" + \\$pr + \\\" created. You MUST now run the poll skill for PR #\\\" + \\$pr + \\\" immediately.\\\")}}\"; fi'",
+            "if": "Bash(gh pr create *)",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": ".claude/scripts/check-target-version.sh",
+            "if": "Bash(git push *)",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'PR_NUM=$(gh pr view --json number,state -q \"select(.state==\\\"OPEN\\\") | .number\" 2>/dev/null || true); if [ -n \"$PR_NUM\" ]; then jq -n --arg pr \"$PR_NUM\" \"{hookSpecificOutput:{hookEventName:\\\"PostToolUse\\\",additionalContext:(\\\"Push detected for open PR #\\\" + \\$pr + \\\". You MUST now run the poll skill for PR #\\\" + \\$pr + \\\" immediately. Do NOT continue other work until poll is running.\\\")}}\"; fi'",
             "if": "Bash(git push *)",
             "timeout": 15
           }

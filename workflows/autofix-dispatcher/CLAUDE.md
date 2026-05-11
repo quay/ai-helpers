@@ -38,7 +38,12 @@ and verifies they are a member of the Quay Atlassian team.
 - **Exit 0** — authorized. The author's email is printed to stdout. Proceed to
   Step 2.
 - **Non-zero** — unauthorized or no changelog entry found. The reason is
-  printed to stderr. **Skip the issue** and log it in the Step 3 summary.
+  printed to stderr. **Remove the `autofix` label** to prevent the issue from
+  being picked up again, then log it in the Step 3 summary:
+
+  ```bash
+  acli jira workitem edit --key <ISSUE-KEY> --labels-remove "autofix" --yes
+  ```
 
 ### Step 2: For each eligible issue, perform the following
 
@@ -110,7 +115,7 @@ acli JQL query (autofix AND NOT autofix-started)
           ▼
    for each issue:
      1. Run validate-label-author.sh <ISSUE-KEY>
-     2. [exit 0?] -- no --> skip (log as unauthorized)
+     2. [exit 0?] -- no --> remove "autofix" label, log as unauthorized
           │
          yes
           │

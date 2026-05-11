@@ -83,7 +83,7 @@ it has CSRF token interceptors, auth middleware, and error handling.
 
 ## Data Flow
 
-```
+```text
 Component → Hook (src/hooks/UseX.ts) → Resource (src/resources/XResource.ts) → Axios → API
 ```
 
@@ -110,6 +110,7 @@ const mutation = useMutation({
 ```typescript
 import {describe, it, expect, vi} from 'vitest';
 import {render, screen, userEvent} from 'src/test-utils';
+import axios from 'src/libs/axios';
 
 vi.mock('src/libs/axios');
 

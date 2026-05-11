@@ -24,7 +24,23 @@ acli jira workitem search \
 
 If zero issues are returned, skip to Step 3 (report and exit).
 
-### Step 2: For each issue, perform the following
+### Step 1b: Validate label author
+
+For each issue returned in Step 1, run the validation script:
+
+```bash
+.claude/scripts/validate-label-author.sh <ISSUE-KEY>
+```
+
+This script checks the JIRA changelog to find who added the `autofix` label
+and verifies they are a member of the Quay Atlassian team.
+
+- **Exit 0** — authorized. The author's email is printed to stdout. Proceed to
+  Step 2.
+- **Non-zero** — unauthorized or no changelog entry found. The reason is
+  printed to stderr. **Skip the issue** and log it in the Step 3 summary.
+
+### Step 2: For each eligible issue, perform the following
 
 #### 2a. Create a new ACP session
 
@@ -66,12 +82,13 @@ Print a summary of what you did in this cycle:
 ```text
 [<ISO-8601 timestamp>] Autofix Dispatcher — cycle complete
 Issues discovered: N
+Issues skipped (unauthorized): S
 Sessions created: K
 Errors: E
 
 Details:
 - PROJQUAY-XXXX: created session autofix-projquay-xxxx
-- PROJQUAY-YYYY: created session autofix-projquay-yyyy
+- PROJQUAY-YYYY: skipped — label added by unauthorized-user@example.com
 ```
 
 Then stop yourself:
@@ -92,9 +109,15 @@ acli JQL query (autofix AND NOT autofix-started)
           │
           ▼
    for each issue:
-     1. Create ACP session (repo + workflow.md)
-     2. Comment session ID on JIRA issue (via REST API)
-     3. Add "autofix-started" label (via acli)
+     1. Run validate-label-author.sh <ISSUE-KEY>
+     2. [exit 0?] -- no --> skip (log as unauthorized)
+          │
+         yes
+          │
+          ▼
+     3. Create ACP session (repo + workflow.md)
+     4. Comment session ID on JIRA issue (via REST API)
+     5. Add "autofix-started" label (via acli)
           │
           ▼
    report & stop

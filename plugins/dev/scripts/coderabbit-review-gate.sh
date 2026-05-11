@@ -38,7 +38,10 @@ fi
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
 BASE_BRANCH=$(echo "$CMD" | grep -oE '(--base|-B)[= ]+[^ ]+' | sed -E 's/(--base|-B)[= ]+//' | head -1)
-BASE_BRANCH="${BASE_BRANCH:-master}"
+if [ -z "$BASE_BRANCH" ]; then
+  BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+  BASE_BRANCH="${BASE_BRANCH:-main}"
+fi
 
 CHANGED_FILES=$(git diff "$BASE_BRANCH"...HEAD --name-only 2>/dev/null || git diff HEAD~1 --name-only 2>/dev/null || true)
 if [ -z "$CHANGED_FILES" ]; then

@@ -19,6 +19,13 @@ if [ ! -f "$MAP_FILE" ]; then
   exit 0
 fi
 
+if ! command -v python3 &>/dev/null; then
+  exit 0
+fi
+if ! python3 -c 'import yaml' 2>/dev/null; then
+  exit 0
+fi
+
 python3 -c "
 import yaml, sys
 with open(sys.argv[1]) as f:

@@ -1,2 +1,6 @@
+dependencies:
+  - source: https://github.com/patternfly/ai-helpers.git
+    module: plugins/react
+
 hooks:
   post-install: scripts/lola-post-install.sh

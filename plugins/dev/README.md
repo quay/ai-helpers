@@ -14,6 +14,7 @@ workflow as a continuous state machine.
 | `/dev:poll` | Stateful PR poller for CI, reviews, and feedback |
 | `/dev:ci` | Quick CI status check |
 | `/dev:backport` | Trigger cherry-pick robot for backporting |
+| `/dev:frontend` | Load Quay React + PatternFly 6 frontend context (auto-invoked by `/code` for web/ changes) |
 
 ## Scripts
 

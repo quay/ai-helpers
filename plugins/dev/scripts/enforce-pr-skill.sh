@@ -26,6 +26,10 @@ if [ -z "$CMD" ]; then
   exit 0
 fi
 
+if ! echo "$CMD" | grep -q 'gh pr create'; then
+  exit 0
+fi
+
 ERRORS=()
 
 # --- Check 1: PR title matches CI-enforced regex ---

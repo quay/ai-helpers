@@ -20,7 +20,10 @@ An external cron schedules you hourly.
 | `KONFLUX_NAMESPACE` | Kubernetes namespace for PipelineRun queries |
 | `KONFLUX_KUBECONFIG_DATA` | Base64-encoded kubeconfig (decoded at session start) |
 | `MAX_TRIAGE_PER_COMPONENT` | Triage cap per component (default: 3) |
+| `MAX_SESSIONS_PER_RUN` | Max new sessions to spawn per cron run (default: 5) |
 | `EXCLUDE_APP_REGEX` | Regex to exclude applications by name (default: `-dev$`) |
+| `SUPPORTED_VERSIONS` | Comma-separated version strings to allow (e.g. `v3-17,v3-18`). Empty = no filter. |
+| `MAX_FAILURE_AGE_DAYS` | Skip failures whose `last_build` is older than this many days (default: 30). Set to 0 to disable. |
 
 ## Scripts
 
@@ -34,28 +37,35 @@ An external cron schedules you hourly.
 `curl` and bearer token auth. KubeArchive archives all PipelineRuns
 after they are garbage-collected from the live cluster (within hours).
 The script queries the **latest on-push PipelineRun per component** to
-determine current build health.
+determine current build health. Components with empty `branch` fields
+(e.g., FBC components) are excluded from `--failed-only` output since
+they cannot be actioned without a known branch.
 
-## Deduplication via ACP Sessions
+## Deduplication via ACP Session displayName
 
 Cross-run deduplication uses the ACP platform as the source of truth.
-Fix session names are deterministic, so checking whether a session
-already exists tells you whether a failure was already triaged.
 
-Session name formula:
+**Important:** The `session_name` parameter passed to `acp_create_session`
+is NOT used as the actual session name — ACP auto-generates UUID names
+(`session-xxxxxxxx-...`). Deduplication must match on `displayName` instead.
+
+Fix session displayNames are deterministic:
 ```text
-fix-<component>-<first-8-chars-of-md5-of-pipelinerun-name>
+Fix: {component} ({pipelinerun_name})
 ```
 
-At the start of each run, list all existing fix sessions:
+At the start of each run, list all fix sessions by searching displayName:
 ```text
-acp_list_sessions(search="fix-", include_completed=true)
+acp_list_sessions(search="Fix:", include_completed=true)
 ```
 
-To deduplicate: compute the session name and check if it appears in
-the list (any phase). To check the triage cap: count only **active**
-sessions (Running, Pending, Creating) whose name starts with
-`fix-<component>-`. Do not count Completed, Failed, or Stopped sessions
+To deduplicate: check if any session in the list has
+`displayName == "Fix: {component} ({pipelinerun_name})"`. If it does,
+mark as "already triaged" and skip.
+
+To check the triage cap: count **active** sessions (phase = Running,
+Pending, or Creating) in the list whose `displayName` starts with
+`"Fix: {component} "`. Do not count Completed, Failed, or Stopped sessions
 — a component with 3 successfully merged fixes must not be permanently
 suppressed.
 
@@ -65,7 +75,7 @@ Execute these steps in order. When all steps complete, stop yourself.
 
 ### Step 1: List existing fix sessions
 
-Call `acp_list_sessions` with `search="fix-"` and
+Call `acp_list_sessions` with `search="Fix:"` and
 `include_completed=true` to get all fix sessions (running, completed,
 failed, stopped). Store this list for deduplication in later steps.
 
@@ -101,24 +111,56 @@ Flatten the components from all applications into a list of failures.
 If empty, report "All components building successfully" and proceed
 to Step 5 (report).
 
-### Step 3: For each failure — deduplicate and check triage cap
+### Step 2.5: Filter failures
 
-For each failing component:
+Apply the following filters to the flattened failures list before Step 3.
+Log each filtered entry with a reason.
 
-**a. Compute session name:**
-```text
-fix-<component>-<first-8-chars-of-md5-of-pipelinerun-name>
+**a. Branch filter:** Skip any component with an empty `branch` field.
+```
+SKIP {component} — empty branch (FBC or unresolved source ref)
 ```
 
-**b. Deduplicate:** Check if this session name exists in the Step 1
-list. If it does, mark as "already triaged" and skip.
+**b. Version filter** (if `SUPPORTED_VERSIONS` is non-empty): Split
+`SUPPORTED_VERSIONS` by commas. Keep only components whose `application`
+name contains at least one of the version strings.
+```
+SKIP {component} (app: {application}) — not in SUPPORTED_VERSIONS ({SUPPORTED_VERSIONS})
+```
 
-**c. Triage cap:** Count **active** sessions (phase = Running, Pending,
-or Creating) in the Step 1 list whose name starts with
-`fix-<component>-`. If count >= `MAX_TRIAGE_PER_COMPONENT` (default 3),
-log a warning and skip. Do NOT spawn another session. Completed, Failed,
-and Stopped sessions are excluded — they represent resolved or abandoned
-work, not live capacity.
+**c. Age filter** (if `MAX_FAILURE_AGE_DAYS` > 0): Compute the cutoff
+as `now - MAX_FAILURE_AGE_DAYS * 86400` seconds. Skip components where
+`last_build` is older than the cutoff.
+```
+SKIP {component} — last build {last_build} older than {MAX_FAILURE_AGE_DAYS} days
+```
+
+Track the total number of filtered entries for the Step 5 report.
+
+### Step 3: Sort and process failures
+
+**a. Sort by recency:** Sort the filtered failures list by `last_build`
+descending (most recent first). This prioritizes active breakage over
+stale failures when the run cap is hit.
+
+**b. For each failure — deduplicate, check caps, and spawn:**
+
+Initialize `sessions_spawned = 0`.
+
+For each component in sorted order:
+
+**i. Run cap check:** If `sessions_spawned >= MAX_SESSIONS_PER_RUN`
+(default 5), add to "Skipped (run cap)" count and continue without
+spawning. Do not deduplicate or check the triage cap — just skip.
+
+**ii. Deduplicate:** Check if any session in the Step 1 list has
+`displayName == "Fix: {component} ({pipelinerun})"`. If yes, mark as
+"already triaged" and skip.
+
+**iii. Triage cap:** Count **active** sessions (phase = Running, Pending,
+or Creating) in the Step 1 list whose `displayName` starts with
+`"Fix: {component} "`. If count >= `MAX_TRIAGE_PER_COMPONENT` (default 3),
+log a warning and skip. Do NOT spawn another session.
 
 ### Step 4: Spawn debugger session
 
@@ -133,16 +175,18 @@ REPO=$(echo "$SOURCE" | sed 's|https://github.com/||' | sed 's|\.git$||')
 
 **b. Spawn via `acp_create_session`:**
 
-- `session_name`: the computed session name
-- `display_name`: `"Fix: {component} ({pipelinerun})"`
+- `session_name`: any unique slug (ACP overrides this with a UUID name)
+- `display_name`: `"Fix: {component} ({pipelinerun})"` ← used for dedup
 - `initial_prompt`: use the template below
 - `repos`: `[{"url": "https://github.com/{repo}", "branch": "{branch}"}]`
 - `workflow_git_url`: `"https://github.com/quay/ai-helpers.git"`
 - `workflow_branch`: `"main"`
 - `workflow_path`: `"workflows/konflux-build-debugger"`
 
+Increment `sessions_spawned` after each successful spawn.
+
 If session creation fails, log the error. It will be retried on the
-next cron run (the session won't exist, so dedup won't skip it).
+next cron run (no matching displayName will exist, so dedup won't skip it).
 
 ### Step 5: Report summary and exit
 
@@ -151,11 +195,18 @@ Print a run summary:
 ══════════════════════════════════════════
   Triage Run — YYYY-MM-DDTHH:MM:SSZ
 ══════════════════════════════════════════
-  Failures found:         X
-  Already triaged:        Y
-  New sessions spawned:   Z
-  Skipped (triage cap):   A
+  Failures found:              X
+  Filtered (version/age/branch): A
+  Already triaged:             Y
+  Skipped (triage cap):        B
+  Skipped (run cap):           C
+  New sessions spawned:        Z
 ══════════════════════════════════════════
+```
+
+If `C > 0` (run cap hit), add a note:
+```
+NOTE: Run cap reached. {C} failure(s) deferred to next run.
 ```
 
 Then stop yourself:
@@ -196,3 +247,8 @@ and handle feedback until COMPLETE or triage cap (3 attempts).
 - **ACP session creation fails**: Log error. Will be retried next run.
 - **ACP session listing fails**: Log error. Run without dedup (risk of
   duplicate sessions is acceptable as a fallback).
+- **Spawned sessions remain idle**: If feasible, call `acp_get_session_status`
+  on 1–2 spawned sessions after a brief pause. If `totalMessages == 0`
+  after spawn, log the session IDs in the report — this indicates the
+  debugger workflow's SessionStart hook may be blocked. Do not wait;
+  proceed to the report and exit.

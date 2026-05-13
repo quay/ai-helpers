@@ -13,6 +13,7 @@ EXCLUDE_APP_REGEX="${EXCLUDE_APP_REGEX:-}"
 FAILED_ONLY=false
 TABLE_OUTPUT=false
 CONCURRENCY=20
+SUPPORTED_ONLY=false
 
 usage() {
   cat <<'EOF'
@@ -26,6 +27,7 @@ Options:
   -a, --application APP  Filter to a single application
   -e, --exclude REGEX    Exclude applications matching regex (or EXCLUDE_APP_REGEX env)
   -f, --failed-only      Only show components with failed builds
+  -s, --supported-only   Only show components for supported Quay versions
   -t, --table            Human-readable table output instead of JSON
   -P, --parallel N       Max parallel queries (default: 20)
   -h, --help             Show this help
@@ -40,6 +42,7 @@ while [[ $# -gt 0 ]]; do
     -a|--application) APPLICATION="$2"; shift 2 ;;
     -e|--exclude) EXCLUDE_APP_REGEX="$2"; shift 2 ;;
     -f|--failed-only) FAILED_ONLY=true; shift ;;
+    -s|--supported-only) SUPPORTED_ONLY=true; shift ;;
     -t|--table) TABLE_OUTPUT=true; shift ;;
     -P|--parallel) CONCURRENCY="$2"; shift 2 ;;
     -h|--help) usage ;;
@@ -100,6 +103,28 @@ fi
 
 echo "$COMPONENTS_JSON" | jq -r --arg app "$APPLICATION" --arg exclude "$EXCLUDE_APP_REGEX" \
   ".items[] | select(${JQ_APP_FILTER}) | select(${JQ_EXCLUDE}) | [.metadata.name, .spec.application, (.spec.source.git.url // \"\"), (.spec.source.git.revision // \"\")] | @tsv" > "$TMPDIR/components.tsv"
+
+# Filter out end-of-life versions if requested
+if [[ "$SUPPORTED_ONLY" == "true" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  EOL_VERSIONS=$("$SCRIPT_DIR/get-supported-versions.sh" --eol 2>/dev/null) || {
+    echo "Error: Failed to fetch lifecycle data from Red Hat lifecycle API" >&2
+    exit 1
+  }
+  if [[ -n "$EOL_VERSIONS" ]]; then
+    # Build a regex that matches application names containing EOL version numbers
+    # Application names follow the pattern: quay-v3-18 -> version 3.18
+    # Use ([^0-9]|$) boundary to prevent v3-1 matching inside v3-18
+    EOL_PATTERN=$(echo "$EOL_VERSIONS" | sed 's/\./\\./g' | sed 's/\(.*\)\\\.\(.*\)/v\1-\2/' | paste -sd'|' -)
+    BEFORE=$(wc -l < "$TMPDIR/components.tsv" | tr -d ' ')
+    grep -vE "($EOL_PATTERN)([^0-9]|$)" "$TMPDIR/components.tsv" > "$TMPDIR/components_filtered.tsv" || true
+    SKIPPED=$(( BEFORE - $(wc -l < "$TMPDIR/components_filtered.tsv" | tr -d ' ') ))
+    mv "$TMPDIR/components_filtered.tsv" "$TMPDIR/components.tsv"
+    if [[ "$SKIPPED" -gt 0 ]]; then
+      echo "Filtered out ${SKIPPED} components for end-of-life Quay versions" >&2
+    fi
+  fi
+fi
 
 TOTAL=$(wc -l < "$TMPDIR/components.tsv" | tr -d ' ')
 if [[ "$TOTAL" -eq 0 ]]; then

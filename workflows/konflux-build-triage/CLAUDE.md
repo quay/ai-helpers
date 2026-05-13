@@ -11,7 +11,9 @@ An external cron schedules you hourly.
 2. **NEVER create PRs or branches.** You spawn fix sessions that do that.
 3. **Always deduplicate.** Check existing ACP sessions before spawning.
 4. **Respect the triage cap.** Too many failures per component = stop spawning, alert.
-5. **Always stop yourself at the end.** You are ephemeral by design.
+5. **Only triage supported versions.** Skip components for Quay versions that have reached end of life per the Red Hat product lifecycle.
+6. **Always wait for user confirmation before spawning sessions.** Present the list of failures and let the user choose which ones to triage. NEVER auto-spawn.
+7. **Always stop yourself at the end.** You are ephemeral by design.
 
 ## Environment
 
@@ -27,6 +29,7 @@ An external cron schedules you hourly.
 | Script | Purpose |
 |--------|---------|
 | `scripts/check-build-health.sh` | Check latest on-push build status for all components (via KubeArchive REST API) |
+| `scripts/get-supported-versions.sh` | Query Red Hat product lifecycle API for currently supported Quay versions |
 
 ## Data Source
 
@@ -69,11 +72,17 @@ Call `acp_list_sessions` with `search="fix-"` and
 `include_completed=true` to get all fix sessions (running, completed,
 failed, stopped). Store this list for deduplication in later steps.
 
-### Step 2: Assess build health
+### Step 2: Assess build health (supported versions only)
 
 ```bash
-HEALTH=$(bash scripts/check-build-health.sh --failed-only)
+HEALTH=$(bash scripts/check-build-health.sh --failed-only --supported-only)
 ```
+
+The `--supported-only` flag queries the Red Hat product lifecycle API
+(https://access.redhat.com/support/policy/updates/rhquay) and filters
+out components belonging to Quay versions that have reached end of life.
+Only versions in Full Support, Maintenance Support, or Extended Update
+Support are included.
 
 This returns JSON grouped by application:
 
@@ -99,7 +108,7 @@ This returns JSON grouped by application:
 
 Flatten the components from all applications into a list of failures.
 If empty, report "All components building successfully" and proceed
-to Step 5 (report).
+to Step 6 (report).
 
 ### Step 3: For each failure — deduplicate and check triage cap
 
@@ -120,10 +129,39 @@ log a warning and skip. Do NOT spawn another session. Completed, Failed,
 and Stopped sessions are excluded — they represent resolved or abandoned
 work, not live capacity.
 
-### Step 4: Spawn debugger session
+### Step 4: Present failures and wait for confirmation
 
-For each new (non-duplicate, under cap) failure, resolve the repo
-and spawn a debugger session.
+**Do NOT automatically spawn debugger sessions.** Present the list
+of actionable failures (non-duplicate, under cap) to the user and
+wait for explicit confirmation before proceeding.
+
+Display a numbered table of failures that are ready to be triaged:
+
+```text
+══════════════════════════════════════════════════════════════
+  Build Failures Ready for Triage
+══════════════════════════════════════════════════════════════
+  #   COMPONENT                 APPLICATION      PIPELINERUN
+  1   quay-quay-v3-18           quay-v3-18       quay-quay-v3-18-on-push-ppm9z
+  2   clair-clair-v3-17         quay-v3-17       clair-clair-v3-17-on-push-abc12
+══════════════════════════════════════════════════════════════
+  Already triaged:        Y
+  Skipped (triage cap):   A
+  Skipped (EOL version):  B
+══════════════════════════════════════════════════════════════
+```
+
+Then ask the user:
+> "Would you like me to spawn debugger sessions for these failures?
+> Reply 'all' to spawn all, list numbers (e.g. '1,3') to select
+> specific ones, or 'none' to skip."
+
+Wait for the user's response before continuing. Do NOT proceed
+without explicit confirmation.
+
+### Step 5: Spawn debugger sessions (after confirmation)
+
+Only spawn sessions for failures the user approved in Step 4.
 
 **a. Resolve the repository:**
 
@@ -144,7 +182,7 @@ REPO=$(echo "$SOURCE" | sed 's|https://github.com/||' | sed 's|\.git$||')
 If session creation fails, log the error. It will be retried on the
 next cron run (the session won't exist, so dedup won't skip it).
 
-### Step 5: Report summary and exit
+### Step 6: Report summary and exit
 
 Print a run summary:
 ```text
@@ -155,6 +193,8 @@ Print a run summary:
   Already triaged:        Y
   New sessions spawned:   Z
   Skipped (triage cap):   A
+  Skipped (EOL version):  B
+  Skipped (user):         C
 ══════════════════════════════════════════
 ```
 

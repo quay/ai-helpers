@@ -212,6 +212,11 @@ else
       continue
     fi
 
+    if [[ "$FAILED_ONLY" == "true" && "$build_failed" == "true" && -z "$branch" ]]; then
+      echo "WARNING: Skipping ${comp_name} (app: ${app}) — empty branch, cannot spawn fix session" >&2
+      continue
+    fi
+
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$comp_name" "$app" "$source" "$branch" "$build_failed" "$last_build" "$plr_name"
   done < "$TMPDIR/components.tsv" > "$TMPDIR/merged.tsv"
 

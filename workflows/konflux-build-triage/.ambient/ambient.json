@@ -7,6 +7,9 @@
     "KONFLUX_NAMESPACE": "quay-eng-tenant",
     "KONFLUX_KUBECONFIG_DATA": "",
     "MAX_TRIAGE_PER_COMPONENT": "3",
-    "EXCLUDE_APP_REGEX": "-dev$"
+    "MAX_SESSIONS_PER_RUN": "5",
+    "EXCLUDE_APP_REGEX": "-dev$",
+    "SUPPORTED_VERSIONS": "",
+    "MAX_FAILURE_AGE_DAYS": "30"
   }
 }

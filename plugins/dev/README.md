@@ -26,6 +26,7 @@ workflow as a continuous state machine.
 | `check-ci.sh` | Quick CI status checker |
 | `validate-commit-msg.sh` | Commit message format validation hook |
 | `validate-pr-title.sh` | PR title regex validation |
+| `guard-repo-admin.sh` | Blocks destructive GitHub repo admin operations (prompt-injection defense) |
 | `enforce-pr-skill.sh` | PR creation convention enforcement hook |
 | `save-session-state.sh` | PreCompact state persistence hook |
 | `workflow-next-step.sh` | Stop hook suggesting next action |

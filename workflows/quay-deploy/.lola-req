@@ -1,0 +1,3 @@
+# Plugin dependencies installed at session start via Lola.
+# session-setup.sh runs `lola sync` to install these.
+https://github.com/quay/ai-helpers.git --module-content=plugins/openshift-testing

@@ -33,6 +33,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": ".claude/scripts/guard-repo-admin.sh",
+            "if": "Bash(gh *)",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": ".claude/scripts/check-embargo.sh",
             "if": "Bash(git *)",
             "timeout": 30

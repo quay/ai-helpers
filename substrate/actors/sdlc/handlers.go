@@ -15,6 +15,7 @@ var (
 	actorState *ActorState
 	stateMutex sync.Mutex
 	statePath  = "/state/actor-state.json"
+	jiraClient *JIRAClient
 )
 
 func handleEvent(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +40,17 @@ func handleEvent(w http.ResponseWriter, r *http.Request) {
 		slog.String("actorID", envelope.ActorID))
 
 	stateMutex.Lock()
-	defer stateMutex.Unlock()
+
+	if actorState.IsEventProcessed(envelope.EventID) {
+		stateMutex.Unlock()
+		slog.Info("duplicate event, skipping", slog.String("eventID", envelope.EventID))
+		respondJSON(w, substrate.EventResponse{KeepAlive: false, Message: "duplicate"})
+		return
+	}
+
+	if actorState.ActorID == "" {
+		actorState.ActorID = envelope.ActorID
+	}
 
 	var decision string
 	switch envelope.Source {
@@ -61,21 +72,43 @@ func handleEvent(w http.ResponseWriter, r *http.Request) {
 		decision = "error"
 	}
 
-	actorState.AddEvent(envelope.Source, envelope.EventType, decision, result)
+	actorState.AddEvent(envelope.EventID, envelope.Source, envelope.EventType, decision, result)
 
 	if err := actorState.Save(statePath); err != nil {
+		stateMutex.Unlock()
 		slog.Error("failed to save state", slog.String("error", err.Error()))
 		http.Error(w, "failed to save state", http.StatusInternalServerError)
 		return
 	}
 
-	response := substrate.EventResponse{
-		KeepAlive: false,
-		Message:   decision,
+	if shouldStartChain(actorState.Phase) && claudeClient != nil {
+		actorID := actorState.ActorID
+		stateMutex.Unlock()
+
+		respondJSON(w, substrate.EventResponse{KeepAlive: true, TTL: 900, Message: decision})
+
+		go func() {
+			stateMutex.Lock()
+			defer stateMutex.Unlock()
+
+			runImplementationChain(actorState)
+
+			if err := actorState.Save(statePath); err != nil {
+				slog.Error("failed to save state after chain", slog.String("error", err.Error()))
+			}
+
+			ateClient.SuspendSelf(actorID)
+		}()
+		return
 	}
 
+	stateMutex.Unlock()
+	respondJSON(w, substrate.EventResponse{KeepAlive: false, Message: decision})
+}
+
+func respondJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := json.NewEncoder(w).Encode(v); err != nil {
 		slog.Error("failed to encode response", slog.String("error", err.Error()))
 	}
 }

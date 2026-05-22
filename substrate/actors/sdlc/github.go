@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 func ProcessGitHubEvent(state *ActorState, eventType string, payload []byte) (decision string, err error) {
@@ -16,7 +17,7 @@ func ProcessGitHubEvent(state *ActorState, eventType string, payload []byte) (de
 	case "pull_request_review":
 		return processPullRequestReview(state, payload)
 	case "issue_comment":
-		return "ignored", nil
+		return processIssueComment(state, payload)
 	default:
 		return "ignored", nil
 	}
@@ -30,7 +31,11 @@ func processPullRequest(state *ActorState, payload []byte) (string, error) {
 			Number int `json:"number"`
 			Head   struct {
 				SHA string `json:"sha"`
+				Ref string `json:"ref"`
 			} `json:"head"`
+			Base struct {
+				Ref string `json:"ref"`
+			} `json:"base"`
 			Merged bool `json:"merged"`
 		} `json:"pull_request"`
 		Repository struct {
@@ -42,36 +47,45 @@ func processPullRequest(state *ActorState, payload []byte) (string, error) {
 		return "", fmt.Errorf("while unmarshaling pull_request event: %w", err)
 	}
 
+	branch := event.PullRequest.Head.Ref
+	if branch == "" {
+		branch = "main"
+	}
+
 	switch event.Action {
 	case "opened", "reopened":
-		if state.PR == nil {
-			state.PR = &PRState{}
+		pr := state.PRs[branch]
+		if pr == nil {
+			pr = &PRState{}
+			state.PRs[branch] = pr
 		}
-		state.PR.Repo = event.Repository.FullName
-		state.PR.Number = event.PullRequest.Number
-		state.PR.HeadSHA = event.PullRequest.Head.SHA
-		state.PR.CIStatus = "pending"
-		state.PR.Conclusion = "pending"
-		state.Phase = "pr-open"
+		pr.Repo = event.Repository.FullName
+		pr.Number = event.PullRequest.Number
+		pr.Branch = branch
+		pr.BaseBranch = event.PullRequest.Base.Ref
+		pr.HeadSHA = event.PullRequest.Head.SHA
+		pr.CIStatus = "pending"
+		pr.Conclusion = "pending"
+		state.Phase = PhaseCIWaiting
 		return "initialized PR state", nil
 
 	case "synchronize":
-		if state.PR != nil {
-			state.PR.HeadSHA = event.PullRequest.Head.SHA
-			state.PR.CIStatus = "pending"
+		if pr := state.PRs[branch]; pr != nil {
+			pr.HeadSHA = event.PullRequest.Head.SHA
+			pr.CIStatus = "pending"
 		}
 		return "updated HeadSHA", nil
 
 	case "closed":
-		if state.PR != nil {
+		if pr := state.PRs[branch]; pr != nil {
 			if event.PullRequest.Merged {
-				state.PR.Conclusion = "merged"
+				pr.Conclusion = "merged"
 			} else {
-				state.PR.Conclusion = "closed"
+				pr.Conclusion = "closed"
 			}
 		}
-		state.Phase = "done"
-		return fmt.Sprintf("PR %s", state.PR.Conclusion), nil
+		state.Phase = PhaseDone
+		return fmt.Sprintf("PR %s", state.PRs[branch].Conclusion), nil
 
 	default:
 		return "ignored", nil
@@ -94,16 +108,17 @@ func processCheckRun(state *ActorState, payload []byte) (string, error) {
 		return "ignored", nil
 	}
 
-	if state.PR != nil {
-		if event.CheckRun.Conclusion == "success" {
-			state.PR.CIStatus = "passing"
-			return "CI status: passing", nil
-		}
-		state.PR.CIStatus = "failing"
-		return "CI status: failing", nil
+	pr := findActivePR(state)
+	if pr == nil {
+		return "ignored", nil
 	}
 
-	return "ignored", nil
+	if event.CheckRun.Conclusion == "success" {
+		pr.CIStatus = "passing"
+		return "CI status: passing", nil
+	}
+	pr.CIStatus = "failing"
+	return "CI status: failing", nil
 }
 
 func processCheckSuite(state *ActorState, payload []byte) (string, error) {
@@ -122,16 +137,17 @@ func processCheckSuite(state *ActorState, payload []byte) (string, error) {
 		return "ignored", nil
 	}
 
-	if state.PR != nil {
-		if event.CheckSuite.Conclusion == "success" {
-			state.PR.CIStatus = "passing"
-			return "CI status: passing", nil
-		}
-		state.PR.CIStatus = "failing"
-		return "CI status: failing", nil
+	pr := findActivePR(state)
+	if pr == nil {
+		return "ignored", nil
 	}
 
-	return "ignored", nil
+	if event.CheckSuite.Conclusion == "success" {
+		pr.CIStatus = "passing"
+		return "CI status: passing", nil
+	}
+	pr.CIStatus = "failing"
+	return "CI status: failing", nil
 }
 
 func processPullRequestReview(state *ActorState, payload []byte) (string, error) {
@@ -145,18 +161,80 @@ func processPullRequestReview(state *ActorState, payload []byte) (string, error)
 		return "", fmt.Errorf("while unmarshaling pull_request_review event: %w", err)
 	}
 
-	if state.PR == nil {
+	pr := findActivePR(state)
+	if pr == nil {
 		return "ignored", nil
 	}
 
 	switch event.Review.State {
 	case "approved":
-		state.PR.HasApproval = true
+		pr.HasApproval = true
 		return "approval received", nil
 	case "changes_requested":
-		state.PR.Conclusion = "actionable"
+		pr.Conclusion = "actionable"
 		return "changes requested", nil
 	default:
 		return "ignored", nil
 	}
+}
+
+func processIssueComment(state *ActorState, payload []byte) (string, error) {
+	var event struct {
+		Action  string `json:"action"`
+		Comment struct {
+			User struct {
+				Login string `json:"login"`
+			} `json:"user"`
+			Body string `json:"body"`
+		} `json:"comment"`
+	}
+
+	if err := json.Unmarshal(payload, &event); err != nil {
+		return "", fmt.Errorf("while unmarshaling issue_comment event: %w", err)
+	}
+
+	// Only handle created comments
+	if event.Action != "created" {
+		return "ignored", nil
+	}
+
+	// Ignore bot comments
+	if strings.HasSuffix(event.Comment.User.Login, "[bot]") {
+		return "ignored (bot comment)", nil
+	}
+
+	// Check if comment contains an actor command
+	body := strings.TrimSpace(event.Comment.Body)
+	if !strings.HasPrefix(body, "/actor-") {
+		return "ignored (not a command)", nil
+	}
+
+	// Parse command and args
+	parts := strings.SplitN(body, " ", 2)
+	command := parts[0]
+	args := ""
+	if len(parts) > 1 {
+		args = strings.TrimSpace(parts[1])
+	}
+
+	// Process the command
+	_, err := processActorCommand(state, command, args)
+	if err != nil {
+		return fmt.Sprintf("command error: %s", err.Error()), err
+	}
+
+	return fmt.Sprintf("command processed: %s", command), nil
+}
+
+// findActivePR returns the first PR in the map, used by handlers that
+// don't have branch context from the payload. When only one PR is
+// tracked (the common case in Phase 1), this returns it.
+func findActivePR(state *ActorState) *PRState {
+	if pr := state.GetMainPR(); pr != nil {
+		return pr
+	}
+	for _, pr := range state.PRs {
+		return pr
+	}
+	return nil
 }

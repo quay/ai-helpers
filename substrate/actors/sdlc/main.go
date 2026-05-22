@@ -21,9 +21,22 @@ func main() {
 		slog.Warn("failed to load state, using empty state",
 			slog.String("path", statePath),
 			slog.String("error", err.Error()))
-		state = &ActorState{Events: []EventRecord{}}
+		state = newEmptyState()
 	}
 	actorState = state
+
+	jiraClient = NewJIRAClient()
+	if jiraClient != nil {
+		slog.Info("JIRA client initialized", slog.String("baseURL", jiraClient.baseURL))
+	}
+
+	ateClient = NewAteClient()
+	if ateClient != nil {
+		slog.Info("ate-api client initialized")
+	}
+
+	claudeClient = NewClaudeCodeClient()
+	slog.Info("claude code client initialized", slog.String("binary", claudeClient.binaryPath))
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /event", handleEvent)

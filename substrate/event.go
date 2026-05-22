@@ -17,4 +17,5 @@ type EventEnvelope struct {
 type EventResponse struct {
 	KeepAlive bool   `json:"keepAlive"`
 	Message   string `json:"message"`
+	TTL       int    `json:"ttl,omitempty"`
 }

@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-router
+  namespace: ate-sdlc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-router
+  template:
+    metadata:
+      labels:
+        app: webhook-router
+    spec:
+      containers:
+      - name: webhook-router
+        image: ${WEBHOOK_ROUTER_IMAGE}
+        args:
+        - "--ateapi=api.ate-system.svc:443"
+        - "--atenet=atenet-router.ate-system.svc:80"
+        - "--template-ns=ate-sdlc"
+        - "--template-name=sdlc"
+        env:
+        - name: GITHUB_WEBHOOK_SECRET
+          value: "${GITHUB_WEBHOOK_SECRET}"
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 128Mi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-router
+  namespace: ate-sdlc
+spec:
+  type: ClusterIP
+  selector:
+    app: webhook-router
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP

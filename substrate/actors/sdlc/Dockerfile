@@ -10,5 +10,7 @@ RUN CGO_ENABLED=0 go build -o /sdlc-actor ./actors/sdlc/
 
 FROM registry.access.redhat.com/ubi9-minimal:latest
 RUN microdnf install -y git && microdnf clean all
+RUN curl -fsSL https://claude.ai/install.sh | bash -s stable
+ENV PATH="/root/.local/bin:${PATH}"
 COPY --from=builder /sdlc-actor /sdlc-actor
 ENTRYPOINT ["/sdlc-actor"]

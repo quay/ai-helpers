@@ -59,6 +59,24 @@ spec:
           name: sdlc-actor-secrets
           key: jira-api-token
           optional: true
+    - name: ANTHROPIC_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: sdlc-actor-secrets
+          key: anthropic-api-key
+          optional: true
+    - name: CLAUDE_CODE_USE_VERTEX
+      value: "${CLAUDE_CODE_USE_VERTEX}"
+    - name: ANTHROPIC_VERTEX_PROJECT_ID
+      value: "${ANTHROPIC_VERTEX_PROJECT_ID}"
+    - name: CLOUD_ML_REGION
+      value: "${CLOUD_ML_REGION}"
+    - name: GCP_SA_KEY
+      valueFrom:
+        secretKeyRef:
+          name: sdlc-actor-secrets
+          key: gcp-sa-key
+          optional: true
   workerPoolRef:
     namespace: ate-sdlc
     name: sdlc

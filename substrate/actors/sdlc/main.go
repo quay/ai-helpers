@@ -35,6 +35,8 @@ func main() {
 		slog.Info("ate-api client initialized")
 	}
 
+	setupGCPCredentials()
+
 	claudeClient = NewClaudeCodeClient()
 	slog.Info("claude code client initialized", slog.String("binary", claudeClient.binaryPath))
 
@@ -48,6 +50,20 @@ func main() {
 		slog.Error("server failed", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
+}
+
+func setupGCPCredentials() {
+	key := os.Getenv("GCP_SA_KEY")
+	if key == "" {
+		return
+	}
+	path := "/tmp/gcp-sa-key.json"
+	if err := os.WriteFile(path, []byte(key), 0o600); err != nil {
+		slog.Error("failed to write GCP credentials", slog.String("error", err.Error()))
+		return
+	}
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", path)
+	slog.Info("GCP credentials configured")
 }
 
 func envOr(key, fallback string) string {

@@ -81,20 +81,21 @@ func handleEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if shouldStartChain(actorState.Phase) && claudeClient != nil {
+	if asyncWork := selectAsyncWork(actorState.Phase); asyncWork != nil && claudeClient != nil {
 		actorID := actorState.ActorID
+		ttl := asyncWork.ttl
 		stateMutex.Unlock()
 
-		respondJSON(w, substrate.EventResponse{KeepAlive: true, TTL: 900, Message: decision})
+		respondJSON(w, substrate.EventResponse{KeepAlive: true, TTL: ttl, Message: decision})
 
 		go func() {
 			stateMutex.Lock()
 			defer stateMutex.Unlock()
 
-			runImplementationChain(actorState)
+			asyncWork.run(actorState)
 
 			if err := actorState.Save(statePath); err != nil {
-				slog.Error("failed to save state after chain", slog.String("error", err.Error()))
+				slog.Error("failed to save state after async work", slog.String("error", err.Error()))
 			}
 
 			ateClient.SuspendSelf(actorID)
@@ -104,6 +105,22 @@ func handleEvent(w http.ResponseWriter, r *http.Request) {
 
 	stateMutex.Unlock()
 	respondJSON(w, substrate.EventResponse{KeepAlive: false, Message: decision})
+}
+
+type asyncWorkItem struct {
+	run func(state *ActorState)
+	ttl int
+}
+
+func selectAsyncWork(phase Phase) *asyncWorkItem {
+	switch {
+	case shouldStartChain(phase):
+		return &asyncWorkItem{run: runImplementationChain, ttl: 900}
+	case shouldStartCIAnalysis(phase):
+		return &asyncWorkItem{run: runCIAnalysisChain, ttl: 300}
+	default:
+		return nil
+	}
 }
 
 func respondJSON(w http.ResponseWriter, v any) {

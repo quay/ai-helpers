@@ -55,6 +55,32 @@ func (c *ClaudeCodeClient) Implement(ctx context.Context, jira *JIRAContext, pla
 	return nil
 }
 
+// AnalyzeCI invokes Claude Code to analyze CI failure logs and determine root cause.
+// STUB: returns a fixable analysis.
+func (c *ClaudeCodeClient) AnalyzeCI(ctx context.Context, jira *JIRAContext, failingChecks []string) (*CIAnalysisResult, error) {
+	slog.Info("STUB: claude CI analysis invocation",
+		slog.String("ticket", jira.Key),
+		slog.Any("failingChecks", failingChecks))
+
+	return &CIAnalysisResult{
+		RootCause:   "STUB: placeholder CI failure analysis",
+		Fixable:     true,
+		FixApproach: "STUB: placeholder fix approach",
+		Confidence:  0.9,
+	}, nil
+}
+
+// FixCI invokes Claude Code to fix the CI failure based on analysis.
+// Claude Code edits code, commits the fix.
+// STUB: logs and returns nil (success).
+func (c *ClaudeCodeClient) FixCI(ctx context.Context, analysis *CIAnalysisResult) error {
+	slog.Info("STUB: claude CI fix invocation",
+		slog.String("rootCause", analysis.RootCause),
+		slog.String("approach", analysis.FixApproach))
+
+	return nil
+}
+
 func buildPlanPrompt(jira *JIRAContext) string {
 	return "Analyze the codebase and create an implementation plan for " +
 		jira.Key + ": " + jira.Summary + "\n\n" +

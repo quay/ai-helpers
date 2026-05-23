@@ -74,6 +74,10 @@ func handleEvent(w http.ResponseWriter, r *http.Request) {
 
 	actorState.AddEvent(envelope.EventID, envelope.Source, envelope.EventType, decision, result)
 
+	if actorState.Phase == PhaseBackportPlanning {
+		planBackports(actorState)
+	}
+
 	if err := actorState.Save(statePath); err != nil {
 		stateMutex.Unlock()
 		slog.Error("failed to save state", slog.String("error", err.Error()))

@@ -54,8 +54,17 @@ func processPullRequest(state *ActorState, payload []byte) (string, error) {
 		branch = "main"
 	}
 
+	baseBranch := event.PullRequest.Base.Ref
+	isBackport := strings.HasPrefix(baseBranch, "redhat-") && isBackportPhase(state.Phase)
+
 	switch event.Action {
 	case "opened", "reopened":
+		if isBackport {
+			handleBackportPROpened(state, baseBranch, event.PullRequest.Number,
+				event.Repository.FullName, event.PullRequest.Head.SHA)
+			return fmt.Sprintf("backport PR opened for %s", baseBranch), nil
+		}
+
 		pr := state.PRs[branch]
 		if pr == nil {
 			pr = &PRState{}
@@ -64,7 +73,7 @@ func processPullRequest(state *ActorState, payload []byte) (string, error) {
 		pr.Repo = event.Repository.FullName
 		pr.Number = event.PullRequest.Number
 		pr.Branch = branch
-		pr.BaseBranch = event.PullRequest.Base.Ref
+		pr.BaseBranch = baseBranch
 		pr.HeadSHA = event.PullRequest.Head.SHA
 		pr.CIStatus = "pending"
 		pr.Conclusion = "pending"
@@ -83,12 +92,20 @@ func processPullRequest(state *ActorState, payload []byte) (string, error) {
 
 	case "closed":
 		pr := state.PRs[branch]
+		if pr == nil {
+			pr = state.PRs[baseBranch]
+		}
 		if pr != nil {
 			if event.PullRequest.Merged {
 				pr.Conclusion = "merged"
 			} else {
 				pr.Conclusion = "closed"
 			}
+		}
+
+		if isBackport && event.PullRequest.Merged {
+			handleBackportMerged(state)
+			return fmt.Sprintf("backport PR merged for %s", baseBranch), nil
 		}
 
 		if event.PullRequest.Merged && state.JIRA != nil && len(state.JIRA.TargetVersions) > 0 {
@@ -215,6 +232,10 @@ func processPullRequestReview(state *ActorState, payload []byte) (string, error)
 	switch event.Review.State {
 	case "approved":
 		pr.HasApproval = true
+		if state.Phase == PhaseBackportReviewWaiting {
+			handleBackportMerged(state)
+			return "backport approved and merged", nil
+		}
 		transitionIfMergeReady(state)
 		return "approval received", nil
 	case "changes_requested":

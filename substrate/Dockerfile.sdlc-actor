@@ -1,0 +1,20 @@
+FROM golang:1.26 AS builder
+
+WORKDIR /build
+COPY go.mod go.sum ./
+RUN go mod download
+COPY internal/ ./internal/
+COPY cmd/sdlc-actor/ ./cmd/sdlc-actor/
+
+RUN CGO_ENABLED=0 go build -o /sdlc-actor ./cmd/sdlc-actor/
+
+FROM docker.io/library/node:20-slim
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates curl git \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g @anthropic-ai/claude-code@latest
+
+COPY --from=builder /sdlc-actor /sdlc-actor
+ENTRYPOINT ["/sdlc-actor"]

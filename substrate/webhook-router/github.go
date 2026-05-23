@@ -129,14 +129,64 @@ func parseGitHubEvent(eventType string, payload []byte) (actorID string, action 
 		return "", "", fmt.Errorf("failed to extract PR number from %s event", eventType)
 	}
 
-	parts := strings.Split(baseEvent.Repository.FullName, "/")
+	repoFullName := baseEvent.Repository.FullName
+
+	if ticketID := resolveTicketActor(eventType, prNumber, repoFullName, payload); ticketID != "" {
+		return sanitizeDNS1123(ticketID), action, nil
+	}
+
+	parts := strings.Split(repoFullName, "/")
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid repository full_name: %s", baseEvent.Repository.FullName)
+		return "", "", fmt.Errorf("invalid repository full_name: %s", repoFullName)
 	}
 	owner, repo := parts[0], parts[1]
 
 	actorID = sanitizeDNS1123(fmt.Sprintf("pr-%s-%s-%d", owner, repo, prNumber))
 	return actorID, action, nil
+}
+
+var (
+	ticketPattern       = regexp.MustCompile(`(?i)(PROJQUAY-\d+|[A-Z]+-\d+)`)
+	cherryPickBotLogin  = "openshift-cherrypick-robot"
+	backportTitlePrefix = regexp.MustCompile(`^\[redhat-\d+\.\d+\]\s*`)
+	prToTicketCache     = make(map[string]string) // "repo#number" → ticket actor ID
+)
+
+func resolveTicketActor(eventType string, prNumber int, repo string, payload []byte) string {
+	cacheKey := fmt.Sprintf("%s#%d", repo, prNumber)
+
+	if cached, ok := prToTicketCache[cacheKey]; ok {
+		return cached
+	}
+
+	if eventType != "pull_request" {
+		return ""
+	}
+
+	var prEvent struct {
+		PullRequest struct {
+			Title string `json:"title"`
+			User  struct {
+				Login string `json:"login"`
+			} `json:"user"`
+		} `json:"pull_request"`
+	}
+	if err := json.Unmarshal(payload, &prEvent); err != nil {
+		return ""
+	}
+
+	title := prEvent.PullRequest.Title
+	author := prEvent.PullRequest.User.Login
+
+	if author == cherryPickBotLogin && backportTitlePrefix.MatchString(title) {
+		if match := ticketPattern.FindString(title); match != "" {
+			ticketID := strings.ToLower(match)
+			prToTicketCache[cacheKey] = ticketID
+			return ticketID
+		}
+	}
+
+	return ""
 }
 
 var nonAlphanumeric = regexp.MustCompile(`[^a-z0-9-]+`)

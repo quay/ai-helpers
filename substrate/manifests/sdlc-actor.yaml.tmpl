@@ -34,6 +34,31 @@ spec:
   - name: sdlc
     image: ${SDLC_ACTOR_IMAGE}
     command: ["/sdlc-actor"]
+    env:
+    - name: GITHUB_REPO
+      value: "${GITHUB_REPO}"
+    - name: GITHUB_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: sdlc-actor-secrets
+          key: github-token
+          optional: true
+    - name: ATE_API_ADDR
+      value: "api.ate-system.svc:443"
+    - name: JIRA_BASE_URL
+      value: "${JIRA_BASE_URL}"
+    - name: JIRA_USER
+      valueFrom:
+        secretKeyRef:
+          name: sdlc-actor-secrets
+          key: jira-user
+          optional: true
+    - name: JIRA_API_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: sdlc-actor-secrets
+          key: jira-api-token
+          optional: true
   workerPoolRef:
     namespace: ate-sdlc
     name: sdlc

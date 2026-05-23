@@ -16,6 +16,13 @@ func runImplementationChain(state *ActorState) {
 
 	slog.Info("starting implementation chain", slog.String("ticket", state.Ticket), slog.String("phase", string(state.Phase)))
 
+	if err := ensureRepo(ctx); err != nil {
+		slog.Error("repo setup failed", slog.String("ticket", state.Ticket), slog.String("error", err.Error()))
+		state.SetBlocker("repo_setup_failed", []string{err.Error()})
+		state.Phase = PhaseImplementationBlocked
+		return
+	}
+
 	for {
 		select {
 		case <-ctx.Done():

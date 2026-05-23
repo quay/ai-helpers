@@ -8,6 +8,7 @@ COPY actors/sdlc/ ./actors/sdlc/
 
 RUN CGO_ENABLED=0 go build -o /sdlc-actor ./actors/sdlc/
 
-FROM registry.access.redhat.com/ubi9-micro:latest
+FROM registry.access.redhat.com/ubi9-minimal:latest
+RUN microdnf install -y git && microdnf clean all
 COPY --from=builder /sdlc-actor /sdlc-actor
 ENTRYPOINT ["/sdlc-actor"]

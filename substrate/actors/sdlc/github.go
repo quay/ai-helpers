@@ -16,6 +16,8 @@ func ProcessGitHubEvent(state *ActorState, eventType string, payload []byte) (de
 		return processCheckSuite(state, payload)
 	case "pull_request_review":
 		return processPullRequestReview(state, payload)
+	case "pull_request_review_thread":
+		return processPullRequestReviewThread(state, payload)
 	case "issue_comment":
 		return processIssueComment(state, payload)
 	default:
@@ -169,10 +171,24 @@ func processCheckSuite(state *ActorState, payload []byte) (string, error) {
 	return fmt.Sprintf("CI status: %s", pr.CIStatus), nil
 }
 
+type parsedReview struct {
+	ID       int64           `json:"id"`
+	User     string          `json:"user"`
+	State    string          `json:"state"`
+	Body     string          `json:"body"`
+	Comments []ReviewComment `json:"comments"`
+}
+
 func processPullRequestReview(state *ActorState, payload []byte) (string, error) {
 	var event struct {
+		Action string `json:"action"`
 		Review struct {
+			ID   int64  `json:"id"`
+			User struct {
+				Login string `json:"login"`
+			} `json:"user"`
 			State string `json:"state"`
+			Body  string `json:"body"`
 		} `json:"review"`
 	}
 
@@ -180,9 +196,20 @@ func processPullRequestReview(state *ActorState, payload []byte) (string, error)
 		return "", fmt.Errorf("while unmarshaling pull_request_review event: %w", err)
 	}
 
+	if event.Action != "submitted" {
+		return "ignored", nil
+	}
+
 	pr := findActivePR(state)
 	if pr == nil {
 		return "ignored", nil
+	}
+
+	review := &parsedReview{
+		ID:    event.Review.ID,
+		User:  event.Review.User.Login,
+		State: event.Review.State,
+		Body:  event.Review.Body,
 	}
 
 	switch event.Review.State {
@@ -191,8 +218,46 @@ func processPullRequestReview(state *ActorState, payload []byte) (string, error)
 		transitionIfMergeReady(state)
 		return "approval received", nil
 	case "changes_requested":
-		pr.Conclusion = "actionable"
-		return "changes requested", nil
+		categorizeAndTransition(state, review)
+		return "changes requested, feedback categorized", nil
+	case "dismissed":
+		pr.HasApproval = false
+		if state.Phase == PhaseChangesRequested {
+			state.Phase = PhaseReviewWaiting
+		}
+		return "review dismissed", nil
+	default:
+		return "ignored", nil
+	}
+}
+
+func processPullRequestReviewThread(state *ActorState, payload []byte) (string, error) {
+	var event struct {
+		Action string `json:"action"`
+	}
+
+	if err := json.Unmarshal(payload, &event); err != nil {
+		return "", fmt.Errorf("while unmarshaling review thread event: %w", err)
+	}
+
+	pr := findActivePR(state)
+	if pr == nil {
+		return "ignored", nil
+	}
+
+	switch event.Action {
+	case "resolved":
+		if pr.ThreadsOpen > 0 {
+			pr.ThreadsOpen--
+		}
+		pr.ThreadsResolved++
+		if pr.ThreadsOpen == 0 && state.Phase == PhaseChangesRequested {
+			transitionIfMergeReady(state)
+		}
+		return fmt.Sprintf("thread resolved (%d open)", pr.ThreadsOpen), nil
+	case "unresolved":
+		pr.ThreadsOpen++
+		return fmt.Sprintf("thread unresolved (%d open)", pr.ThreadsOpen), nil
 	default:
 		return "ignored", nil
 	}
@@ -223,9 +288,12 @@ func processIssueComment(state *ActorState, payload []byte) (string, error) {
 		return "ignored (bot comment)", nil
 	}
 
-	// Check if comment contains an actor command
 	body := strings.TrimSpace(event.Comment.Body)
+
 	if !strings.HasPrefix(body, "/actor-") {
+		if state.Phase == PhaseClarificationNeeded {
+			return handleClarificationReply(state, body)
+		}
 		return "ignored (not a command)", nil
 	}
 

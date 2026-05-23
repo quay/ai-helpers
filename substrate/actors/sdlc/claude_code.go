@@ -81,6 +81,26 @@ func (c *ClaudeCodeClient) FixCI(ctx context.Context, analysis *CIAnalysisResult
 	return nil
 }
 
+// AddressFeedback invokes Claude Code to implement review feedback changes.
+// STUB: logs and returns nil (success).
+func (c *ClaudeCodeClient) AddressFeedback(ctx context.Context, jira *JIRAContext, pr *PRState) error {
+	slog.Info("STUB: claude address feedback invocation",
+		slog.String("ticket", jira.Key),
+		slog.Int("reviewCount", len(pr.Reviews)),
+		slog.Int("threadsOpen", pr.ThreadsOpen))
+
+	return nil
+}
+
+// CheckClarification invokes Claude Code to determine if a comment resolves a pending clarification.
+// STUB: returns true (resolved).
+func (c *ClaudeCodeClient) CheckClarification(ctx context.Context, commentBody string) (bool, error) {
+	slog.Info("STUB: claude check clarification",
+		slog.String("comment", commentBody))
+
+	return true, nil
+}
+
 func buildPlanPrompt(jira *JIRAContext) string {
 	return "Analyze the codebase and create an implementation plan for " +
 		jira.Key + ": " + jira.Summary + "\n\n" +

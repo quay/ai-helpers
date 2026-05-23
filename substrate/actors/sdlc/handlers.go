@@ -118,6 +118,8 @@ func selectAsyncWork(phase Phase) *asyncWorkItem {
 		return &asyncWorkItem{run: runImplementationChain, ttl: 900}
 	case shouldStartCIAnalysis(phase):
 		return &asyncWorkItem{run: runCIAnalysisChain, ttl: 300}
+	case shouldStartReviewHandling(phase):
+		return &asyncWorkItem{run: runReviewFeedbackChain, ttl: 300}
 	default:
 		return nil
 	}

@@ -74,18 +74,29 @@ func processPullRequest(state *ActorState, payload []byte) (string, error) {
 			pr.HeadSHA = event.PullRequest.Head.SHA
 			pr.CIStatus = "pending"
 		}
+		if state.Phase == PhaseMergeReady || state.Phase == PhaseReviewWaiting {
+			state.Phase = PhaseCIWaiting
+		}
 		return "updated HeadSHA", nil
 
 	case "closed":
-		if pr := state.PRs[branch]; pr != nil {
+		pr := state.PRs[branch]
+		if pr != nil {
 			if event.PullRequest.Merged {
 				pr.Conclusion = "merged"
 			} else {
 				pr.Conclusion = "closed"
 			}
 		}
-		state.Phase = PhaseDone
-		return fmt.Sprintf("PR %s", state.PRs[branch].Conclusion), nil
+
+		if event.PullRequest.Merged && state.JIRA != nil && len(state.JIRA.TargetVersions) > 0 {
+			state.Phase = PhaseBackportPlanning
+		} else if event.PullRequest.Merged {
+			closeTicket(state)
+		} else {
+			state.Phase = PhaseDone
+		}
+		return fmt.Sprintf("PR %s", pr.Conclusion), nil
 
 	default:
 		return "ignored", nil
@@ -96,6 +107,7 @@ func processCheckRun(state *ActorState, payload []byte) (string, error) {
 	var event struct {
 		Action   string `json:"action"`
 		CheckRun struct {
+			Name       string `json:"name"`
 			Conclusion string `json:"conclusion"`
 		} `json:"check_run"`
 	}
@@ -113,12 +125,18 @@ func processCheckRun(state *ActorState, payload []byte) (string, error) {
 		return "ignored", nil
 	}
 
+	if pr.CheckRuns == nil {
+		pr.CheckRuns = make(map[string]string)
+	}
+	pr.CheckRuns[event.CheckRun.Name] = event.CheckRun.Conclusion
+
 	if event.CheckRun.Conclusion == "success" {
 		pr.CIStatus = "passing"
-		return "CI status: passing", nil
+	} else {
+		pr.CIStatus = "failing"
 	}
-	pr.CIStatus = "failing"
-	return "CI status: failing", nil
+	transitionOnCIComplete(state)
+	return fmt.Sprintf("CI check %s: %s", event.CheckRun.Name, event.CheckRun.Conclusion), nil
 }
 
 func processCheckSuite(state *ActorState, payload []byte) (string, error) {
@@ -144,10 +162,11 @@ func processCheckSuite(state *ActorState, payload []byte) (string, error) {
 
 	if event.CheckSuite.Conclusion == "success" {
 		pr.CIStatus = "passing"
-		return "CI status: passing", nil
+	} else {
+		pr.CIStatus = "failing"
 	}
-	pr.CIStatus = "failing"
-	return "CI status: failing", nil
+	transitionOnCIComplete(state)
+	return fmt.Sprintf("CI status: %s", pr.CIStatus), nil
 }
 
 func processPullRequestReview(state *ActorState, payload []byte) (string, error) {
@@ -169,6 +188,7 @@ func processPullRequestReview(state *ActorState, payload []byte) (string, error)
 	switch event.Review.State {
 	case "approved":
 		pr.HasApproval = true
+		transitionIfMergeReady(state)
 		return "approval received", nil
 	case "changes_requested":
 		pr.Conclusion = "actionable"

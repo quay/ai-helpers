@@ -19,7 +19,7 @@ func planImplementation(ctx context.Context, h *Handler, state *ActorState) erro
 
 	dir := RepoDir()
 
-	if err := h.git.Fetch(ctx, dir, "main"); err != nil {
+	if err := h.git.Fetch(ctx, dir, ""); err != nil {
 		slog.Warn("git fetch failed, continuing with existing state", slog.String("error", err.Error()))
 	}
 

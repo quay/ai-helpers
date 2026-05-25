@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"flag"
 	"log/slog"
 	"net/http"
@@ -15,7 +16,7 @@ func main() {
 	statePathFlag := flag.String("state-path", envutil.Or("STATE_PATH", "/tmp/actor-state.json"), "path to state file")
 	flag.Parse()
 
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
 
 	setupGCPCredentials()
 
@@ -53,6 +54,15 @@ func main() {
 	mux.HandleFunc("POST /event", handler.HandleEvent)
 	mux.HandleFunc("GET /health", handler.HandleHealth)
 	mux.HandleFunc("GET /status", handler.HandleStatus)
+	mux.HandleFunc("GET /debug/claude-log", func(w http.ResponseWriter, r *http.Request) {
+		data, err := os.ReadFile("/tmp/claude-debug.log")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write(data)
+	})
 
 	slog.Info("starting sdlc actor", slog.String("listen", *listenAddr), slog.String("statePath", *statePathFlag))
 	if err := http.ListenAndServe(*listenAddr, mux); err != nil {
@@ -62,12 +72,18 @@ func main() {
 }
 
 func setupGCPCredentials() {
-	key := os.Getenv("GCP_SA_KEY")
-	if key == "" {
+	keyB64 := os.Getenv("GCP_SA_KEY_B64")
+	if keyB64 == "" {
 		return
 	}
-	path := "/home/actor/gcp-sa-key.json"
-	if err := os.WriteFile(path, []byte(key), 0o600); err != nil {
+	key, err := base64.StdEncoding.DecodeString(keyB64)
+	if err != nil {
+		slog.Error("failed to decode GCP_SA_KEY_B64", slog.String("error", err.Error()))
+		return
+	}
+	os.MkdirAll("/tmp/home", 0o755)
+	path := "/tmp/home/gcp-sa-key.json"
+	if err := os.WriteFile(path, key, 0o600); err != nil {
 		slog.Error("failed to write GCP credentials", slog.String("error", err.Error()))
 		return
 	}

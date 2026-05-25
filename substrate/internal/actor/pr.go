@@ -1,13 +1,10 @@
 package actor
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -19,33 +16,18 @@ func createPR(ctx context.Context, h *Handler, state *ActorState) error {
 	}
 
 	dir := RepoDir()
-	token := os.Getenv("GITHUB_TOKEN")
 	branch := state.Implementation.Branch
 
-	if token != "" {
-		if err := h.git.Push(ctx, dir, branch, token); err != nil {
-			return fmt.Errorf("pushing branch: %w", err)
-		}
-	} else {
-		slog.Warn("GITHUB_TOKEN not set, skipping push")
+	if err := h.git.Push(ctx, dir, branch); err != nil {
+		return fmt.Errorf("pushing branch: %w", err)
 	}
 
-	pr := findActivePR(state)
-	repo := ""
-	if pr != nil {
-		repo = pr.Repo
-	}
+	repo := os.Getenv("GITHUB_REPO")
 	if repo == "" {
-		repo = os.Getenv("GITHUB_REPO")
-	}
-
-	if repo == "" || token == "" {
 		slog.Warn("STUB: skipping GitHub PR creation (missing GITHUB_TOKEN or GITHUB_REPO)")
 		state.PRs[branch] = &PRState{
 			Repo:       repo,
-			Number:     0,
 			Branch:     branch,
-			BaseBranch: "main",
 			CIStatus:   "pending",
 			Conclusion: "pending",
 			CreatedAt:  time.Now(),
@@ -54,77 +36,38 @@ func createPR(ctx context.Context, h *Handler, state *ActorState) error {
 		return nil
 	}
 
-	prNumber, prURL, err := createGitHubPR(ctx, token, repo, branch, state)
+	title := fmt.Sprintf("%s: %s", state.Ticket, state.JIRA.Summary)
+	body := fmt.Sprintf("## JIRA\n\n[%s](https://issues.redhat.com/browse/%s)\n\n## Summary\n\n%s",
+		state.Ticket, state.Ticket, state.Implementation.Plan)
+
+	result, err := runCommand(ctx, dir, "gh", "pr", "create",
+		"--title", title,
+		"--body", body,
+		"--label", fmt.Sprintf("jira/%s", state.Ticket),
+		"--json", "number,url")
 	if err != nil {
-		return fmt.Errorf("creating GitHub PR: %w", err)
+		return fmt.Errorf("gh pr create failed: %w\nstderr: %s", err, result.Stderr)
+	}
+
+	var ghResult struct {
+		Number int    `json:"number"`
+		URL    string `json:"url"`
+	}
+	if err := json.Unmarshal([]byte(strings.TrimSpace(result.Stdout)), &ghResult); err != nil {
+		return fmt.Errorf("parsing gh pr output: %w\nraw: %s", err, result.Stdout)
 	}
 
 	state.PRs[branch] = &PRState{
 		Repo:       repo,
-		Number:     prNumber,
+		Number:     ghResult.Number,
 		Branch:     branch,
-		BaseBranch: "main",
-		URL:        prURL,
+		URL:        ghResult.URL,
 		CIStatus:   "pending",
 		Conclusion: "pending",
 		CreatedAt:  time.Now(),
 	}
 	state.Phase = PhaseCIWaiting
 
-	slog.Info("PR created", slog.String("ticket", state.Ticket), slog.Int("number", prNumber), slog.String("url", prURL))
+	slog.Info("PR created", slog.String("ticket", state.Ticket), slog.Int("number", ghResult.Number), slog.String("url", ghResult.URL))
 	return nil
-}
-
-func createGitHubPR(ctx context.Context, token, repo, branch string, state *ActorState) (int, string, error) {
-	parts := strings.SplitN(repo, "/", 2)
-	if len(parts) != 2 {
-		return 0, "", fmt.Errorf("invalid repo format: %s", repo)
-	}
-
-	title := fmt.Sprintf("%s: %s", state.Ticket, state.JIRA.Summary)
-	body := fmt.Sprintf("## JIRA\n\n[%s](https://issues.redhat.com/browse/%s)\n\n## Summary\n\n%s",
-		state.Ticket, state.Ticket, state.Implementation.Plan)
-
-	payload, err := json.Marshal(map[string]any{
-		"title": title,
-		"body":  body,
-		"head":  branch,
-		"base":  "main",
-		"labels": []string{
-			fmt.Sprintf("jira/%s", state.Ticket),
-		},
-	})
-	if err != nil {
-		return 0, "", fmt.Errorf("marshaling PR payload: %w", err)
-	}
-
-	url := fmt.Sprintf("https://api.github.com/repos/%s/pulls", repo)
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(payload))
-	if err != nil {
-		return 0, "", fmt.Errorf("creating request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return 0, "", fmt.Errorf("GitHub API request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		respBody, _ := io.ReadAll(resp.Body)
-		return 0, "", fmt.Errorf("GitHub API returned %d: %s", resp.StatusCode, respBody)
-	}
-
-	var result struct {
-		Number  int    `json:"number"`
-		HTMLURL string `json:"html_url"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return 0, "", fmt.Errorf("decoding GitHub response: %w", err)
-	}
-
-	return result.Number, result.HTMLURL, nil
 }

@@ -8,13 +8,23 @@ COPY cmd/sdlc-actor/ ./cmd/sdlc-actor/
 
 RUN CGO_ENABLED=0 go build -o /sdlc-actor ./cmd/sdlc-actor/
 
-FROM docker.io/library/node:20-slim
+FROM registry.access.redhat.com/ubi9-minimal:latest
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl git \
-  && rm -rf /var/lib/apt/lists/*
+RUN microdnf install -y ca-certificates git shadow-utils tar gzip && microdnf clean all
 
-RUN npm install -g @anthropic-ai/claude-code@latest
+RUN GH_VERSION=2.92.0 && \
+    curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" \
+    | tar xz -C /usr/local --strip-components=1
 
+RUN useradd -r -m -d /home/actor -s /bin/bash actor
+
+USER actor
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
+USER root
 COPY --from=builder /sdlc-actor /sdlc-actor
+
+ENV HOME=/home/actor
+ENV PATH="/home/actor/.local/bin:/home/actor/.claude/bin:${PATH}"
+
 ENTRYPOINT ["/sdlc-actor"]

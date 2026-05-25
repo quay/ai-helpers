@@ -33,6 +33,6 @@ type GitOperations interface {
 	CheckoutNewBranch(ctx context.Context, dir, branch string) error
 	Add(ctx context.Context, dir string) error
 	Commit(ctx context.Context, dir, message string) error
-	Push(ctx context.Context, dir, branch, token string) error
+	Push(ctx context.Context, dir, branch string) error
 	EnsureRepo(ctx context.Context) error
 }

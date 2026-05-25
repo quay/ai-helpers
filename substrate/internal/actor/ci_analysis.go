@@ -6,8 +6,6 @@ import (
 	"log/slog"
 	"strings"
 	"time"
-
-	"github.com/quay/ai-helpers/substrate/internal/envutil"
 )
 
 type CIAnalysisResult struct {
@@ -81,9 +79,8 @@ func runCIAnalysisChain(h *Handler, state *ActorState) {
 	}
 
 	dir := RepoDir()
-	token := envutil.Or("GITHUB_TOKEN", "")
-	if token != "" && state.Implementation != nil && state.Implementation.Branch != "" {
-		if err := h.git.Push(ctx, dir, state.Implementation.Branch, token); err != nil {
+	if state.Implementation != nil && state.Implementation.Branch != "" {
+		if err := h.git.Push(ctx, dir, state.Implementation.Branch); err != nil {
 			slog.Error("failed to push CI fix", slog.String("error", err.Error()))
 		}
 	}

@@ -12,7 +12,7 @@ metadata:
   namespace: ate-sdlc
 spec:
   replicas: 3
-  ateomImage: ko://github.com/agent-substrate/substrate/cmd/servers/ateom-gvisor
+  ateomImage: ko://github.com/agent-substrate/substrate/cmd/ateom-gvisor
 
 ---
 
@@ -65,18 +65,18 @@ spec:
           name: sdlc-actor-secrets
           key: anthropic-api-key
           optional: true
+    - name: HOME
+      value: "/tmp/home"
+    - name: PATH
+      value: "/home/actor/.local/bin:/home/actor/.claude/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     - name: CLAUDE_CODE_USE_VERTEX
       value: "${CLAUDE_CODE_USE_VERTEX}"
     - name: ANTHROPIC_VERTEX_PROJECT_ID
       value: "${ANTHROPIC_VERTEX_PROJECT_ID}"
     - name: CLOUD_ML_REGION
       value: "${CLOUD_ML_REGION}"
-    - name: GCP_SA_KEY
-      valueFrom:
-        secretKeyRef:
-          name: sdlc-actor-secrets
-          key: gcp-sa-key
-          optional: true
+    - name: GCP_SA_KEY_B64
+      value: "${GCP_SA_KEY_B64}"
   workerPoolRef:
     namespace: ate-sdlc
     name: sdlc

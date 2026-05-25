@@ -146,7 +146,7 @@ func isBackportPhase(phase Phase) bool {
 
 func findMainMergedPR(state *ActorState) *PRState {
 	for _, pr := range state.PRs {
-		if pr.Conclusion == "merged" && pr.BaseBranch == "main" {
+		if pr.Conclusion == "merged" && !strings.HasPrefix(pr.BaseBranch, "redhat-") {
 			return pr
 		}
 	}

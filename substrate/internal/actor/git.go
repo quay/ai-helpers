@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // GitOpsClient implements git operations for the actor
@@ -34,8 +33,8 @@ func (g *GitOpsClient) Commit(ctx context.Context, dir, message string) error {
 	return gitCommit(ctx, dir, message)
 }
 
-func (g *GitOpsClient) Push(ctx context.Context, dir, branch, token string) error {
-	return gitPush(ctx, dir, branch, token)
+func (g *GitOpsClient) Push(ctx context.Context, dir, branch string) error {
+	return gitPush(ctx, dir, branch)
 }
 
 func (g *GitOpsClient) EnsureRepo(ctx context.Context) error {
@@ -45,7 +44,11 @@ func (g *GitOpsClient) EnsureRepo(ctx context.Context) error {
 // Git operations functions
 
 func gitFetch(ctx context.Context, dir, branch string) error {
-	_, err := runCommand(ctx, dir, "git", "fetch", "origin", branch, "--depth", "1")
+	args := []string{"fetch", "origin", "--depth", "1"}
+	if branch != "" {
+		args = append(args, branch)
+	}
+	_, err := runCommand(ctx, dir, "git", args...)
 	return err
 }
 
@@ -64,24 +67,9 @@ func gitCommit(ctx context.Context, dir, message string) error {
 	return err
 }
 
-func gitPush(ctx context.Context, dir, branch, token string) error {
-	result, err := runCommand(ctx, dir, "git", "remote", "get-url", "origin")
-	if err != nil {
-		return fmt.Errorf("getting remote URL: %w", err)
-	}
-
-	remoteURL := strings.TrimSpace(result.Stdout)
-	authURL := injectTokenInURL(remoteURL, token)
-
-	_, err = runCommand(ctx, dir, "git", "push", authURL, branch)
+func gitPush(ctx context.Context, dir, branch string) error {
+	_, err := runCommand(ctx, dir, "git", "push", "-u", "origin", branch)
 	return err
-}
-
-func injectTokenInURL(remoteURL, token string) string {
-	if strings.HasPrefix(remoteURL, "https://") {
-		return strings.Replace(remoteURL, "https://", "https://x-access-token:"+token+"@", 1)
-	}
-	return remoteURL
 }
 
 // Repository setup
@@ -94,24 +82,23 @@ func ensureRepo(ctx context.Context) error {
 		return nil
 	}
 
-	repoURL := os.Getenv("GITHUB_REPO_URL")
-	if repoURL == "" {
-		repo := os.Getenv("GITHUB_REPO")
-		if repo == "" {
-			return fmt.Errorf("GITHUB_REPO or GITHUB_REPO_URL must be set for repo setup")
-		}
-		token := os.Getenv("GITHUB_TOKEN")
-		if token != "" {
-			repoURL = fmt.Sprintf("https://x-access-token:%s@github.com/%s.git", token, repo)
-		} else {
-			repoURL = fmt.Sprintf("https://github.com/%s.git", repo)
-		}
+	repo := os.Getenv("GITHUB_REPO")
+	if repo == "" {
+		return fmt.Errorf("GITHUB_REPO must be set for repo setup")
 	}
 
-	slog.Info("cloning repo", slog.String("dir", dir))
+	slog.Info("cloning repo", slog.String("dir", dir), slog.String("repo", repo))
 
 	if err := os.MkdirAll(filepath.Dir(dir), 0o755); err != nil {
 		return fmt.Errorf("creating repo parent dir: %w", err)
+	}
+
+	token := os.Getenv("GITHUB_TOKEN")
+	var repoURL string
+	if token != "" {
+		repoURL = fmt.Sprintf("https://x-access-token:%s@github.com/%s.git", token, repo)
+	} else {
+		repoURL = fmt.Sprintf("https://github.com/%s.git", repo)
 	}
 
 	_, err := runCommand(ctx, "", "git", "clone", "--depth", "1", repoURL, dir)

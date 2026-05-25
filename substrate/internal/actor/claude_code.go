@@ -41,7 +41,12 @@ func (c *ClaudeCodeClient) invoke(ctx context.Context, opts invokeOpts) (string,
 		slog.Bool("continue", opts.continuing),
 		slog.String("prompt_prefix", truncate(opts.prompt, 100)))
 
-	args := []string{"-p", opts.prompt, "--dangerously-skip-permissions"}
+	args := []string{
+		"--print",
+		"--allowedTools", "Bash,Read,Edit,Write,Glob,Grep,WebFetch,WebSearch",
+		"--debug-file", "/tmp/claude-debug.log",
+		opts.prompt,
+	}
 	if opts.continuing {
 		args = append(args, "--continue")
 	}
@@ -67,7 +72,7 @@ func (c *ClaudeCodeClient) invokeJSON(ctx context.Context, prompt string, out an
 }
 
 func (c *ClaudeCodeClient) Plan(ctx context.Context, jira *JIRAContext) (*PlanResult, error) {
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
 	prompt := fmt.Sprintf(`Analyze this codebase and create an implementation plan for JIRA ticket %s (%s): %s

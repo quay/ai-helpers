@@ -61,6 +61,13 @@ func (rt *Router) routeEvent(ctx context.Context, source, actorID, eventType, ac
 	return nil
 }
 
+const (
+	maxRetries    = 3
+	baseBackoff   = 500 * time.Millisecond
+	maxBackoff    = 5 * time.Second
+	backoffFactor = 2
+)
+
 func (rt *Router) forwardEnvelope(ctx context.Context, envelope event.Envelope) (*event.Response, error) {
 	jsonBody, err := json.Marshal(envelope)
 	if err != nil {
@@ -68,31 +75,64 @@ func (rt *Router) forwardEnvelope(ctx context.Context, envelope event.Envelope) 
 	}
 
 	url := fmt.Sprintf("http://%s/event", rt.AtenetAddr)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+	var lastErr error
+	backoff := baseBackoff
+
+	for attempt := range maxRetries {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonBody))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Host = fmt.Sprintf("%s.actors.resources.substrate.ate.dev", envelope.ActorID)
+
+		resp, err := rt.HTTPClient.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to send request to actor: %w", err)
+			slog.Warn("retryable error forwarding envelope", "attempt", attempt+1, "error", err)
+			if err := sleepWithContext(ctx, backoff); err != nil {
+				return nil, lastErr
+			}
+			backoff = min(backoff*backoffFactor, maxBackoff)
+			continue
+		}
+
+		if resp.StatusCode >= 500 {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			lastErr = fmt.Errorf("actor returned status %d: %s", resp.StatusCode, string(body))
+			slog.Warn("retryable status forwarding envelope", "attempt", attempt+1, "status", resp.StatusCode)
+			if err := sleepWithContext(ctx, backoff); err != nil {
+				return nil, lastErr
+			}
+			backoff = min(backoff*backoffFactor, maxBackoff)
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			return nil, fmt.Errorf("actor returned status %d: %s", resp.StatusCode, string(body))
+		}
+
+		var eventResp event.Response
+		if err := json.NewDecoder(resp.Body).Decode(&eventResp); err != nil {
+			return nil, fmt.Errorf("failed to decode actor response: %w", err)
+		}
+
+		return &eventResp, nil
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Host = fmt.Sprintf("%s.actors.resources.substrate.ate.dev", envelope.ActorID)
+	return nil, fmt.Errorf("forwarding envelope failed after %d attempts: %w", maxRetries, lastErr)
+}
 
-	resp, err := rt.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request to actor: %w", err)
+func sleepWithContext(ctx context.Context, d time.Duration) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(d):
+		return nil
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("actor returned status %d: %s", resp.StatusCode, string(body))
-	}
-
-	var eventResp event.Response
-	if err := json.NewDecoder(resp.Body).Decode(&eventResp); err != nil {
-		return nil, fmt.Errorf("failed to decode actor response: %w", err)
-	}
-
-	return &eventResp, nil
 }
 
 func buildEnvelope(source, eventType, actorID string, payload []byte) event.Envelope {

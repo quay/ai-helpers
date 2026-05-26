@@ -80,7 +80,7 @@ lola install dev -a claude-code --force  # Reinstall
 ### Via Claude Plugin
 
 ```bash
-claude plugin add quay/ai-helpers
+claude plugin marketplace add quay/ai-helpers
 ```
 
 ## Configuration

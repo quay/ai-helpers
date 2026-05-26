@@ -109,6 +109,14 @@ assert_output "fires on 'target version' keyword" \
   '{"prompt": "check the target version"}' \
   not_empty ""
 
+assert_output "fires on 'target-version' keyword" \
+  '{"prompt": "check the target-version field"}' \
+  not_empty ""
+
+assert_output "silent on 'targetXversion' (not a keyword)" \
+  '{"prompt": "targetXversion check"}' \
+  empty ""
+
 assert_output "case-insensitive: fires on 'JIRA' uppercase" \
   '{"prompt": "what is in the JIRA backlog?"}' \
   not_empty ""

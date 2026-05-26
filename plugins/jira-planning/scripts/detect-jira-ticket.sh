@@ -9,7 +9,7 @@
 #   JIRA_KEYWORD_PATTERN    — regex for JIRA keywords (default: built-in list)
 
 : "${JIRA_TICKET_KEY_PATTERN:=(PROJQUAY|QUAYIO)-[0-9]+}"
-: "${JIRA_KEYWORD_PATTERN:=\b(jira|ticket|backlog|sprint|epic|story|stories|triage|target.version)\b}"
+: "${JIRA_KEYWORD_PATTERN:=\b(jira|ticket|backlog|sprint|epic|story|stories|triage|target[-[:space:]]+version)\b}"
 
 INPUT=$(cat)
 PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty' 2>/dev/null)

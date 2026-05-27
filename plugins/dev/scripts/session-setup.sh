@@ -109,7 +109,7 @@ fi
 # ── 5. CodeRabbit CLI ────────────────────────────────────────────
 echo "[5/5] Checking CodeRabbit CLI auth..."
 if command -v coderabbit &>/dev/null; then
-  if coderabbit auth status 2>&1 | grep -q "Logged in"; then
+  if coderabbit auth status --agent 2>/dev/null | jq -e .authenticated >/dev/null 2>&1; then
     echo "  CodeRabbit already authenticated."
   else
     cr_key="${CODERABBIT_API_KEY:-${CODERABBIT_TOKEN:-}}"

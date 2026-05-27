@@ -34,7 +34,7 @@ CR_KEY="${CODERABBIT_API_KEY:-${CODERABBIT_TOKEN:-}}"
 CR_KEY_ARGS=()
 if [ -n "$CR_KEY" ]; then
   CR_KEY_ARGS=(--api-key "$CR_KEY")
-elif ! coderabbit auth status 2>&1 | grep -q "Logged in"; then
+elif ! coderabbit auth status --agent 2>/dev/null | jq -e .authenticated >/dev/null 2>&1; then
   echo "[coderabbit-review-gate] No CodeRabbit credentials — skipping review gate" >&2
   echo "[coderabbit-review-gate] Set CODERABBIT_API_KEY or CODERABBIT_TOKEN, or run: coderabbit auth login" >&2
   exit 0

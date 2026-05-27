@@ -26,8 +26,7 @@ if [ -z "$CMD" ]; then
   exit 0
 fi
 
-read -r _t1 _t2 _t3 _ <<< "$CMD"
-if [ "$_t1" != "gh" ] || [ "$_t2" != "pr" ] || [ "$_t3" != "create" ]; then
+if ! echo "$CMD" | grep -qE '(^|[;&|[:space:]])gh pr create([[:space:]]|$)'; then
   exit 0
 fi
 
@@ -56,47 +55,47 @@ print(title, end="")
 ' "$CMD")
 
 if [ -n "$TITLE" ] && ! echo "$TITLE" | grep -qE "$PR_TITLE_PATTERN"; then
-  ERRORS+=("PR title does not match required format. Pattern: ${PR_TITLE_PATTERN}. Got: $TITLE")
+  ERRORS+=("PR title does not match the required CI format. Pattern: ${PR_TITLE_PATTERN}. Got: $TITLE")
 fi
 
 # --- Check 2: /tmp/pr-body.md exists and has required template sections ---
 if [ ! -f /tmp/pr-body.md ]; then
-  ERRORS+=("PR body file /tmp/pr-body.md not found. The /pr skill writes the filled PR description template there before creating the PR. Run /pr to create PRs correctly.")
+  ERRORS+=("/tmp/pr-body.md not found. Run /pr — it writes the filled template there before creating the PR.")
 else
   IFS=',' read -ra SECTIONS <<< "${PR_REQUIRED_SECTIONS:-## Summary,## Test Plan,## JIRA}"
   for section in "${SECTIONS[@]}"; do
     section=$(echo "$section" | xargs)
     if ! grep -qF "$section" /tmp/pr-body.md; then
-      ERRORS+=("PR body file /tmp/pr-body.md is missing required section: $section.")
+      ERRORS+=("/tmp/pr-body.md is missing required section: $section. Run /pr to generate the correct body.")
     fi
   done
 fi
 
 # --- Check 3: Command references /tmp/pr-body.md for the body ---
 if ! echo "$CMD" | grep -q 'pr-body\.md'; then
-  ERRORS+=("The gh pr create command must use /tmp/pr-body.md for the --body content.")
+  ERRORS+=("--body must reference /tmp/pr-body.md. Run /pr — it builds the body and passes it correctly.")
 fi
 
 # --- Check 4: Ambient session label ---
 if [ -n "${AGENTIC_SESSION_NAME:-}" ]; then
   if ! echo "$CMD" | grep -qE "${AMBIENT_SESSION_LABEL}"; then
-    ERRORS+=("AGENTIC_SESSION_NAME is set ($AGENTIC_SESSION_NAME) but --label \"${AMBIENT_SESSION_LABEL}\" is missing.")
+    ERRORS+=("AGENTIC_SESSION_NAME is set ($AGENTIC_SESSION_NAME) but --label \"${AMBIENT_SESSION_LABEL}\" is missing. The /pr skill adds this automatically.")
   fi
 fi
 
 # --- Check 5: --base flag is specified ---
 if ! echo "$CMD" | grep -q -- '--base'; then
-  ERRORS+=("Missing --base flag. The /pr skill requires --base ${PRIMARY_BRANCH} (or the target branch for backports).")
+  ERRORS+=("--base is missing. The /pr skill sets --base ${PRIMARY_BRANCH} (or the backport target) automatically.")
 fi
 
 # --- Report ---
 if [ ${#ERRORS[@]} -gt 0 ]; then
-  echo "BLOCKED: gh pr create does not follow /pr skill conventions." >&2
+  echo "BLOCKED: gh pr create does not meet /pr skill requirements." >&2
   echo "" >&2
   for err in "${ERRORS[@]}"; do
     echo "  - $err" >&2
   done
   echo "" >&2
-  echo "Use the /pr skill to create PRs correctly, or fix the issues above." >&2
+  echo "Fix: run the /pr skill instead of calling 'gh pr create' directly." >&2
   exit 2
 fi

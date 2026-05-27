@@ -27,7 +27,7 @@ echo "=== Session Bootstrap ==="
 STATE_FILE="${REPO_ROOT}/.claude/session-state/current.json"
 CONTEXT=""
 if [ -f "$STATE_FILE" ]; then
-  echo "[1/4] Restoring previous session state..."
+  echo "[1/5] Restoring previous session state..."
   BRANCH=$(jq -r '.branch // empty' "$STATE_FILE" 2>/dev/null || true)
   TICKET=$(jq -r '.ticket // empty' "$STATE_FILE" 2>/dev/null || true)
   PR_NUM=$(jq -r '.pr_number // empty' "$STATE_FILE" 2>/dev/null || true)
@@ -39,7 +39,7 @@ if [ -f "$STATE_FILE" ]; then
   [ -n "$PR_NUM" ] && CONTEXT="${CONTEXT}, PR=#${PR_NUM}"
   echo "  ${CONTEXT}"
 else
-  echo "[1/4] No previous session state found."
+  echo "[1/5] No previous session state found."
 fi
 
 # Skip expensive bootstrap if already done this session
@@ -54,14 +54,14 @@ fi
 
 # ── 2. acli ──────────────────────────────────────────────────────
 if ! command -v acli &>/dev/null; then
-  echo "[2/4] Installing acli..."
+  echo "[2/5] Installing acli..."
   mkdir -p "$ACLI_INSTALL_DIR"
   curl -sSL -o "${ACLI_INSTALL_DIR}/acli" "$ACLI_DOWNLOAD_URL"
   chmod +x "${ACLI_INSTALL_DIR}/acli"
   export PATH="${ACLI_INSTALL_DIR}:${PATH}"
   echo "  Installed to ${ACLI_INSTALL_DIR}/acli"
 else
-  echo "[2/4] acli already installed."
+  echo "[2/5] acli already installed."
 fi
 
 # Auth acli if credentials available
@@ -83,7 +83,7 @@ if command -v acli &>/dev/null; then
 fi
 
 # ── 3. pre-commit ───────────────────────────────────────────────
-echo "[3/4] Checking pre-commit hooks..."
+echo "[3/5] Checking pre-commit hooks..."
 if [ -f "${REPO_ROOT}/.pre-commit-config.yaml" ]; then
   if command -v pre-commit &>/dev/null; then
     (cd "$REPO_ROOT" && pre-commit install --allow-missing-config 2>/dev/null) && echo "  pre-commit hooks installed." || echo "  pre-commit install failed (non-fatal)."
@@ -95,7 +95,7 @@ else
 fi
 
 # ── 4. gh CLI ───────────────────────────────────────────────────
-echo "[4/4] Checking GitHub CLI auth..."
+echo "[4/5] Checking GitHub CLI auth..."
 if command -v gh &>/dev/null; then
   if gh auth status &>/dev/null; then
     echo "  gh authenticated."
@@ -104,6 +104,25 @@ if command -v gh &>/dev/null; then
   fi
 else
   echo "  Warning: gh CLI not found."
+fi
+
+# ── 5. CodeRabbit CLI ────────────────────────────────────────────
+echo "[5/5] Checking CodeRabbit CLI auth..."
+if command -v coderabbit &>/dev/null; then
+  if coderabbit auth status 2>&1 | grep -q "Logged in"; then
+    echo "  CodeRabbit already authenticated."
+  else
+    cr_key="${CODERABBIT_API_KEY:-${CODERABBIT_TOKEN:-}}"
+    if [ -n "$cr_key" ]; then
+      coderabbit auth login --api-key "$cr_key" 2>/dev/null \
+        && echo "  CodeRabbit authenticated via API key." \
+        || echo "  Warning: CodeRabbit auth failed. Run manually: coderabbit auth login"
+    else
+      echo "  Warning: No CODERABBIT_API_KEY or CODERABBIT_TOKEN set. Set one or run: coderabbit auth login"
+    fi
+  fi
+else
+  echo "  CodeRabbit CLI not found (pre-PR review gate will be skipped)."
 fi
 
 # Mark complete

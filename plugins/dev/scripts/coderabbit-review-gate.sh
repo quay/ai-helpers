@@ -30,9 +30,13 @@ if ! command -v coderabbit &>/dev/null; then
   exit 0
 fi
 
-if [ -z "${CODERABBIT_API_KEY:-}" ]; then
-  echo "[coderabbit-review-gate] CODERABBIT_API_KEY not set — skipping review gate" >&2
-  echo "[coderabbit-review-gate] Connect your key in ACP Integrations or run: coderabbit auth login" >&2
+CR_KEY="${CODERABBIT_API_KEY:-${CODERABBIT_TOKEN:-}}"
+CR_KEY_ARGS=()
+if [ -n "$CR_KEY" ]; then
+  CR_KEY_ARGS=(--api-key "$CR_KEY")
+elif ! coderabbit auth status 2>&1 | grep -q "Logged in"; then
+  echo "[coderabbit-review-gate] No CodeRabbit credentials — skipping review gate" >&2
+  echo "[coderabbit-review-gate] Set CODERABBIT_API_KEY or CODERABBIT_TOKEN, or run: coderabbit auth login" >&2
   exit 0
 fi
 
@@ -52,7 +56,7 @@ fi
 echo "[coderabbit-review-gate] Running CodeRabbit review before PR creation..." >&2
 
 CR_ERR=$(mktemp)
-CR_OUTPUT=$(cd "$REPO_ROOT" && coderabbit review --agent --base "$BASE_BRANCH" 2>"$CR_ERR" || true)
+CR_OUTPUT=$(cd "$REPO_ROOT" && coderabbit review --agent --base "$BASE_BRANCH" "${CR_KEY_ARGS[@]}" 2>"$CR_ERR" || true)
 
 CR_JSON=$(echo "$CR_OUTPUT" | jq -c '.' 2>/dev/null || true)
 

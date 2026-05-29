@@ -144,7 +144,7 @@ When processing a batch of CVEs:
 
 After processing all CVEs, print a summary:
 
-```
+```text
 === CVE Fix Summary ===
 
 PRs Created:

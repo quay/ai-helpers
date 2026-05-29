@@ -123,7 +123,7 @@ Set in `ambient.json`:
 
 ## Artifacts
 
-```
+```text
 artifacts/quay-cvefix/
 ├── find/            # Jira CVE issue lists
 ├── assess/          # Per-CVE triage reports

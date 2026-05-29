@@ -74,7 +74,7 @@
     },
     "quay/quay-container-security-operator-rhel8": {
       "upstream_repo": "quay/container-security-operator",
-      "github_url": "https://github.com/quay/container-security-operator.git",
+      "github_url": "https://github.com/quay/container-security-operator",
       "konflux_component": "components/container-security-operator/",
       "languages": ["go"],
       "go_mod_path": ".",
@@ -83,7 +83,7 @@
     },
     "quay/quay-container-security-operator-rhel9": {
       "upstream_repo": "quay/container-security-operator",
-      "github_url": "https://github.com/quay/container-security-operator.git",
+      "github_url": "https://github.com/quay/container-security-operator",
       "konflux_component": "components/container-security-operator/",
       "languages": ["go"],
       "go_mod_path": ".",
@@ -131,7 +131,7 @@
     },
     "quay/quay-operator-rhel8": {
       "upstream_repo": "quay/quay-operator",
-      "github_url": "https://github.com/quay/quay-operator.git",
+      "github_url": "https://github.com/quay/quay-operator",
       "konflux_component": "components/quay-operator/",
       "languages": ["go"],
       "go_mod_path": ".",
@@ -140,7 +140,7 @@
     },
     "quay/quay-operator-rhel9": {
       "upstream_repo": "quay/quay-operator",
-      "github_url": "https://github.com/quay/quay-operator.git",
+      "github_url": "https://github.com/quay/quay-operator",
       "konflux_component": "components/quay-operator/",
       "languages": ["go"],
       "go_mod_path": ".",

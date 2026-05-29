@@ -238,9 +238,12 @@ if [ -z "$REQ_FILE" ]; then
   grep -ri "${PACKAGE}" requirements*.txt 2>/dev/null
 fi
 
+# Escape regex metacharacters in package name (e.g., dots in golang.org/x/net)
+ESCAPED_PACKAGE=$(printf '%s\n' "$PACKAGE" | sed 's/[.[\*^$]/\\&/g')
+
 # Update the version pin
 # Handle various pin formats: pkg==1.0.0, pkg>=1.0.0, pkg~=1.0.0
-sed -i "s/^${PACKAGE}[=>~!][=<>~!]*.*$/${PACKAGE}>=${FIXED_VERSION}/" "$REQ_FILE"
+sed -i "s/^${ESCAPED_PACKAGE}[=>~!][=<>~!]*.*$/${PACKAGE}>=${FIXED_VERSION}/" "$REQ_FILE"
 ```
 
 **Step 7.1.2: Regenerate requirements-build.txt**
@@ -248,8 +251,11 @@ sed -i "s/^${PACKAGE}[=>~!][=<>~!]*.*$/${PACKAGE}>=${FIXED_VERSION}/" "$REQ_FILE
 ```bash
 pybuild-deps compile requirements.txt -o requirements-build.txt
 
-# WORKAROUND: Remove setuptools==82 entries (known bug)
-sed -i '/^setuptools==82/d' requirements-build.txt
+# WORKAROUND: setuptools 82.x produces broken metadata when used as a build
+# dependency, causing pip install failures. Remove the exact pin until the
+# upstream bug (https://github.com/pypa/setuptools/issues/XXXX) is resolved.
+# This can be removed once pybuild-deps no longer emits setuptools==82.x pins.
+sed -i '/^setuptools==82\b/d' requirements-build.txt
 ```
 
 **Step 7.1.3: Verify the fix**

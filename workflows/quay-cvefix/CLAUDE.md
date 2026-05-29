@@ -77,7 +77,7 @@ prefix format for consistency with other Quay workflows.
 
 ## Commit Format
 
-```
+```text
 fix(cve): CVE-YYYY-XXXXX - <package-name> (<PROJQUAY-XXXX>)
 
 - Update <package> from X.X.X to Y.Y.Y

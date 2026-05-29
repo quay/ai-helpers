@@ -393,7 +393,7 @@ Post a structured comment to the Jira ticket:
 
 **For package-bump / go-stdlib:**
 
-```
+```text
 [Phase: Assess] CVE Triage Complete
 
 CVE: CVE-YYYY-XXXXX
@@ -412,7 +412,7 @@ Next: Applying fix.
 
 **For not-affected (VEX):**
 
-```
+```text
 [Phase: Assess] CVE Not Affected - VEX Justification
 
 CVE: CVE-YYYY-XXXXX
@@ -431,7 +431,7 @@ This issue can be closed as "Not a Bug / <justification>" if the above evidence 
 
 **For rpm-layer:**
 
-```
+```text
 [Phase: Assess] CVE in Base Image / RPM Layer
 
 CVE: CVE-YYYY-XXXXX

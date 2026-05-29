@@ -116,7 +116,7 @@ Skip issues with these comments; document them separately.
 
 Extract structured data from each ticket summary. The format is:
 
-```
+```text
 CVE-YYYY-XXXXX container/name: package: description [quay-X.Y]
 ```
 

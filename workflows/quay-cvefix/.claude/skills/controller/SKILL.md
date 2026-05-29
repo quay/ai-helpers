@@ -1,9 +1,9 @@
 ---
 name: controller
 description: >
-  Orchestrates the Quay CVE fix workflow through three phases: find, assess,
-  and fix. Routes each CVE based on the assessment verdict — only package-bump
-  and go-stdlib CVEs proceed to the fix phase.
+  Orchestrates the Quay CVE fix workflow through four phases: find, assess,
+  fix, and PR. Routes each CVE based on the assessment verdict — only
+  package-bump and go-stdlib CVEs proceed to fix and PR creation.
 allowed-tools:
   - Bash(bash .claude/scripts/session-setup.sh)
   - Bash(bash .claude/scripts/jira-ops.sh *)
@@ -37,9 +37,10 @@ allowed-tools:
 
 # Quay CVE Fix Controller
 
-You manage a 3-phase CVE remediation workflow for Quay components. Each CVE
-passes through find -> assess -> fix, with routing based on the assessment
-verdict.
+You manage a 4-phase CVE remediation workflow for Quay components. Each CVE
+passes through find -> assess -> fix -> PR, with routing based on the
+assessment verdict. PR creation is delegated to the `/dev:pr` skill from the
+dev plugin — never create PRs inline.
 
 ## Session Bootstrap
 
@@ -64,7 +65,14 @@ component mappings and safety rules.
    and classify into a fix category.
 
 3. **Fix** — the `fix` skill (runs per CVE, only for fixable categories)
-   Apply the version bump, run tests, verify the fix, and create a PR.
+   Apply the version bump, run tests, verify the fix, and commit changes.
+   Does NOT create the PR — that is handled by the next phase.
+
+4. **PR** — the `/dev:pr` skill (from dev plugin), then `/dev:poll`
+   Create a pull request using `/dev:pr`, which handles fork management,
+   PR title validation against the CI regex, the standard description
+   template, and fallback ladder. Then start CI polling with `/dev:poll`.
+   After the PR is created, post a Jira comment with the PR URL.
 
 ## Entry Points
 
@@ -90,17 +98,40 @@ Read the verdict from the assess artifact and route:
 
 | Verdict | Action |
 |---------|--------|
-| `package-bump` | Proceed to fix skill |
-| `go-stdlib` | Proceed to fix skill (targets quay-konflux-components) |
+| `package-bump` | Proceed to fix skill, then `/dev:pr` |
+| `go-stdlib` | Proceed to fix skill (targets quay-konflux-components), then `/dev:pr` |
 | `rpm-layer` | Post Jira comment, log in artifacts, skip fix |
 | `code-change-required` | Post Jira comment, escalate via AskUserQuestion |
 | `not-affected` | Post VEX justification to Jira, log in artifacts, skip fix |
 
 ### After Fix (per CVE)
 
-1. Log the PR URL and test results
-2. Post a Jira comment with the fix summary
-3. Move to the next CVE in the queue
+1. Read the fix report from `artifacts/quay-cvefix/fixes/fix-implementation-CVE-*.md`
+2. Run the `/dev:pr` skill to create the PR
+   - `/dev:pr` reads the fix report to fill in the PR description template
+   - PR title must match the CI regex: `${JIRA_KEY}: fix(cve): ${CVE_ID} - ${PACKAGE}`
+   - `/dev:pr` handles fork workflow, title validation, and push
+3. Run `/dev:poll` to start CI polling on the new PR
+4. Post a Jira comment with the PR URL and fix summary:
+
+```text
+[Phase: Fix] CVE Remediation PR Created
+
+CVE: <CVE_ID>
+Package: <PACKAGE> <OLD_VERSION> -> <NEW_VERSION>
+Branch: fix/cve-<ID>-<pkg>-<branch>-attempt-1
+
+Fix Applied: <description of change>
+Test Results: <PASSED / FAILED / NOT_RUN>
+Post-fix Scan: <CVE resolved / still present>
+
+PR: <full PR URL>
+Backport Required: <yes/no + branch>
+
+Next: PR ready for review.
+```
+
+5. Move to the next CVE in the queue
 
 ## Jira Comments
 

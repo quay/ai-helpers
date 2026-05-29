@@ -1,0 +1,157 @@
+{
+  "components": {
+    "quay/clair-rhel8": {
+      "upstream_repo": "quay/clair",
+      "github_url": "https://github.com/quay/clair",
+      "konflux_component": "components/clair/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "main",
+      "active_release_branches": ["release-4.9"]
+    },
+    "quay/clair-rhel9": {
+      "upstream_repo": "quay/clair",
+      "github_url": "https://github.com/quay/clair",
+      "konflux_component": "components/clair/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "main",
+      "active_release_branches": ["release-4.9"]
+    },
+    "openshift/mirror-registry-rhel8": {
+      "upstream_repo": "quay/mirror-registry",
+      "github_url": "https://github.com/quay/mirror-registry",
+      "konflux_component": null,
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "main",
+      "active_release_branches": []
+    },
+    "quay/quay-bridge-operator-rhel8": {
+      "upstream_repo": "quay/quay-bridge-operator",
+      "github_url": "https://github.com/quay/quay-bridge-operator",
+      "konflux_component": "components/quay-bridge-operator/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-bridge-operator-rhel9": {
+      "upstream_repo": "quay/quay-bridge-operator",
+      "github_url": "https://github.com/quay/quay-bridge-operator",
+      "konflux_component": "components/quay-bridge-operator/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-builder-rhel8": {
+      "upstream_repo": "quay/quay-builder",
+      "github_url": "https://github.com/quay/quay-builder",
+      "konflux_component": "components/quay-builder/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-builder-rhel9": {
+      "upstream_repo": "quay/quay-builder",
+      "github_url": "https://github.com/quay/quay-builder",
+      "konflux_component": "components/quay-builder/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-builder-qemu-rhcos-rhel8": {
+      "upstream_repo": "quay/quay-builder-qemu",
+      "github_url": "https://github.com/quay/quay-builder-qemu",
+      "konflux_component": "components/quay-builder-qemu/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-container-security-operator-rhel8": {
+      "upstream_repo": "quay/container-security-operator",
+      "github_url": "https://github.com/quay/container-security-operator.git",
+      "konflux_component": "components/container-security-operator/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-container-security-operator-rhel9": {
+      "upstream_repo": "quay/container-security-operator",
+      "github_url": "https://github.com/quay/container-security-operator.git",
+      "konflux_component": "components/container-security-operator/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-rhel8": {
+      "upstream_repo": "quay/quay",
+      "github_url": "https://github.com/quay/quay",
+      "konflux_component": "components/quay/",
+      "languages": ["python", "nodejs", "go"],
+      "go_mod_path": "config-tool/",
+      "nodejs_paths": {
+        "root": ".",
+        "web": "web/"
+      },
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-rhel9": {
+      "upstream_repo": "quay/quay",
+      "github_url": "https://github.com/quay/quay",
+      "konflux_component": "components/quay/",
+      "languages": ["python", "nodejs", "go"],
+      "go_mod_path": "config-tool/",
+      "nodejs_paths": {
+        "root": ".",
+        "web": "web/"
+      },
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "redhat-user-workloads/quay-quay-v3-x": {
+      "upstream_repo": "quay/quay",
+      "github_url": "https://github.com/quay/quay",
+      "konflux_component": "components/quay/",
+      "languages": ["python", "nodejs", "go"],
+      "go_mod_path": "config-tool/",
+      "nodejs_paths": {
+        "root": ".",
+        "web": "web/"
+      },
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-operator-rhel8": {
+      "upstream_repo": "quay/quay-operator",
+      "github_url": "https://github.com/quay/quay-operator.git",
+      "konflux_component": "components/quay-operator/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    },
+    "quay/quay-operator-rhel9": {
+      "upstream_repo": "quay/quay-operator",
+      "github_url": "https://github.com/quay/quay-operator.git",
+      "konflux_component": "components/quay-operator/",
+      "languages": ["go"],
+      "go_mod_path": ".",
+      "default_branch": "master",
+      "active_release_branches": ["redhat-3.17"]
+    }
+  },
+  "eol_branches": ["3.11", "3.13"],
+  "metadata": {
+    "description": "Quay component to repository and branch mappings for CVE fix workflow automation",
+    "konflux_repo": "https://github.com/quay/quay-konflux-components",
+    "last_updated": "2026-05-29"
+  }
+}

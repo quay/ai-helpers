@@ -249,7 +249,7 @@ sed -i "s/^${ESCAPED_PACKAGE}[=>~!][=<>~!]*.*$/${PACKAGE}>=${FIXED_VERSION}/" "$
 **Step 7.1.2: Regenerate requirements-build.txt**
 
 ```bash
-pybuild-deps compile requirements.txt -o requirements-build.txt
+pybuild-deps compile --generate-hashes --output-file=requirements-build.txt requirements.txt
 
 # WORKAROUND: setuptools 82.x produces broken metadata when used as a build
 # dependency, causing pip install failures. Remove the exact pin until the

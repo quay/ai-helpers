@@ -3,8 +3,8 @@
 # Container runtime (podman or docker)
 CONTAINER_RUNTIME ?= $(shell command -v podman 2>/dev/null || echo docker)
 
-# claudelint image
-CLAUDELINT_IMAGE = ghcr.io/stbenjam/claudelint:main
+# skillsaw version
+SKILLSAW_VERSION := 0.11.4
 
 # Template repository
 TEMPLATE_REPO := https://raw.githubusercontent.com/stbenjam/claude-marketplace-template/main
@@ -15,14 +15,12 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: lint
-lint: ## Run plugin linter (verbose mode)
-	@echo "Running claudelint with $(CONTAINER_RUNTIME)..."
-	$(CONTAINER_RUNTIME) run --rm -v $(PWD):/workspace:Z ghcr.io/stbenjam/claudelint:main -v
+lint: ## Run skillsaw linter
+	$(CONTAINER_RUNTIME) run --rm -v $$(pwd):/workspace:Z ghcr.io/stbenjam/skillsaw:v$(SKILLSAW_VERSION) --strict
 
-.PHONY: lint-pull
-lint-pull: ## Pull the latest claudelint image
-	@echo "Pulling latest claudelint image..."
-	$(CONTAINER_RUNTIME) pull $(CLAUDELINT_IMAGE)
+.PHONY: lint-fix
+lint-fix: ## Run skillsaw autofixes
+	$(CONTAINER_RUNTIME) run --rm -v $$(pwd):/workspace:Z ghcr.io/stbenjam/skillsaw:v$(SKILLSAW_VERSION) fix
 
 .PHONY: update
 update: ## Update plugin documentation and website data

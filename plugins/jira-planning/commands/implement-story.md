@@ -562,10 +562,10 @@ npx playwright test --grep "Organization Mirroring"
 UI stories should verify:
 - [ ] Component renders without errors
 - [ ] All interactive elements work (buttons, forms, links)
-- [ ] Form validation works correctly
-- [ ] Error states display properly
-- [ ] Loading states display properly
-- [ ] Success states display properly
+- [ ] Form validation rejects invalid input and accepts valid input
+- [ ] Error states render with descriptive messages
+- [ ] Loading states render during async operations
+- [ ] Success states render after completed actions
 - [ ] Responsive design works (mobile, tablet, desktop)
 - [ ] Accessibility requirements met (ARIA labels, keyboard navigation)
 - [ ] E2E tests cover main user workflows

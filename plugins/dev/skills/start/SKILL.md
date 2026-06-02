@@ -49,7 +49,7 @@ bash .claude/scripts/jira-ops.sh transition $ARGUMENTS "ASSIGNED"
 bash .claude/scripts/jira-ops.sh check-version $ARGUMENTS
 ```
 
-If Target Version is set, note that **backporting will be required** after merge.
+If Target Version is set, **backporting is required** after merge.
 
 ## Step 3: Create Branch
 

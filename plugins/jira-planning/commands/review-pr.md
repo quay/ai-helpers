@@ -279,9 +279,9 @@ For any files in `workers/` or `storage/`:
 1. **SOLID Principles**
    - Single Responsibility: Does each class/function do one thing well?
    - Open/Closed: Is code open for extension, closed for modification?
-   - Liskov Substitution: Are subtypes properly substitutable?
+   - Liskov Substitution: Are subtypes fully substitutable?
    - Interface Segregation: Are interfaces focused and minimal?
-   - Dependency Inversion: Are dependencies properly abstracted?
+   - Dependency Inversion: Are dependencies abstracted behind interfaces?
 
 2. **Design Patterns**
    - Appropriate pattern usage (Factory, Strategy, Observer, etc.)
@@ -305,7 +305,7 @@ For any files in `workers/` or `storage/`:
    - `dataclasses` or `attrs` for data containers
 
 2. **Comprehensions & Generators**
-   - List/dict/set comprehensions used appropriately
+   - List/dict/set comprehensions used instead of manual loops
    - Generator expressions for memory efficiency
    - No overly complex nested comprehensions
 
@@ -324,10 +324,10 @@ For any files in `workers/` or `storage/`:
 1. **Type Hints**
    - All function signatures typed
    - Return types specified
-   - Complex types properly annotated
+   - Complex types fully annotated
 
 2. **Type Patterns**
-   - `Optional[T]` or `T | None` used correctly
+   - `Optional[T]` or `T | None` used for nullable types
    - `TypeVar` for generic functions
    - `Protocol` for structural typing
    - `Literal` for constrained values
@@ -384,7 +384,7 @@ For any files in `workers/` or `storage/`:
    - No prop drilling (use context/composition)
 
 3. **Component Patterns**
-   - Controlled vs uncontrolled used correctly
+   - Controlled vs uncontrolled chosen deliberately
    - Compound components where appropriate
    - Render props/children patterns
    - HOCs used sparingly (prefer hooks)
@@ -404,7 +404,7 @@ For any files in `workers/` or `storage/`:
    - No premature optimization
 
 3. **State Management**
-   - State colocated appropriately
+   - State colocated near its consumers
    - Derived state computed, not stored
    - Complex state with `useReducer`
    - Global state only when needed
@@ -433,7 +433,7 @@ For any files in `workers/` or `storage/`:
 
 1. **Render Optimization**
    - No unnecessary re-renders
-   - Keys used correctly in lists
+   - Keys are stable and unique in lists
    - Virtualization for long lists
    - Lazy loading for routes/heavy components
 
@@ -455,7 +455,7 @@ For any files in `workers/` or `storage/`:
    - Proper heading hierarchy
    - Landmark elements used
    - Lists for list content
-   - Buttons vs links used correctly
+   - Buttons for actions, links for navigation
 
 2. **ARIA**
    - ARIA labels where needed

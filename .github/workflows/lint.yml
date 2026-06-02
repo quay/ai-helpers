@@ -12,16 +12,16 @@ permissions:
   contents: read
 
 jobs:
-  claudelint:
-    name: Plugin structure
+  skillsaw:
+    name: Skillsaw lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run claudelint
-        run: |
-          docker run --rm -v $(pwd):/workspace ghcr.io/stbenjam/claudelint:main -v
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+      - uses: stbenjam/skillsaw@269fd97ad8fe9082e7cc2f36d82eafddf7187764 # v0
+        with:
+          strict: true
 
   shellcheck:
     name: Shell scripts
@@ -75,44 +75,6 @@ jobs:
           fi
           echo "Docs are up to date."
 
-  plugin-json:
-    name: Plugin metadata
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate plugin.json files
-        run: |
-          failed=0
-          for pj in $(find plugins -path '*/.claude-plugin/plugin.json'); do
-            plugin_dir=$(dirname "$(dirname "$pj")")
-            plugin_name=$(basename "$plugin_dir")
-
-            if ! python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$pj" 2>/dev/null; then
-              echo "ERROR: invalid JSON: $pj"
-              failed=1
-              continue
-            fi
-
-            name=$(python3 -c "import json, sys; print(json.load(open(sys.argv[1])).get('name',''))" "$pj")
-            if [ -z "$name" ]; then
-              echo "ERROR: missing 'name' field: $pj"
-              failed=1
-            fi
-
-            desc=$(python3 -c "import json, sys; print(json.load(open(sys.argv[1])).get('description',''))" "$pj")
-            if [ -z "$desc" ]; then
-              echo "ERROR: missing 'description' field: $pj"
-              failed=1
-            fi
-
-            if [ ! -f "$plugin_dir/README.md" ]; then
-              echo "ERROR: missing README.md for plugin $plugin_name"
-              failed=1
-            fi
-          done
-          exit $failed
 
   settings-sync:
     name: Workflow settings in sync

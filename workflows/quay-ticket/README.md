@@ -45,11 +45,11 @@ Declared in `.lola-req`:
 
 ### Bootstrap
 
-`session-setup.sh` runs as a `SessionStart` hook. It uses `lola sync`
-to install all plugins declared in `.lola-req`. The plugins' post-install
-hooks copy scripts and templates into `.claude/scripts/` and
-`.claude/templates/`. This is the only script committed directly —
-everything else comes from plugins.
+`session-setup.sh` runs as a `SessionStart` hook. It parses pip-style
+URL fragments from `.lola-req` and installs each plugin via `lola mod add`
++ `lola install`. The plugins' post-install hooks copy scripts and
+templates into `.claude/scripts/` and `.claude/templates/`. This is the
+only script committed directly — everything else comes from plugins.
 
 ## Environment variables
 

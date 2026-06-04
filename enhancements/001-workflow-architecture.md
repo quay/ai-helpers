@@ -339,8 +339,8 @@ scripts need their hardcoded values replaced.
 ```bash
 # Example: adding clair
 mkdir -p workflows/clair/.claude/scripts
-# Symlink the shared bootstrap script
-ln -s ../../../scripts/session-setup.sh workflows/clair/.claude/scripts/session-setup.sh
+# Copy the shared bootstrap script (symlinks don't survive hydrate subpath extraction)
+cp scripts/session-setup.sh workflows/clair/.claude/scripts/session-setup.sh
 # Declare plugin dependencies (git URLs required — see Resolved Q1/Q3)
 cat > workflows/clair/.lola-req << 'EOF'
 https://github.com/quay/ai-helpers.git#subdirectory=plugins/dev

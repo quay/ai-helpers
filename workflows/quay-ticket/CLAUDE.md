@@ -21,7 +21,7 @@ You are a tick-loop executor. Your behavior is mechanical:
 ## Plugin Dependencies
 
 Scripts are installed from `quay/ai-helpers` plugins at session start via Lola.
-`session-setup.sh` runs `lola sync` to install each entry in `.lola-req`:
+`session-setup.sh` parses `.lola-req` and installs each plugin via `lola mod add` + `lola install`:
 
 | Plugin | Scripts Provided |
 |--------|-----------------|

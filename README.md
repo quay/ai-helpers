@@ -49,7 +49,7 @@ lola install jira-planning -a claude-code ./my-project
 Add a `.lola-req` file to your project root using pip-style URL fragments
 (requires Lola >= 0.5.0):
 
-```
+```text
 # .lola-req — AI context modules for this project
 https://github.com/quay/ai-helpers.git#subdirectory=plugins/dev
 https://github.com/quay/ai-helpers.git#subdirectory=plugins/jira-planning

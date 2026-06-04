@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# SessionStart hook: reads .lola-req and installs plugins via Lola.
+# SessionStart hook: installs Claude Code plugins via Lola.
 #
-# Parses .lola-req lines (URL + --module-content=<path>) and runs
-# `lola mod add` + `lola install` for each entry. This is a shim for
-# `lola sync` which does not yet parse --module-content from .lola-req.
+# Parses .lola-req entries with pip-style URL fragments (#subdirectory=path)
+# and registers/installs each plugin individually. Uses lola mod add +
+# lola install rather than lola sync because lola sync derives module names
+# from the URL, causing collisions when multiple subdirectories come from
+# the same repository (tracked upstream).
 #
 # Must be committed directly in each workflow's .claude/scripts/
 # directory — symlinks do not survive ACP's hydrate.sh subpath extraction.
@@ -21,32 +23,37 @@ if [ ! -f "$LOLA_REQ" ]; then
 fi
 
 while IFS= read -r line || [ -n "$line" ]; do
-  # Strip comments and whitespace
-  line="${line%%#*}"
+  # Skip full-line comments and blank lines
+  [[ "$line" =~ ^[[:space:]]*# ]] && continue
   line="$(echo "$line" | xargs)"
   [ -z "$line" ] && continue
 
-  # Parse URL and --module-content flag
-  url="${line%% --*}"
-  content_dir=""
-  if [[ "$line" == *"--module-content="* ]]; then
-    content_dir="${line#*--module-content=}"
-    content_dir="${content_dir%% *}"
+  # Parse pip-style URL fragment (#subdirectory=path)
+  url="$line"
+  subdir=""
+  if [[ "$line" == *"#"* ]]; then
+    url="${line%%#*}"
+    fragment="${line#*#}"
+    if [[ "$fragment" == *"subdirectory="* ]]; then
+      subdir="${fragment#*subdirectory=}"
+      subdir="${subdir%%&*}"
+    fi
   fi
 
-  # Derive module name from content dir or URL
-  name="$(basename "${content_dir:-$url}" | sed 's/\.git$//')"
+  # Derive module name from subdirectory basename or URL
+  name="$(basename "${subdir:-$url}" | sed 's/\.git$//')"
 
   echo "[session-setup] Installing plugin: ${name}"
-  if [ -n "$content_dir" ]; then
-    $LOLA mod add "$url" --module-content="$content_dir" --name "$name" 2>&1 | tail -1
+  if [ -n "$subdir" ]; then
+    $LOLA mod add "$url" --module-content="$subdir" --name "$name" 2>&1 | tail -1
   else
     $LOLA mod add "$url" --name "$name" 2>&1 | tail -1
   fi
-  $LOLA install "$name" -a claude-code --scope project --force "$REPO_ROOT" 2>&1
+  $LOLA install "$name" -a claude-code -s project --force "$REPO_ROOT" 2>&1
 done < "$LOLA_REQ"
 
-if [ -z "$(ls -A "${CLAUDE_DIR}/scripts" 2>/dev/null)" ]; then
+installed_count="$(find "${CLAUDE_DIR}/scripts" -maxdepth 1 -type f ! -name 'session-setup.sh' | wc -l | tr -d ' ')"
+if [ "${installed_count}" = "0" ]; then
   echo "ERROR: .claude/scripts/ is empty after plugin install — check .lola-req"
   exit 1
 fi

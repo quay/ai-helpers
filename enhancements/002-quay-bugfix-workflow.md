@@ -157,8 +157,8 @@ The workflow reuses existing plugins — no script duplication:
 `.lola-req`:
 
 ```
-https://github.com/quay/ai-helpers.git@main --module-content=plugins/dev
-https://github.com/quay/ai-helpers.git@main --module-content=plugins/jira-planning
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/dev
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/jira-planning
 ```
 
 Scripts available after `lola sync`:

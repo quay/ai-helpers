@@ -144,28 +144,8 @@ fi
 if [ ! -f "$LOLA_REQ" ]; then
   echo "[session-setup] No .lola-req found, skipping plugin install"
 else
-  while IFS= read -r line || [ -n "$line" ]; do
-    line="${line%%#*}"
-    line="$(echo "$line" | xargs)"
-    [ -z "$line" ] && continue
-
-    url="${line%% --*}"
-    content_dir=""
-    if [[ "$line" == *"--module-content="* ]]; then
-      content_dir="${line#*--module-content=}"
-      content_dir="${content_dir%% *}"
-    fi
-
-    name="$(basename "${content_dir:-$url}" | sed 's/\.git$//')"
-
-    echo "[session-setup] Installing plugin: ${name}"
-    if [ -n "$content_dir" ]; then
-      $LOLA mod add "$url" --module-content="$content_dir" --name "$name" 2>&1 | tail -1
-    else
-      $LOLA mod add "$url" --name "$name" 2>&1 | tail -1
-    fi
-    $LOLA install "$name" -a claude-code --scope project --force "$WORKFLOW_DIR" 2>&1
-  done < "$LOLA_REQ"
+  echo "[session-setup] Running lola sync..."
+  $LOLA sync -a claude-code
 
   if [ -n "$(ls -A "${CLAUDE_DIR}/skills" 2>/dev/null)" ]; then
     echo "[session-setup] Skills installed: $(ls "${CLAUDE_DIR}/skills" 2>/dev/null | tr '\n' ' ')"

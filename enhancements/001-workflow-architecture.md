@@ -155,16 +155,17 @@ The same plugin directory serves both. Lola adds `lola.yaml` alongside
 `workflows/quay/.lola-req`:
 
 ```
-# Plugins installed at session start via lola sync
-https://github.com/quay/ai-helpers.git --module-content=plugins/dev
-https://github.com/quay/ai-helpers.git --module-content=plugins/jira-planning
-https://github.com/quay/ai-helpers.git --module-content=plugins/openshift-testing
-https://github.com/quay/ai-helpers.git --module-content=plugins/konflux
+# Plugins installed at session start via lola sync (pip-style URL fragments)
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/dev
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/jira-planning
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/openshift-testing
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/konflux
 ```
 
-Git URLs with `--module-content` are required because ACP's `hydrate.sh`
-extracts only the workflow subpath — relative paths like `../../plugins/dev`
-won't resolve at runtime (see [Resolved Questions](#resolved-questions)).
+Git URLs with `#subdirectory=` fragments are required because ACP's
+`hydrate.sh` extracts only the workflow subpath — relative paths like
+`../../plugins/dev` won't resolve at runtime (see
+[Resolved Questions](#resolved-questions)).
 
 `lola sync` reads this file, installs SKILL.md files to `.claude/skills/`,
 and runs the post-install hook which copies scripts, templates, and commands
@@ -338,12 +339,12 @@ scripts need their hardcoded values replaced.
 ```bash
 # Example: adding clair
 mkdir -p workflows/clair/.claude/scripts
-# Symlink the shared bootstrap script
-ln -s ../../../scripts/session-setup.sh workflows/clair/.claude/scripts/session-setup.sh
+# Copy the shared bootstrap script (symlinks don't survive hydrate subpath extraction)
+cp scripts/session-setup.sh workflows/clair/.claude/scripts/session-setup.sh
 # Declare plugin dependencies (git URLs required — see Resolved Q1/Q3)
 cat > workflows/clair/.lola-req << 'EOF'
-https://github.com/quay/ai-helpers.git --module-content=plugins/dev
-https://github.com/quay/ai-helpers.git --module-content=plugins/jira-planning
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/dev
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/jira-planning
 EOF
 cat > workflows/clair/CLAUDE.md << 'EOF'
 @/workspace/repos/clair/AGENTS.md
@@ -358,14 +359,15 @@ EOF
    `cp -r` copies **only the subpath** (`workflows/quay/`) to
    `/workspace/workflows/quay/`. Parent directories are discarded. This
    means relative paths like `../../plugins/dev` in `.lola-req` won't
-   resolve at runtime. **Resolution:** use git URLs with `--module-content`
-   syntax in `.lola-req` (see [Plugin Composition](#plugin-composition)).
+   resolve at runtime. **Resolution:** use git URLs with `#subdirectory=`
+   fragments in `.lola-req` (see [Plugin Composition](#plugin-composition)).
 
 3. **Lola relative path support** — Tested with Lola v0.4.4. Relative
    paths in `.lola-req` do **not** work — they're treated as module names,
    not filesystem paths. `lola mod add ../../path` works (resolves against
    cwd), but `lola sync` reading from `.lola-req` does not. `file://` URLs
-   also fail. **Resolution:** use git URLs with `--module-content` syntax.
+   also fail. **Resolution:** use git URLs with `#subdirectory=` fragments
+   (supported since Lola v0.5.0).
    This also sidesteps the hydrate.sh subpath issue (Q1).
 
 5. **settings.json bootstrap** — `settings.json` references

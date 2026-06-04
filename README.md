@@ -46,19 +46,20 @@ lola install jira-planning -a claude-code ./my-project
 
 #### Declarative dependencies
 
-Add a `.lola-req` file to your project root:
+Add a `.lola-req` file to your project root using pip-style URL fragments
+(requires Lola >= 0.5.0):
 
 ```
 # .lola-req — AI context modules for this project
-https://github.com/quay/ai-helpers.git@main --module-content=plugins/dev
-https://github.com/quay/ai-helpers.git@main --module-content=plugins/jira-planning
-https://github.com/quay/ai-helpers.git@main --module-content=plugins/openshift-testing
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/dev
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/jira-planning
+https://github.com/quay/ai-helpers.git#subdirectory=plugins/openshift-testing
 ```
 
 Then sync all modules:
 
 ```bash
-uvx --python 3.13 --from lola-ai lola sync
+uvx --python 3.13 --from lola-ai lola sync -a claude-code
 ```
 
 #### What Lola installs

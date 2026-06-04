@@ -17,7 +17,7 @@ if [ ! -f "${WORKFLOW_ROOT}/.lola-req" ]; then
 fi
 
 echo "[session-setup] Running lola sync..."
-uvx --python 3.13 --from lola-ai lola sync
+uvx --python 3.13 --from lola-ai lola sync -a claude-code
 
 if [ -z "$(ls -A "${CLAUDE_DIR}/skills" 2>/dev/null)" ]; then
   echo "ERROR: .claude/skills/ is empty after lola sync — check .lola-req" >&2

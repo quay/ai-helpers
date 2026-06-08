@@ -1,7 +1,7 @@
 {
-  "name": "jira-planning",
+  "name": "jira",
   "description": "JIRA operations (view, assign, transition, check-version) and planning commands (epics, stories, estimates, quarterly plans).",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "quay"
   }

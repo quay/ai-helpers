@@ -10,8 +10,8 @@
       "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work"
     },
     {
-      "name": "jira-planning",
-      "source": "./plugins/jira-planning",
+      "name": "jira",
+      "source": "./plugins/jira",
       "description": "JIRA operations, planning commands, and estimation workflows"
     },
     {

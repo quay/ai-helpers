@@ -1,69 +1,69 @@
 {
   "version": "1",
-  "generated_by": "skillsaw 0.11.4",
-  "generated_at": "2026-06-02T14:26:12.094294+00:00",
+  "generated_by": "skillsaw 0.11.5",
+  "generated_at": "2026-06-08T14:59:30.878077+00:00",
   "violations": [
     {
-      "fingerprint": "cc47d7a568cb3ddc",
+      "fingerprint": "e589b29f0c987fd2",
       "rule_id": "context-budget",
-      "file_path": "plugins/jira-planning/commands/create-epic-from-feature.md",
+      "file_path": "plugins/dev/commands/review-pr.md",
+      "message": "Estimated 7,957 tokens exceeds command error limit of 4,000",
+      "severity": "error",
+      "value": 7957,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "714be043fe0d5eca",
+      "rule_id": "context-budget",
+      "file_path": "plugins/jira/commands/create-epic-from-feature.md",
       "message": "Estimated 3,797 tokens exceeds command warn limit of 2,000",
       "severity": "warning",
       "value": 3797,
       "baseline_mode": "ceiling"
     },
     {
-      "fingerprint": "971942be5b492e27",
+      "fingerprint": "8be25300ce6b6766",
       "rule_id": "context-budget",
-      "file_path": "plugins/jira-planning/commands/create-plan-from-issue.md",
+      "file_path": "plugins/jira/commands/create-plan-from-issue.md",
       "message": "Estimated 3,561 tokens exceeds command warn limit of 2,000",
       "severity": "warning",
       "value": 3561,
       "baseline_mode": "ceiling"
     },
     {
-      "fingerprint": "7531fccfe7efc8ee",
+      "fingerprint": "f0befe0265c5efb2",
       "rule_id": "context-budget",
-      "file_path": "plugins/jira-planning/commands/create-stories-from-epic.md",
+      "file_path": "plugins/jira/commands/create-stories-from-epic.md",
       "message": "Estimated 4,202 tokens exceeds command error limit of 4,000",
       "severity": "error",
       "value": 4202,
       "baseline_mode": "ceiling"
     },
     {
-      "fingerprint": "ad1c719a1dc3c2b9",
+      "fingerprint": "b707bf72677259ac",
       "rule_id": "context-budget",
-      "file_path": "plugins/jira-planning/commands/implement-story.md",
+      "file_path": "plugins/jira/commands/implement-story.md",
       "message": "Estimated 6,231 tokens exceeds command error limit of 4,000",
       "severity": "error",
       "value": 6231,
       "baseline_mode": "ceiling"
     },
     {
-      "fingerprint": "25245ea70df41ae3",
+      "fingerprint": "814c18fb264676ce",
       "rule_id": "context-budget",
-      "file_path": "plugins/jira-planning/commands/jira-ticket.md",
+      "file_path": "plugins/jira/commands/jira-ticket.md",
       "message": "Estimated 2,932 tokens exceeds command warn limit of 2,000",
       "severity": "warning",
       "value": 2932,
       "baseline_mode": "ceiling"
     },
     {
-      "fingerprint": "6d32f6923a71080e",
+      "fingerprint": "3835acc68c76c4bb",
       "rule_id": "context-budget",
-      "file_path": "plugins/jira-planning/commands/quarterly-plan.md",
+      "file_path": "plugins/jira/commands/quarterly-plan.md",
       "message": "Estimated 2,881 tokens exceeds command warn limit of 2,000",
       "severity": "warning",
       "value": 2881,
-      "baseline_mode": "ceiling"
-    },
-    {
-      "fingerprint": "3083d4a71cdb34ee",
-      "rule_id": "context-budget",
-      "file_path": "plugins/jira-planning/commands/review-pr.md",
-      "message": "Estimated 7,957 tokens exceeds command error limit of 4,000",
-      "severity": "error",
-      "value": 7957,
       "baseline_mode": "ceiling"
     }
   ]

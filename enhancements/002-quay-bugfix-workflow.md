@@ -130,7 +130,7 @@ workflows/quay-bugfix/
 │       ├── document/SKILL.md     # Phase 7: Release docs
 │       ├── pr/SKILL.md           # Phase 8: Create PR
 │       └── summary/SKILL.md      # Phase 9: Synthesize results
-├── .lola-req                     # Pulls in dev + jira-planning plugins
+├── .lola-req                     # Pulls in dev + jira plugins
 ├── CLAUDE.md                     # Quay-specific engineering discipline
 └── README.md                     # Usage documentation
 ```
@@ -158,14 +158,14 @@ The workflow reuses existing plugins — no script duplication:
 
 ```
 https://github.com/quay/ai-helpers.git@main --module-content=plugins/dev
-https://github.com/quay/ai-helpers.git@main --module-content=plugins/jira-planning
+https://github.com/quay/ai-helpers.git@main --module-content=plugins/jira
 ```
 
 Scripts available after `lola sync`:
 
 | Script | Source Plugin | Used By Phase |
 |--------|-------------|---------------|
-| `jira-ops.sh` | jira-planning | Assess, Fix, Document |
+| `jira-ops.sh` | jira | Assess, Fix, Document |
 | `format-and-lint.sh` | dev | Fix, Test |
 | `validate-pr-title.sh` | dev | PR |
 | `poll-pr.sh` | dev | PR |
@@ -316,7 +316,7 @@ Submit this enhancement for team review. Align on:
 
 1. Create `workflows/quay-bugfix/` directory structure
 2. Create `.ambient/ambient.json` with metadata, env vars, rubric
-3. Create `.lola-req` referencing dev + jira-planning plugins
+3. Create `.lola-req` referencing dev + jira plugins
 4. Copy `session-setup.sh` bootstrap script
 5. Create `CLAUDE.md` with Quay engineering discipline
 

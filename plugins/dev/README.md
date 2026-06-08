@@ -15,6 +15,12 @@ workflow as a continuous state machine.
 | `/dev:ci` | Quick CI status check |
 | `/dev:backport` | Trigger cherry-pick robot for backporting |
 
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/dev:review-pr` | Comprehensive code quality review of a pull request |
+
 ## Scripts
 
 | Script | Purpose |

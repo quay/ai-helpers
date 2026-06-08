@@ -3,7 +3,7 @@
 This document lists all available Claude Code plugins and their commands in the ai-helpers repository.
 
 - [Dev](#dev-plugin)
-- [Jira Planning](#jira-planning-plugin)
+- [Jira](#jira-plugin)
 - [Openshift Testing](#openshift-testing-plugin)
 
 ### Dev Plugin
@@ -19,26 +19,28 @@ Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Incl
 - **`/dev:start`** - Begin work on a JIRA ticket. Assigns the ticket, creates a feature branch, checks if backporting is needed, and loads the relevant agent_docs/ for the ticket's area.
 - **`/dev:work`** - Ralph Loop tick-loop for single-ticket development. Replaces the /start -> /code -> /pr -> /poll skill chain with one continuous state machine. Each tick: read state, do one thing, write state, continue.
 
+**Commands:**
+- **`/dev:review-pr`** - Perform a comprehensive code quality review of a pull request
+
 See [plugins/dev/README.md](plugins/dev/README.md) for detailed documentation.
 
-### Jira Planning Plugin
+### Jira Plugin
 
 JIRA operations (view, assign, transition, check-version) and planning commands (epics, stories, estimates, quarterly plans).
 
 **Skills:**
-- **`/jira-planning:jira`** - View or update a JIRA ticket. Supports view, assign, transition, check-version, and set-version operations via REST API or acli.
+- **`/jira:ticket`** - View or update a JIRA ticket. Supports view, assign, transition, check-version, and set-version operations via REST API or acli.
 
 **Commands:**
-- **`/jira-planning:create-epic-from-feature` `<feature-key>`** - Generate an epic structure from a JIRA feature and create it in JIRA
-- **`/jira-planning:create-plan-from-issue` `<issue-key>`** - Systematically plan a bug or feature based on a JIRA issue
-- **`/jira-planning:create-stories-from-epic` `<epic-key>`** - Generate child stories from a JIRA epic, review them, and create in JIRA with approval
-- **`/jira-planning:estimate-issue` `<issue-key>`** - Estimate complexity and effort for a JIRA issue
-- **`/jira-planning:implement-story`** - Implement a JIRA story end-to-end with tests
-- **`/jira-planning:jira-ticket`** - Create or edit JIRA tickets in PROJQUAY or QUAYIO projects
-- **`/jira-planning:quarterly-plan` `<quarter> <must-have-issues> e.g., "2026-Q3 QUAYIO-1234,QUAYIO-5678"`** - Plan the next quarter by tagging JIRA issues with the quarterly label
-- **`/jira-planning:review-pr`** - Perform a comprehensive code quality review of a pull request
+- **`/jira:create-epic-from-feature` `<feature-key>`** - Generate an epic structure from a JIRA feature and create it in JIRA
+- **`/jira:create-plan-from-issue` `<issue-key>`** - Systematically plan a bug or feature based on a JIRA issue
+- **`/jira:create-stories-from-epic` `<epic-key>`** - Generate child stories from a JIRA epic, review them, and create in JIRA with approval
+- **`/jira:estimate-issue` `<issue-key>`** - Estimate complexity and effort for a JIRA issue
+- **`/jira:implement-story`** - Implement a JIRA story end-to-end with tests
+- **`/jira:jira-ticket`** - Create or edit JIRA tickets in PROJQUAY or QUAYIO projects
+- **`/jira:quarterly-plan` `<quarter> <must-have-issues> e.g., "2026-Q3 QUAYIO-1234,QUAYIO-5678"`** - Plan the next quarter by tagging JIRA issues with the quarterly label
 
-See [plugins/jira-planning/README.md](plugins/jira-planning/README.md) for detailed documentation.
+See [plugins/jira/README.md](plugins/jira/README.md) for detailed documentation.
 
 ### Openshift Testing Plugin
 

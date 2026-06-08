@@ -6,7 +6,7 @@
       "enabled": true
     },
     {
-      "name": "jira-planning",
+      "name": "jira",
       "source": "local",
       "enabled": true
     },

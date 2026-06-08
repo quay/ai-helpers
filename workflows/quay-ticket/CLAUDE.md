@@ -26,7 +26,7 @@ Scripts are installed from `quay/ai-helpers` plugins at session start via Lola.
 | Plugin | Scripts Provided |
 |--------|-----------------|
 | `plugins/dev` | tick-state.sh, format-and-lint.sh, poll-pr.sh, validate-pr-title.sh |
-| `plugins/jira-planning` | jira-ops.sh |
+| `plugins/jira` | jira-ops.sh |
 
 After bootstrap, all scripts are available at `.claude/scripts/`.
 

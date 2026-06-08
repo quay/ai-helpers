@@ -1,5 +1,5 @@
 ---
-name: jira
+name: ticket
 description: >
   View or update a JIRA ticket. Supports view, assign, transition,
   check-version, and set-version operations via REST API or acli.

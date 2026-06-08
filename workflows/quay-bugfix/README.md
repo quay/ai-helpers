@@ -64,7 +64,7 @@ Declared in `.lola-req`:
 - **plugins/dev** — `/dev:code`, `/dev:pr`, `/dev:poll`, `/dev:ci`,
   `/dev:backport` skills; format-and-lint.sh, poll-pr.sh,
   validate-pr-title.sh, and other dev tooling scripts
-- **plugins/jira-planning** — jira-ops.sh and JIRA integration scripts
+- **plugins/jira** — jira-ops.sh and JIRA integration scripts
 
 ### Bootstrap
 

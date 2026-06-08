@@ -5,8 +5,15 @@
     {
       "name": "dev",
       "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work",
-      "version": "0.1.0",
-      "commands": [],
+      "version": "0.2.0",
+      "commands": [
+        {
+          "name": "review-pr",
+          "description": "Perform a comprehensive code quality review of a pull request",
+          "synopsis": "",
+          "argument_hint": ""
+        }
+      ],
       "skills": [
         {
           "name": "backport",
@@ -50,9 +57,9 @@
       "has_mcp": false
     },
     {
-      "name": "jira-planning",
+      "name": "jira",
       "description": "JIRA operations, planning commands, and estimation workflows",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "commands": [
         {
           "name": "create-epic-from-feature",
@@ -95,18 +102,12 @@
           "description": "Plan the next quarter by tagging JIRA issues with the quarterly label",
           "synopsis": "",
           "argument_hint": "<quarter> <must-have-issues> e.g., \"2026-Q3 QUAYIO-1234,QUAYIO-5678\""
-        },
-        {
-          "name": "review-pr",
-          "description": "Perform a comprehensive code quality review of a pull request",
-          "synopsis": "",
-          "argument_hint": ""
         }
       ],
       "skills": [
         {
-          "name": "jira",
-          "id": "jira",
+          "name": "ticket",
+          "id": "ticket",
           "description": "View or update a JIRA ticket. Supports view, assign, transition, check-version, and set-version operations via REST API or acli."
         }
       ],

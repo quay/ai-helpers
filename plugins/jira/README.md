@@ -1,4 +1,4 @@
-# jira-planning
+# jira
 
 JIRA operations and planning workflows. Provides ticket management, planning
 commands for epics/stories/estimates, and safety hooks for embargoed tickets.
@@ -7,20 +7,19 @@ commands for epics/stories/estimates, and safety hooks for embargoed tickets.
 
 | Skill | Purpose |
 |-------|---------|
-| `/jira-planning:jira` | View, assign, transition, check/set Target Version |
+| `/jira:ticket` | View, assign, transition, check/set Target Version |
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/jira-planning:create-epic-from-feature` | Decompose a feature into epics |
-| `/jira-planning:create-stories-from-epic` | Break an epic into stories |
-| `/jira-planning:create-plan-from-issue` | Generate implementation plan |
-| `/jira-planning:estimate-issue` | Estimate story complexity |
-| `/jira-planning:implement-story` | Guide for implementing a story |
-| `/jira-planning:jira-ticket` | Work with JIRA tickets |
-| `/jira-planning:quarterly-plan` | Create quarterly roadmap |
-| `/jira-planning:review-pr` | Code review checklist |
+| `/jira:create-epic-from-feature` | Decompose a feature into epics |
+| `/jira:create-stories-from-epic` | Break an epic into stories |
+| `/jira:create-plan-from-issue` | Generate implementation plan |
+| `/jira:estimate-issue` | Estimate story complexity |
+| `/jira:implement-story` | Guide for implementing a story |
+| `/jira:jira-ticket` | Work with JIRA tickets |
+| `/jira:quarterly-plan` | Create quarterly roadmap |
 
 ## Scripts
 

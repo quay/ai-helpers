@@ -2,4 +2,4 @@
 # session-setup.sh runs `lola mod add` + `lola install` for each entry
 # because `lola sync` does not yet parse --module-content from this file.
 https://github.com/quay/ai-helpers.git --module-content=plugins/dev
-https://github.com/quay/ai-helpers.git --module-content=plugins/jira-planning
+https://github.com/quay/ai-helpers.git --module-content=plugins/jira

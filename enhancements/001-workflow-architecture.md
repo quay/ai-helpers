@@ -95,7 +95,7 @@ quay/ai-helpers/
 │   │   ├── skills/{start,code,pr,poll,ci,backport,work}/
 │   │   ├── scripts/
 │   │   └── templates/
-│   ├── jira-planning/                  # 1 skill, 5 scripts, 8 commands
+│   ├── jira/                  # 1 skill, 5 scripts, 8 commands
 │   │   ├── .claude-plugin/plugin.json
 │   │   ├── lola.yaml
 │   │   ├── skills/jira/
@@ -157,7 +157,7 @@ The same plugin directory serves both. Lola adds `lola.yaml` alongside
 ```
 # Plugins installed at session start via lola sync
 https://github.com/quay/ai-helpers.git --module-content=plugins/dev
-https://github.com/quay/ai-helpers.git --module-content=plugins/jira-planning
+https://github.com/quay/ai-helpers.git --module-content=plugins/jira
 https://github.com/quay/ai-helpers.git --module-content=plugins/openshift-testing
 https://github.com/quay/ai-helpers.git --module-content=plugins/konflux
 ```
@@ -343,7 +343,7 @@ ln -s ../../../scripts/session-setup.sh workflows/clair/.claude/scripts/session-
 # Declare plugin dependencies (git URLs required — see Resolved Q1/Q3)
 cat > workflows/clair/.lola-req << 'EOF'
 https://github.com/quay/ai-helpers.git --module-content=plugins/dev
-https://github.com/quay/ai-helpers.git --module-content=plugins/jira-planning
+https://github.com/quay/ai-helpers.git --module-content=plugins/jira
 EOF
 cat > workflows/clair/CLAUDE.md << 'EOF'
 @/workspace/repos/clair/AGENTS.md

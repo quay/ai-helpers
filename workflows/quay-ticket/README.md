@@ -41,7 +41,7 @@ Declared in `.lola-req`:
 
 - **plugins/dev** — tick-state.sh, format-and-lint.sh, poll-pr.sh,
   validate-pr-title.sh, and other dev tooling
-- **plugins/jira-planning** — jira-ops.sh and JIRA integration scripts
+- **plugins/jira** — jira-ops.sh and JIRA integration scripts
 
 ### Bootstrap
 

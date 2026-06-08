@@ -8,6 +8,9 @@
 #   bash scripts/jira-ops.sh comment <ISSUE_KEY> <comment_text>
 #   bash scripts/jira-ops.sh check-version <ISSUE_KEY>
 #   bash scripts/jira-ops.sh set-version <ISSUE_KEY> <version>
+#   bash scripts/jira-ops.sh get-fix-versions <ISSUE_KEY>
+#   bash scripts/jira-ops.sh get-clone-key <ISSUE_KEY> <BRANCH>
+#   bash scripts/jira-ops.sh clone <ISSUE_KEY> <TARGET_VERSION>
 #
 # Environment variables:
 #   JIRA_DOMAIN                — JIRA instance (default: redhat.atlassian.net)
@@ -235,9 +238,78 @@ case "$ACTION" in
       { echo "ERROR: Failed to add comment to ${ISSUE_KEY}." >&2; exit 1; }
     ;;
 
+  get-fix-versions)
+    echo "Fetching Fix Versions for ${ISSUE_KEY}..."
+    RESULT=$(jira_rest GET "issue/${ISSUE_KEY}?fields=fixVersions")
+    FV=$(echo "$RESULT" | jq -r '.fields.fixVersions // [] | [.[].name] | join(", ")')
+    if [ -n "$FV" ]; then
+      echo "Fix Versions: ${FV}"
+    else
+      echo "No Fix Versions set."
+    fi
+    ;;
+
+  get-clone-key)
+    BRANCH="${1:?Usage: jira-ops.sh get-clone-key <ISSUE_KEY> <BRANCH>}"
+    echo "Looking up clone key for ${ISSUE_KEY} on branch ${BRANCH}..."
+    RESULT=$(jira_rest GET "issue/${ISSUE_KEY}?fields=labels,issuelinks,${TV_FIELD}")
+
+    CLONE_KEY=$(echo "$RESULT" | jq -r --arg branch "$BRANCH" '
+      .fields.labels // [] | map(select(startswith("jlp-\($branch):"))) | .[0] // "" | split(":")[1] // empty')
+
+    if [ -z "$CLONE_KEY" ]; then
+      # Fallback: check Blocks links whose summary contains the branch name
+      CLONE_KEY=$(echo "$RESULT" | jq -r --arg branch "$BRANCH" '
+        .fields.issuelinks // [] | map(
+          select(.type.name == "Blocks") |
+          (.outwardIssue // .inwardIssue) |
+          select(.fields.summary // "" | test("\\[" + $branch + "\\]"; "i")) |
+          .key
+        ) | .[0] // empty')
+    fi
+
+    if [ -n "$CLONE_KEY" ]; then
+      echo "Clone key: ${CLONE_KEY}"
+    else
+      echo "none"
+    fi
+    ;;
+
+  clone)
+    TARGET_VERSION="${1:?Usage: jira-ops.sh clone <ISSUE_KEY> <TARGET_VERSION>}"
+    echo "Cloning ${ISSUE_KEY} with Target Version '${TARGET_VERSION}'..."
+    ORIGINAL=$(jira_rest GET "issue/${ISSUE_KEY}?fields=summary,issuetype,priority,labels,components,project")
+
+    DATA=$(echo "$ORIGINAL" | jq --arg tv "$TARGET_VERSION" --arg tvField "$TV_FIELD" '{
+      fields: {
+        project: { key: .fields.project.key },
+        summary: .fields.summary,
+        issuetype: { id: .fields.issuetype.id },
+        priority: { id: .fields.priority.id },
+        labels: (.fields.labels // []),
+        components: (.fields.components // []),
+        ($tvField): [{ name: $tv }]
+      }
+    }')
+
+    NEW_KEY=$(jira_rest POST "issue" "$DATA" | jq -r '.key')
+    if [ -z "$NEW_KEY" ] || [ "$NEW_KEY" = "null" ]; then
+      echo "ERROR: Failed to create clone." >&2
+      exit 1
+    fi
+
+    jira_rest POST "issueLink" "$(jq -n --arg clone "$NEW_KEY" --arg orig "$ISSUE_KEY" '{
+      type: { name: "Blocks" },
+      outwardIssue: { key: $clone },
+      inwardIssue: { key: $orig }
+    }')" 2>/dev/null
+
+    echo "Created clone: ${NEW_KEY}"
+    ;;
+
   *)
     echo "Unknown action: ${ACTION}"
-    echo "Usage: jira-ops.sh <view|assign|transition|comment|check-version|set-version> <ISSUE_KEY> [args...]"
+    echo "Usage: jira-ops.sh <view|assign|transition|comment|check-version|set-version|get-fix-versions|get-clone-key|clone> <ISSUE_KEY> [args...]"
     exit 1
     ;;
 esac

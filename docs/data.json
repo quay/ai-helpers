@@ -5,7 +5,7 @@
     {
       "name": "dev",
       "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "commands": [
         {
           "name": "review-pr",
@@ -18,7 +18,7 @@
         {
           "name": "backport",
           "id": "backport",
-          "description": "Trigger the cherry-pick robot to backport a merged PR to a release branch. Checks Target Version from JIRA if no branch is specified."
+          "description": "Backport a merged PR to release branches. Detects prior bot failures, performs manual cherry-picks from a fork matching bot conventions, and handles JIRA clone tickets. Derives target branches from fixVersions."
         },
         {
           "name": "ci",
@@ -59,7 +59,7 @@
     {
       "name": "jira",
       "description": "JIRA operations, planning commands, and estimation workflows",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "commands": [
         {
           "name": "create-epic-from-feature",

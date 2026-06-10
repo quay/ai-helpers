@@ -13,6 +13,7 @@ workflow as a continuous state machine.
 | `/dev:pr` | Create PR with validated title and description |
 | `/dev:poll` | Stateful PR poller for CI, reviews, and feedback |
 | `/dev:ci` | Quick CI status check |
+| `/dev:debug-playwright` | Debug Playwright CI failures from GHA runs |
 | `/dev:backport` | Trigger cherry-pick robot for backporting |
 | `/dev:grill-with-docs` | Stress-test a plan against domain model and docs |
 | `/dev:to-prd` | Turn conversation context into a PRD |

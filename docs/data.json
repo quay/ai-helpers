@@ -5,7 +5,7 @@
     {
       "name": "dev",
       "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "commands": [
         {
           "name": "review-pr",
@@ -29,6 +29,11 @@
           "name": "code",
           "id": "code",
           "description": "Implement changes following project conventions. Reads AGENTS.md and area-specific docs, then guides implementation, quality checks (pre-commit, tests), and commit with proper message format."
+        },
+        {
+          "name": "debug-playwright",
+          "id": "debug-playwright",
+          "description": "Debug Playwright E2E test failures from GitHub Actions CI runs. Downloads artifacts, categorizes failures (flaky/real/infra), correlates with backend logs and Jaeger traces, and offers fixes."
         },
         {
           "name": "grill-with-docs",

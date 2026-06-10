@@ -14,6 +14,7 @@ Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Incl
 - **`/dev:backport`** - Backport a merged PR to release branches. Detects prior bot failures, performs manual cherry-picks from a fork matching bot conventions, and handles JIRA clone tickets. Derives target branches from fixVersions.
 - **`/dev:ci`** - Quick CI status check for a pull request. Shows pass/fail/pending status for all GitHub Actions jobs and other CI checks.
 - **`/dev:code`** - Implement changes following project conventions. Reads AGENTS.md and area-specific docs, then guides implementation, quality checks (pre-commit, tests), and commit with proper message format.
+- **`/dev:debug-playwright`** - Debug Playwright E2E test failures from GitHub Actions CI runs. Downloads artifacts, categorizes failures (flaky/real/infra), correlates with backend logs and Jaeger traces, and offers fixes.
 - **`/dev:grill-with-docs`** - Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates documentation (CONTEXT.md, ADRs) inline as decisions crystallise. Use when user wants to stress-test a plan against their project's language and documented decisions.
 - **`/dev:handoff`** - Compact the current conversation into a handoff document for another agent to pick up.
 - **`/dev:poll`** - Stateful PR poller: tracks GitHub Actions CI, CodeRabbit, Codecov, and human reviews across polls. Loops with adaptive backoff internally. Run via the Bash tool with run_in_background: true so the platform notifies the agent on exit.

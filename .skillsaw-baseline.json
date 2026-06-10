@@ -1,8 +1,17 @@
 {
   "version": "1",
   "generated_by": "skillsaw 0.12.1",
-  "generated_at": "2026-06-09T18:03:39.342352+00:00",
+  "generated_at": "2026-06-10T21:22:16.382128+00:00",
   "violations": [
+    {
+      "fingerprint": "e589b29f0c987fd2",
+      "rule_id": "context-budget",
+      "file_path": "plugins/dev/commands/review-pr.md",
+      "message": "Estimated 7,957 tokens exceeds command error limit of 4,000",
+      "severity": "error",
+      "value": 7957,
+      "baseline_mode": "ceiling"
+    },
     {
       "fingerprint": "714be043fe0d5eca",
       "rule_id": "context-budget",
@@ -55,15 +64,6 @@
       "message": "Estimated 2,881 tokens exceeds command warn limit of 2,000",
       "severity": "warning",
       "value": 2881,
-      "baseline_mode": "ceiling"
-    },
-    {
-      "fingerprint": "e589b29f0c987fd2",
-      "rule_id": "context-budget",
-      "file_path": "plugins/dev/commands/review-pr.md",
-      "message": "Estimated 7,957 tokens exceeds command error limit of 4,000",
-      "severity": "error",
-      "value": 7957,
       "baseline_mode": "ceiling"
     }
   ]

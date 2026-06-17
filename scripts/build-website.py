@@ -160,22 +160,34 @@ def build_website_data():
     """Build complete website data structure"""
     # Get repository root (parent of scripts directory)
     base_path = Path(__file__).parent.parent
-    marketplace_file = base_path / ".claude-plugin" / "marketplace.json"
+    marketplace_file = base_path / ".agents" / "plugins" / "marketplace.json"
+    if not marketplace_file.exists():
+        marketplace_file = base_path / ".claude-plugin" / "marketplace.json"
 
     with open(marketplace_file) as f:
         marketplace = json.load(f)
 
+    marketplace_interface = marketplace.get("interface", {})
+    owner = marketplace.get("owner", {}).get("name")
+    if not owner:
+        owner = marketplace_interface.get("displayName", marketplace["name"])
+
     website_data = {
         "name": marketplace["name"],
-        "owner": marketplace["owner"]["name"],
+        "owner": owner,
         "plugins": []
     }
 
     for plugin_info in marketplace["plugins"]:
-        plugin_path = base_path / plugin_info["source"]
+        source = plugin_info["source"]
+        if isinstance(source, dict):
+            source = source["path"]
+        plugin_path = base_path / source
 
         # Read plugin.json
-        plugin_json_path = plugin_path / ".claude-plugin" / "plugin.json"
+        plugin_json_path = plugin_path / ".codex-plugin" / "plugin.json"
+        if not plugin_json_path.exists():
+            plugin_json_path = plugin_path / ".claude-plugin" / "plugin.json"
         plugin_metadata = {}
         if plugin_json_path.exists():
             with open(plugin_json_path) as f:
@@ -195,7 +207,7 @@ def build_website_data():
 
         plugin_data = {
             "name": plugin_info["name"],
-            "description": plugin_info["description"],
+            "description": plugin_info.get("description", plugin_metadata.get("description", "")),
             "version": plugin_metadata.get("version", "unknown"),
             "commands": commands,
             "skills": skills,

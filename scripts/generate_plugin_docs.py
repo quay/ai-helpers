@@ -76,7 +76,9 @@ def get_plugin_info(plugin_dir: Path) -> PluginInfo:
     """Extract plugin information from plugin.json and command files."""
     
     # Read plugin metadata
-    plugin_json_path = plugin_dir / '.claude-plugin' / 'plugin.json'
+    plugin_json_path = plugin_dir / '.codex-plugin' / 'plugin.json'
+    if not plugin_json_path.exists():
+        plugin_json_path = plugin_dir / '.claude-plugin' / 'plugin.json'
     if not plugin_json_path.exists():
         return None
     
@@ -144,7 +146,7 @@ def generate_plugin_docs(plugins_dir: Path) -> str:
     lines = []
     lines.append("# Available Plugins")
     lines.append("")
-    lines.append("This document lists all available Claude Code plugins and their commands in the ai-helpers repository.")
+    lines.append("This document lists all available ai-helpers plugins, skills, and Claude Code commands.")
     lines.append("")
 
     # Generate table of contents
@@ -224,4 +226,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

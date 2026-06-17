@@ -1,6 +1,6 @@
 # Available Plugins
 
-This document lists all available Claude Code plugins and their commands in the ai-helpers repository.
+This document lists all available ai-helpers plugins, skills, and Claude Code commands.
 
 - [Dev](#dev-plugin)
 - [Jira](#jira-plugin)

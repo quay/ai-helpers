@@ -1,4 +1,4 @@
-# Makefile for Claude Code Marketplace
+# Makefile for ai-helpers agent marketplace
 
 # Container runtime (podman or docker)
 CONTAINER_RUNTIME ?= $(shell command -v podman 2>/dev/null || echo docker)

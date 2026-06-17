@@ -1,0 +1,44 @@
+{
+  "name": "quay-ai-helpers",
+  "interface": {
+    "displayName": "Quay AI Helpers"
+  },
+  "plugins": [
+    {
+      "name": "dev",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dev"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "jira",
+      "source": {
+        "source": "local",
+        "path": "./plugins/jira"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "openshift-testing",
+      "source": {
+        "source": "local",
+        "path": "./plugins/openshift-testing"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

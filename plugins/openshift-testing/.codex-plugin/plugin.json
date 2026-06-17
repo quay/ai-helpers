@@ -1,0 +1,26 @@
+{
+  "name": "openshift-testing",
+  "description": "OpenShift cluster provisioning via Gangway API and remote Playwright browser server deployment for E2E testing.",
+  "version": "0.1.0",
+  "author": {
+    "name": "quay"
+  },
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "OpenShift Testing",
+    "shortDescription": "Provision OpenShift clusters and run remote Playwright browsers.",
+    "longDescription": "OpenShift testing workflows for provisioning ephemeral clusters through Gangway and deploying remote Playwright browser servers for end-to-end testing.",
+    "developerName": "quay",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Testing",
+      "Automation"
+    ],
+    "defaultPrompt": [
+      "Provision an OpenShift test cluster",
+      "Start remote Playwright",
+      "Check the test cluster status"
+    ]
+  }
+}

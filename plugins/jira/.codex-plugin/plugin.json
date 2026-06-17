@@ -1,0 +1,26 @@
+{
+  "name": "jira",
+  "description": "JIRA operations (view, assign, transition, check-version) and planning commands (epics, stories, estimates, quarterly plans).",
+  "version": "0.3.0",
+  "author": {
+    "name": "quay"
+  },
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Quay Jira",
+    "shortDescription": "Jira ticket operations and planning workflows.",
+    "longDescription": "Jira ticket workflows for viewing, assigning, transitioning, checking target versions, and planning work from issues, epics, stories, estimates, and quarterly plans.",
+    "developerName": "quay",
+    "category": "Productivity",
+    "capabilities": [
+      "Planning",
+      "Automation"
+    ],
+    "defaultPrompt": [
+      "Show JIRA ticket PROJQUAY-1234",
+      "Assign this JIRA ticket to me",
+      "Check the target version"
+    ]
+  }
+}

@@ -1,8 +1,8 @@
 # quay-ai-helpers
 
-Shared agent toolkit for the Quay organization. Provides reusable Claude Code
-plugins for JIRA workflow automation, development lifecycle management, and
-testing infrastructure.
+Shared agent toolkit for the Quay organization. Provides reusable coding agent
+plugins and skills for JIRA workflow automation, development lifecycle
+management, and testing infrastructure.
 
 ## Plugins
 
@@ -25,11 +25,39 @@ browser server deployment for E2E testing.
 
 ## Installation
 
-### Via Lola (recommended)
+### Via Codex Plugin
 
-[Lola](https://github.com/RedHatProductSecurity/lola) is a universal AI package
-manager that distributes skills across AI assistants. Each plugin in this repo is
-a Lola-compatible module.
+Codex uses `.codex-plugin/plugin.json` manifests and discovers repo/team
+marketplaces from `.agents/plugins/marketplace.json`.
+
+From this repository root:
+
+```bash
+codex plugin marketplace add .
+```
+
+Then restart Codex, open `/plugins`, select **Quay AI Helpers**, and install
+the `dev`, `jira`, or `openshift-testing` plugins.
+
+Codex can also import Claude setup from the Codex app via **Settings -> General
+-> Import other agent setup**, but the native Codex marketplace above is the
+preferred path for this repo.
+
+#### Codex status
+
+| Asset type | Codex support |
+|-----------|---------------|
+| Skills (SKILL.md) | Packaged through each plugin's `.codex-plugin/plugin.json` |
+| Plugin marketplace | `.agents/plugins/marketplace.json` |
+| Scripts (*.sh) | Bundled in plugin directories; several skills still reference `.claude/scripts/` and need path migration |
+| Commands (*.md) | Claude-only today; convert important commands to skills for Codex |
+| Hooks/settings | Claude `.claude/settings.json` today; convert to Codex `config.toml`/hooks if needed |
+
+### Via Lola (Claude Code)
+
+[Lola](https://github.com/RedHatProductSecurity/lola) is a package manager that
+distributes skills across AI assistants. Each plugin in this repo is a
+Lola-compatible module; the current Lola hook writes Claude Code project files.
 
 #### One-time setup
 
@@ -39,7 +67,7 @@ uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers
 uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/jira
 uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/openshift-testing
 
-# Install to your project
+# Install to your Claude Code project
 lola install dev -a claude-code ./my-project
 lola install jira -a claude-code ./my-project
 ```
@@ -61,7 +89,7 @@ Then sync all modules:
 uvx --python 3.13 --from lola-ai lola sync
 ```
 
-#### What Lola installs
+#### What Lola installs for Claude Code
 
 | Asset type | Destination |
 |-----------|-------------|
@@ -108,8 +136,12 @@ location.
 
 ```
 ai-helpers/
+├── .agents/
+│   └── plugins/marketplace.json # Codex marketplace
 ├── plugins/
 │   ├── dev/                    # Ralph Loop + dev lifecycle
+│   │   ├── .codex-plugin/      # Codex plugin metadata
+│   │   ├── .claude-plugin/     # Claude plugin metadata
 │   │   ├── skills/             # start, code, pr, poll, ci, backport, work
 │   │   ├── scripts/            # Shell scripts for hooks and automation
 │   │   ├── templates/          # PR description, settings.json template
@@ -133,6 +165,16 @@ ai-helpers/
 ```
 
 ## Adoption Guide
+
+### Codex
+
+1. Add the marketplace: `codex plugin marketplace add .`
+2. Restart Codex and install plugins from `/plugins`
+3. Use `$work`, `$ticket`, or another installed skill name to invoke workflows
+4. For workflows that call helper scripts, migrate `.claude/scripts/...` paths
+   to a Codex-compatible script location before relying on them end to end
+
+### Claude Code
 
 1. Install the plugin: `claude plugin add quay/ai-helpers`
 2. Set project-specific env vars in your `.claude/settings.json` or shell profile

@@ -1,10 +1,10 @@
 {
   "name": "quay-ai-helpers",
-  "owner": "quay",
+  "owner": "Quay AI Helpers",
   "plugins": [
     {
       "name": "dev",
-      "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work",
+      "description": "Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Includes start, code, pr, poll, ci, backport, work, grill-with-docs, to-prd, to-issues, and handoff.",
       "version": "0.4.0",
       "commands": [
         {
@@ -83,7 +83,7 @@
     },
     {
       "name": "jira",
-      "description": "JIRA operations, planning commands, and estimation workflows",
+      "description": "JIRA operations (view, assign, transition, check-version) and planning commands (epics, stories, estimates, quarterly plans).",
       "version": "0.3.0",
       "commands": [
         {
@@ -143,7 +143,7 @@
     },
     {
       "name": "openshift-testing",
-      "description": "OpenShift cluster provisioning and remote Playwright browser testing",
+      "description": "OpenShift cluster provisioning via Gangway API and remote Playwright browser server deployment for E2E testing.",
       "version": "0.1.0",
       "commands": [],
       "skills": [

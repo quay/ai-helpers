@@ -1,0 +1,27 @@
+{
+  "name": "dev",
+  "description": "Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Includes start, code, pr, poll, ci, backport, work, grill-with-docs, to-prd, to-issues, and handoff.",
+  "version": "0.4.0",
+  "author": {
+    "name": "quay"
+  },
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Quay Dev",
+    "shortDescription": "Development lifecycle workflows for Quay repositories.",
+    "longDescription": "Ralph Loop development lifecycle workflows for Quay repositories, including ticket startup, implementation, PR creation, CI polling, backports, handoffs, PRDs, and issue breakdowns.",
+    "developerName": "quay",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Code",
+      "Review",
+      "Automation"
+    ],
+    "defaultPrompt": [
+      "Work on PROJQUAY-1234",
+      "Create a PR for this change",
+      "Check CI for the current PR"
+    ]
+  }
+}

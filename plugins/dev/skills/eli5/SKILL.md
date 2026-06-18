@@ -6,6 +6,11 @@ description: >
   simplified explanation of a technical concept. Targets a senior engineer who wants clarity,
   not condescension.
 argument-hint: "<concept or question>"
+allowed-tools:
+  - Read
+  - Grep
+  - Bash(grep *)
+  - Bash(find *)
 ---
 
 # ELI5 — Explain Like I'm 5
@@ -23,7 +28,7 @@ One sentence: what it is, in plain terms.
 A one-sentence analogy only if it genuinely clarifies. Skip if forced.
 
 ### 3. Code snippet or concrete example (required)
-A short, runnable snippet or real-world example that demonstrates the concept. Prefer Go or Kubernetes/operator examples when relevant to the current project. Annotate with 1-2 inline comments only where non-obvious.
+A short, runnable snippet or real-world example that demonstrates the concept. Prefer examples in the current project's primary language and domain. Annotate with 1-2 inline comments only where non-obvious.
 
 ### 4. The gotcha (optional)
 One sentence on the most common misconception or sharp edge, if one exists.
@@ -35,3 +40,7 @@ One sentence on the most common misconception or sharp edge, if one exists.
 - Never explain what the user already knows — skip straight to the part they're asking about.
 - If the question is about something in the current codebase, reference the actual code, not a hypothetical.
 - Match the user's depth: if they ask "how does SSA work in controller-runtime", assume they know what controllers are.
+
+## Depth escalation
+
+If the user asks for more detail, add ONE level of depth — internal mechanics, edge cases, or a second code snippet. Don't repeat the original explanation.

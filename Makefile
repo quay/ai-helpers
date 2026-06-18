@@ -3,8 +3,8 @@
 # Container runtime (podman or docker)
 CONTAINER_RUNTIME ?= $(shell command -v podman 2>/dev/null || echo docker)
 
-# skillsaw version
-SKILLSAW_VERSION := 0.11.4
+# skillsaw image tag
+SKILLSAW_TAG ?= latest
 
 # Template repository
 TEMPLATE_REPO := https://raw.githubusercontent.com/stbenjam/claude-marketplace-template/main
@@ -16,11 +16,11 @@ help: ## Show this help message
 
 .PHONY: lint
 lint: ## Run skillsaw linter
-	$(CONTAINER_RUNTIME) run --rm -v $$(pwd):/workspace:Z ghcr.io/stbenjam/skillsaw:v$(SKILLSAW_VERSION) --strict
+	$(CONTAINER_RUNTIME) run --rm -v $$(pwd):/workspace:Z ghcr.io/stbenjam/skillsaw:$(SKILLSAW_TAG) --strict
 
 .PHONY: lint-fix
 lint-fix: ## Run skillsaw autofixes
-	$(CONTAINER_RUNTIME) run --rm -v $$(pwd):/workspace:Z ghcr.io/stbenjam/skillsaw:v$(SKILLSAW_VERSION) fix
+	$(CONTAINER_RUNTIME) run --rm -v $$(pwd):/workspace:Z ghcr.io/stbenjam/skillsaw:$(SKILLSAW_TAG) fix
 
 .PHONY: update
 update: ## Update plugin documentation and website data

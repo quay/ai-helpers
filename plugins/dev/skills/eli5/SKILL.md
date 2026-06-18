@@ -10,7 +10,7 @@ argument-hint: "<concept or question>"
 
 # ELI5 — Explain Like I'm 5
 
-Distill a concept into a short, clear explanation with a concrete code snippet or example. The audience is a senior engineer who wants the mental model, not a tutorial.
+Distill `$ARGUMENTS` into a short, clear explanation with a concrete code snippet or example. The audience is a senior engineer who wants the mental model, not a tutorial.
 
 ## Format
 

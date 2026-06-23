@@ -1,7 +1,7 @@
 {
   "version": "1",
-  "generated_by": "skillsaw 0.12.1",
-  "generated_at": "2026-06-10T21:22:16.382128+00:00",
+  "generated_by": "skillsaw 0.14.0",
+  "generated_at": "2026-06-23T21:25:22.117206+00:00",
   "violations": [
     {
       "fingerprint": "e589b29f0c987fd2",
@@ -46,15 +46,6 @@
       "message": "Estimated 6,231 tokens exceeds command error limit of 4,000",
       "severity": "error",
       "value": 6231,
-      "baseline_mode": "ceiling"
-    },
-    {
-      "fingerprint": "814c18fb264676ce",
-      "rule_id": "context-budget",
-      "file_path": "plugins/jira/commands/jira-ticket.md",
-      "message": "Estimated 2,932 tokens exceeds command warn limit of 2,000",
-      "severity": "warning",
-      "value": 2932,
       "baseline_mode": "ceiling"
     },
     {

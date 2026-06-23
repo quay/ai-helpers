@@ -18,7 +18,6 @@ commands for epics/stories/estimates, and safety hooks for embargoed tickets.
 | `/jira:create-plan-from-issue` | Generate implementation plan |
 | `/jira:estimate-issue` | Estimate story complexity |
 | `/jira:implement-story` | Guide for implementing a story |
-| `/jira:jira-ticket` | Work with JIRA tickets |
 | `/jira:quarterly-plan` | Create quarterly roadmap |
 
 ## Scripts

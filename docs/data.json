@@ -89,7 +89,7 @@
     {
       "name": "jira",
       "description": "JIRA operations, planning commands, and estimation workflows",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "commands": [
         {
           "name": "create-epic-from-feature",
@@ -122,12 +122,6 @@
           "argument_hint": ""
         },
         {
-          "name": "jira-ticket",
-          "description": "Create or edit JIRA tickets in PROJQUAY or QUAYIO projects",
-          "synopsis": "",
-          "argument_hint": ""
-        },
-        {
           "name": "quarterly-plan",
           "description": "Plan the next quarter by tagging JIRA issues with the quarterly label",
           "synopsis": "",
@@ -138,7 +132,7 @@
         {
           "name": "ticket",
           "id": "ticket",
-          "description": "View or update a JIRA ticket. Supports view, assign, transition, check-version, and set-version operations via REST API or acli."
+          "description": "Create, view, or update a JIRA ticket. Supports create, edit, view, assign, transition, check-version, set-version, and clone operations via acli CLI."
         }
       ],
       "hooks": [],

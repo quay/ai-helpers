@@ -35,7 +35,7 @@ See [plugins/dev/README.md](plugins/dev/README.md) for detailed documentation.
 JIRA operations (view, assign, transition, check-version) and planning commands (epics, stories, estimates, quarterly plans).
 
 **Skills:**
-- **`/jira:ticket`** - View or update a JIRA ticket. Supports view, assign, transition, check-version, and set-version operations via REST API or acli.
+- **`/jira:ticket`** - Create, view, or update a JIRA ticket. Supports create, edit, view, assign, transition, check-version, set-version, and clone operations via acli CLI.
 
 **Commands:**
 - **`/jira:create-epic-from-feature` `<feature-key>`** - Generate an epic structure from a JIRA feature and create it in JIRA
@@ -43,7 +43,6 @@ JIRA operations (view, assign, transition, check-version) and planning commands 
 - **`/jira:create-stories-from-epic` `<epic-key>`** - Generate child stories from a JIRA epic, review them, and create in JIRA with approval
 - **`/jira:estimate-issue` `<issue-key>`** - Estimate complexity and effort for a JIRA issue
 - **`/jira:implement-story`** - Implement a JIRA story end-to-end with tests
-- **`/jira:jira-ticket`** - Create or edit JIRA tickets in PROJQUAY or QUAYIO projects
 - **`/jira:quarterly-plan` `<quarter> <must-have-issues> e.g., "2026-Q3 QUAYIO-1234,QUAYIO-5678"`** - Plan the next quarter by tagging JIRA issues with the quarterly label
 
 See [plugins/jira/README.md](plugins/jira/README.md) for detailed documentation.

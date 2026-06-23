@@ -38,7 +38,7 @@ Input: `$ARGUMENTS`
 which acli
 ```
 
-If acli is NOT installed, display setup instructions (same as `/jira-ticket`) and stop.
+If acli is NOT installed, display setup instructions and stop.
 
 ### Step 2: Check Authentication
 

@@ -2,9 +2,22 @@
 
 This document lists all available Claude Code plugins and their commands in the ai-helpers repository.
 
+- [Cve](#cve-plugin)
 - [Dev](#dev-plugin)
 - [Jira](#jira-plugin)
 - [Openshift Testing](#openshift-testing-plugin)
+
+### Cve Plugin
+
+Generic CVE triage and dependency-bump remediation: advisory fetch, impact assessment, and language-specific fix recipes (Python, Go, Node.js).
+
+**Skills:**
+- **`/cve:assess`** - Generic CVE triage: fetch advisories (NVD, GHSA, Go vuln DB), check package presence in dependency manifests, classify verdict, write assessment artifact, and post Jira comment. Project workflows supply repo mapping and branch policy.
+- **`/cve:fix-go`** - Apply a Go dependency CVE fix: go get, go mod tidy, verify with govulncheck.
+- **`/cve:fix-node`** - Apply a Node.js dependency CVE fix via lockfile-only updates. Supports npm and pnpm. Uses overrides only as fallback when direct update is insufficient.
+- **`/cve:fix-python`** - Apply a Python dependency CVE fix: bump requirements pin, regenerate requirements-build.txt with pybuild-deps, verify with pip-audit.
+
+See [plugins/cve/README.md](plugins/cve/README.md) for detailed documentation.
 
 ### Dev Plugin
 

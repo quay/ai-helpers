@@ -125,10 +125,10 @@ For each issue, extract:
 ```bash
 SUMMARY="CVE-2026-44432 quay/quay-rhel9: urllib3: Denial of Service [quay-3.17]"
 
-CVE_ID=$(echo "$SUMMARY" | grep -oP 'CVE-[0-9]+-[0-9]+')
-CONTAINER=$(echo "$SUMMARY" | grep -oP '(?<=CVE-[0-9]+-[0-9]+ )[\w/.-]+(?=:)')
+CVE_ID=$(echo "$SUMMARY" | grep -oE 'CVE-[0-9]+-[0-9]+' | head -1)
+CONTAINER=$(echo "$SUMMARY" | sed -nE 's/^CVE-[0-9]+-[0-9]+ ([^:]+):.*/\1/p')
 PACKAGE=$(echo "$SUMMARY" | sed 's/.*: \([^:]*\):.*/\1/' | xargs)
-TARGET_BRANCH=$(echo "$SUMMARY" | grep -oP '(?<=\[quay-)[0-9.]+(?=\])')
+TARGET_BRANCH=$(echo "$SUMMARY" | sed -nE 's/.*\[quay-([0-9.]+)\].*/\1/p')
 ```
 
 Map the container to an upstream repo using `component-repository-mappings.json`.

@@ -53,8 +53,9 @@ Scripts are installed at session start from shared plugins via
   skills/
     controller/        # find -> assess -> fix orchestrator
     find/              # Jira CVE discovery
-    assess/            # CVE triage + advisory analysis
-    fix/               # apply fix + create PR
+    assess/            # Quay wrapper → /cve:assess
+    fix/               # Quay orchestrator → /cve:fix-* + /dev:pr
+    fix-konflux-stdlib/  # Go stdlib fix via quay-konflux-components
 component-repository-mappings.json  # container-to-repo mapping
 CLAUDE.md              # safety guardrails
 ```
@@ -65,7 +66,9 @@ Declared in `.lola-req`:
 
 - **plugins/dev** — `/dev:code`, `/dev:pr`, format-and-lint.sh, and dev
   tooling scripts
-- **plugins/jira-planning** — jira-ops.sh and JIRA integration scripts
+- **plugins/jira** — jira-ops.sh and JIRA integration scripts
+- **plugins/cve** — `/cve:assess`, `/cve:fix-python`, `/cve:fix-go`,
+  `/cve:fix-node`, and advisory fetch scripts
 
 ## CVE Fix Types
 
@@ -74,7 +77,7 @@ Declared in `.lola-req`:
 | Python dependency | quay/quay | Bump in requirements.txt, regenerate requirements-build.txt with pybuild-deps |
 | Go dependency | upstream repo | `go get` + `go mod tidy` |
 | Go stdlib | quay-konflux-components | Bump go-toolset image tag in Containerfile |
-| Node.js dependency | quay/quay | `npm update` or npm overrides |
+| Node.js dependency | quay/quay | npm at root; pnpm + npm in `web/` on master and redhat-3.17; npm only on 3.16 and older |
 
 ## Assessment Verdicts
 

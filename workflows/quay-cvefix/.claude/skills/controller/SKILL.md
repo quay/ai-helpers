@@ -15,6 +15,7 @@ allowed-tools:
   - Bash(go *)
   - Bash(govulncheck *)
   - Bash(npm *)
+  - Bash(pnpm *)
   - Bash(pip-audit *)
   - Bash(pybuild-deps *)
   - Bash(skopeo *)
@@ -65,8 +66,9 @@ component mappings and safety rules.
    and classify into a fix category.
 
 3. **Fix** — the `fix` skill (runs per CVE, only for fixable categories)
-   Apply the version bump, run tests, verify the fix, and commit changes.
-   Does NOT create the PR — that is handled by the next phase.
+   Apply the version bump via `/cve:fix-python`, `/cve:fix-go`, or
+   `/cve:fix-node` (from cve plugin), or `fix-konflux-stdlib` for Go stdlib.
+   Run tests, verify the fix, and commit changes. Does NOT create the PR.
 
 4. **PR** — the `/dev:pr` skill (from dev plugin), then `/dev:poll`
    Create a pull request using `/dev:pr`, which handles fork management,

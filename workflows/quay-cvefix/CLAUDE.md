@@ -59,9 +59,24 @@
 - PR targets `quay/quay-konflux-components`, not the upstream repo
 
 ### Node.js (quay/quay only)
-- `npm update <package>` or npm `overrides` as fallback
-- Lockfiles at: root `package-lock.json`, `web/package-lock.json`
-- Branches <= 3.16: also `config-tool/pkg/lib/editor/package-lock.json`
+
+**Preferred:** bump the vulnerable package with the package manager update command.
+Use `package.json` overrides only when update cannot reach the fixed version.
+
+| Branch | Directories | Update commands | Lockfiles committed |
+|--------|-------------|-----------------|---------------------|
+| `master`, `redhat-3.17` | root `.`, `web/` | root: `npm update <pkg> --package-lock-only` (**npm only**); `web/`: `pnpm update <pkg>` then `npm update <pkg> --package-lock-only` (**pnpm + npm**) | root `package-lock.json`; `web/pnpm-lock.yaml` (authoritative), `web/package-lock.json` |
+| `redhat-3.16` and older | root `.`, `web/`, `config-tool/pkg/lib/editor/` | `npm update <pkg>` per directory (**npm only**) | `package-lock.json` in each directory |
+
+- **`pnpm` is only used in `web/`** — root uses **npm** only. On `master` /
+  `redhat-3.17`, update **both** directories with the correct tool per directory.
+  The Konflux web build reads **`web/pnpm-lock.yaml`**; skipping `web/` or updating
+  only root `package-lock.json` leaves the shipped image vulnerable.
+- After lockfile updates in `web/`, validate with
+  `pnpm install --frozen-lockfile` before push. If lockfile-only update did not
+  reach the fixed version, use `patch-pnpm-lock.py` or override fallback — not
+  `--no-frozen-lockfile` for the primary bump path.
+- Add `overrides` / `pnpm.overrides` in `package.json` only as a **fallback** when direct update cannot reach the fixed version.
 
 ## Jira Comments
 

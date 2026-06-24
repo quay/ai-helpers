@@ -1,0 +1,1 @@
+../../../scripts/lola-post-install.sh

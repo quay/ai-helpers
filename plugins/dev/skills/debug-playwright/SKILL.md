@@ -6,7 +6,7 @@ description: >
   correlates with backend logs and Jaeger traces, and offers fixes.
 argument-hint: PR_NUMBER | RUN_URL
 allowed-tools:
-  - Bash(bash .claude/scripts/playwright-debug.sh *)
+  - Bash(bash scripts/playwright-debug.sh *)
   - Bash(gh run view *)
   - Bash(gh run download *)
   - Bash(gh pr view *)
@@ -23,13 +23,13 @@ Debug Playwright test failures for `$ARGUMENTS`.
 ## Step 1: Fetch and Categorize
 
 ```bash
-bash .claude/scripts/playwright-debug.sh $ARGUMENTS
+bash scripts/playwright-debug.sh $ARGUMENTS
 ```
 
 Capture the full JSON output, then extract `artifacts_dir` for use in later commands:
 
 ```bash
-PW_JSON=$(bash .claude/scripts/playwright-debug.sh $ARGUMENTS)
+PW_JSON=$(bash scripts/playwright-debug.sh $ARGUMENTS)
 ARTIFACTS_DIR=$(echo "$PW_JSON" | jq -r '.artifacts_dir')
 ```
 

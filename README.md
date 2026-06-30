@@ -18,6 +18,12 @@ JIRA operations (view, assign, transition, check/set Target Version) and
 planning commands for decomposing features into epics, stories, and estimates.
 Includes safety hooks for embargoed tickets.
 
+### konflux
+
+Konflux advisory skills: query curated NotebookLM knowledge bases for Konflux
+concepts, pipelines, builds, releases, and troubleshooting. Requires the `nlm`
+CLI (`pipx install nlm`).
+
 ### openshift-testing
 
 Ephemeral OpenShift cluster provisioning via Gangway API and remote Playwright
@@ -37,6 +43,7 @@ a Lola-compatible module.
 # Install individual plugins
 uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/dev
 uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/jira
+uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/konflux
 uvx --python 3.13 --from lola-ai lola mod add https://github.com/quay/ai-helpers.git --module-content=plugins/openshift-testing
 
 # Install to your project
@@ -52,6 +59,7 @@ Add a `.lola-req` file to your project root:
 # .lola-req — AI context modules for this project
 https://github.com/quay/ai-helpers.git@main --module-content=plugins/dev
 https://github.com/quay/ai-helpers.git@main --module-content=plugins/jira
+https://github.com/quay/ai-helpers.git@main --module-content=plugins/konflux
 https://github.com/quay/ai-helpers.git@main --module-content=plugins/openshift-testing
 ```
 
@@ -118,6 +126,10 @@ ai-helpers/
 │   │   ├── skills/             # jira
 │   │   ├── scripts/            # jira-ops, embargo checks, etc.
 │   │   ├── commands/           # 8 planning commands
+│   │   └── lola.yaml           # Lola module metadata
+│   ├── konflux/                # Konflux advisory (NotebookLM)
+│   │   ├── skills/             # konflux-advisor
+│   │   ├── scripts/            # Lola post-install hook
 │   │   └── lola.yaml           # Lola module metadata
 │   └── openshift-testing/      # Cluster + browser testing
 │       ├── skills/             # cluster-provision, remote-playwright

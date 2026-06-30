@@ -89,7 +89,7 @@
     {
       "name": "jira",
       "description": "JIRA operations, planning commands, and estimation workflows",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "commands": [
         {
           "name": "create-epic-from-feature",
@@ -129,6 +129,11 @@
         }
       ],
       "skills": [
+        {
+          "name": "acli",
+          "id": "acli",
+          "description": "\"Reference for using the acli (Atlassian CLI) to interact with JIRA issues. Covers searching with JQL, creating, viewing, editing, transitioning, assigning, commenting, linking, cloning, and bulk operations. Use when performing any JIRA issue operation via acli from the command line. Provides patterns for output parsing with jq, ADF-formatted descriptions and comments, custom field handling via REST fallback, and bulk JQL-targeted mutations.\""
+        },
         {
           "name": "ticket",
           "id": "ticket",

@@ -48,6 +48,7 @@ See [plugins/dev/README.md](plugins/dev/README.md) for detailed documentation.
 JIRA operations (view, assign, transition, check-version) and planning commands (epics, stories, estimates, quarterly plans).
 
 **Skills:**
+- **`/jira:acli`** - "Reference for using the acli (Atlassian CLI) to interact with JIRA issues. Covers searching with JQL, creating, viewing, editing, transitioning, assigning, commenting, linking, cloning, and bulk operations. Use when performing any JIRA issue operation via acli from the command line. Provides patterns for output parsing with jq, ADF-formatted descriptions and comments, custom field handling via REST fallback, and bulk JQL-targeted mutations."
 - **`/jira:ticket`** - Create, view, or update a JIRA ticket. Supports create, edit, view, assign, transition, check-version, set-version, and clone operations via acli CLI.
 
 **Commands:**

@@ -28,7 +28,7 @@ If `nlm` is not found, stop and tell the user:
 
 > The `nlm` CLI is required but not installed. Install it with:
 >
-> ```
+> ```bash
 > pipx install nlm
 > nlm login
 > ```

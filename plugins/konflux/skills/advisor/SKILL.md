@@ -9,8 +9,6 @@ allowed-tools:
   - Bash(nlm notebook list --json)
   - Bash(which nlm)
   - Bash(nlm --version)
-  - mcp__obsidian__obsidian_search
-  - mcp__obsidian__obsidian_read
   - Read
 ---
 
@@ -84,14 +82,6 @@ nlm notebook query 4af834bc-eeca-4ad3-95d0-aaff040085ba "<question>"
 
 11 sources covering Quay-specific Konflux build processes. Query this when the question involves how Quay uses Konflux (builds, components, releases, configuration).
 
-### 3. Obsidian Notes — Fill Gaps
-
-Use Obsidian MCP tools (`obsidian_search`, `obsidian_read`) when nlm answers have gaps about how *we* do things. Key locations:
-
-- `2_Areas/Konflux.md` — main knowledge hub
-- `3_Resource/devel/konflux/` — reference docs
-- `1_Projects/` — active project notes
-
 ## Flow
 
 1. User asks a Konflux question
@@ -99,8 +89,7 @@ Use Obsidian MCP tools (`obsidian_search`, `obsidian_read`) when nlm answers hav
 3. **Check notebook access** — list notebooks, flag any missing ones with links
 4. **Query Konflux User Advisor** via nlm (always, if accessible)
 5. If question involves Quay process → **also query Quay Konflux Processes** via nlm
-6. If gaps remain about our internal process → **search Obsidian**
-7. Synthesize sources into your response
+6. Synthesize sources into your response
 
 ## Common Triggers
 

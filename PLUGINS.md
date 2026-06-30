@@ -66,7 +66,9 @@ See [plugins/jira/README.md](plugins/jira/README.md) for detailed documentation.
 Konflux advisory skills: query curated NotebookLM knowledge bases for Konflux concepts, pipelines, builds, releases, and troubleshooting.
 
 **Skills:**
-- **`/konflux:advisor`** - Query curated NotebookLM knowledge bases for Konflux concepts, resources, pipelines, builds, releases, integration testing, Enterprise Contract, and troubleshooting. Requires `nlm` CLI (`pipx install nlm`).
+- **`/konflux:konflux-advisor`** - Use when user asks about Konflux concepts, resources, pipelines, builds, releases, integration testing, Enterprise Contract, or troubleshooting Konflux issues. Triggers on any Konflux-related question or problem.
+
+See [plugins/konflux/README.md](plugins/konflux/README.md) for detailed documentation.
 
 ### Openshift Testing Plugin
 

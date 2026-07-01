@@ -198,6 +198,23 @@
       "agents": [],
       "has_readme": true,
       "has_mcp": false
+    },
+    {
+      "name": "konflux",
+      "description": "Konflux advisory skills: query curated NotebookLM knowledge bases for Konflux concepts, pipelines, builds, releases, and troubleshooting",
+      "version": "0.1.0",
+      "commands": [],
+      "skills": [
+        {
+          "name": "konflux-advisor",
+          "id": "konflux-advisor",
+          "description": "Use when user asks about Konflux concepts, resources, pipelines, builds, releases, integration testing, Enterprise Contract, or troubleshooting Konflux issues. Triggers on any Konflux-related question or problem."
+        }
+      ],
+      "hooks": [],
+      "agents": [],
+      "has_readme": true,
+      "has_mcp": false
     }
   ]
 }

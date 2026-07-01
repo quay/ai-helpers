@@ -1,0 +1,2 @@
+hooks:
+  post-install: scripts/lola-post-install.sh

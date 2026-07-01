@@ -23,6 +23,11 @@
       "name": "cve",
       "source": "./plugins/cve",
       "description": "Generic CVE triage and dependency-bump remediation (Python, Go, Node.js)"
+    },
+    {
+      "name": "konflux",
+      "source": "./plugins/konflux",
+      "description": "Konflux advisory skills: query curated NotebookLM knowledge bases for Konflux concepts, pipelines, builds, releases, and troubleshooting"
     }
   ]
 }

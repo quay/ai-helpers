@@ -1,17 +1,8 @@
 {
   "version": "1",
-  "generated_by": "skillsaw 0.14.0",
-  "generated_at": "2026-06-23T21:25:22.117206+00:00",
+  "generated_by": "skillsaw 0.14.1",
+  "generated_at": "2026-06-30T18:37:57.331542+00:00",
   "violations": [
-    {
-      "fingerprint": "e589b29f0c987fd2",
-      "rule_id": "context-budget",
-      "file_path": "plugins/dev/commands/review-pr.md",
-      "message": "Estimated 7,957 tokens exceeds command error limit of 4,000",
-      "severity": "error",
-      "value": 7957,
-      "baseline_mode": "ceiling"
-    },
     {
       "fingerprint": "714be043fe0d5eca",
       "rule_id": "context-budget",
@@ -52,9 +43,18 @@
       "fingerprint": "3835acc68c76c4bb",
       "rule_id": "context-budget",
       "file_path": "plugins/jira/commands/quarterly-plan.md",
-      "message": "Estimated 2,881 tokens exceeds command warn limit of 2,000",
+      "message": "Estimated 2,874 tokens exceeds command warn limit of 2,000",
       "severity": "warning",
-      "value": 2881,
+      "value": 2874,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "e589b29f0c987fd2",
+      "rule_id": "context-budget",
+      "file_path": "plugins/dev/commands/review-pr.md",
+      "message": "Estimated 7,957 tokens exceeds command error limit of 4,000",
+      "severity": "error",
+      "value": 7957,
       "baseline_mode": "ceiling"
     }
   ]

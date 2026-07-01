@@ -5,6 +5,7 @@ This document lists all available Claude Code plugins and their commands in the 
 - [Cve](#cve-plugin)
 - [Dev](#dev-plugin)
 - [Jira](#jira-plugin)
+- [Konflux](#konflux-plugin)
 - [Openshift Testing](#openshift-testing-plugin)
 
 ### Cve Plugin
@@ -60,6 +61,15 @@ JIRA operations (view, assign, transition, check-version) and planning commands 
 - **`/jira:quarterly-plan` `<quarter> <must-have-issues> e.g., "2026-Q3 QUAYIO-1234,QUAYIO-5678"`** - Plan the next quarter by tagging JIRA issues with the quarterly label
 
 See [plugins/jira/README.md](plugins/jira/README.md) for detailed documentation.
+
+### Konflux Plugin
+
+Konflux advisory skills: query curated NotebookLM knowledge bases for Konflux concepts, pipelines, builds, releases, and troubleshooting.
+
+**Skills:**
+- **`/konflux:konflux-advisor`** - Use when user asks about Konflux concepts, resources, pipelines, builds, releases, integration testing, Enterprise Contract, or troubleshooting Konflux issues. Triggers on any Konflux-related question or problem.
+
+See [plugins/konflux/README.md](plugins/konflux/README.md) for detailed documentation.
 
 ### Openshift Testing Plugin
 

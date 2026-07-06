@@ -27,7 +27,7 @@ The `acli` CLI is the primary interface for JIRA issue operations. General synta
 acli jira <resource> <action> [flags]
 ```
 
-For the full flag reference of every command, read `references/command-ref.md`.
+For the full flag reference of every command, read [`references/command-ref.md`](references/command-ref.md).
 
 ## Authentication
 

@@ -5,7 +5,7 @@
     {
       "name": "dev",
       "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "commands": [
         {
           "name": "review-pr",
@@ -59,6 +59,11 @@
           "name": "pr",
           "id": "pr",
           "description": "Create a pull request with the correct title format, filled-in description template, and JIRA reference. Handles fork workflow with fallback ladder. Validates the PR title against the CI-enforced regex before creating."
+        },
+        {
+          "name": "rebase",
+          "id": "rebase",
+          "description": "Systematically rebase a branch onto its upstream target. Use when a feature branch has fallen behind, needs conflict resolution, requires commit cleanup before merge, or when a PR review requests a rebase. Handles complex multi-commit branches with many conflicts via incremental strategies."
         },
         {
           "name": "start",

@@ -5,7 +5,7 @@
     {
       "name": "dev",
       "description": "Ralph Loop development lifecycle: start, code, pr, poll, ci, backport, work",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "commands": [
         {
           "name": "review-pr",
@@ -54,6 +54,11 @@
           "name": "pr",
           "id": "pr",
           "description": "Create a pull request with the correct title format, filled-in description template, and JIRA reference. Handles fork workflow with fallback ladder. Validates the PR title against the CI-enforced regex before creating."
+        },
+        {
+          "name": "qe",
+          "id": "qe",
+          "description": "Create a test plan for a PROJQUAY JIRA ticket, validate it with the user, then execute each scenario as manual verification. Covers acceptance criteria, real-user workflows, edge cases, and cross-feature regression."
         },
         {
           "name": "rebase",

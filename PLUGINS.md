@@ -22,7 +22,7 @@ See [plugins/cve/README.md](plugins/cve/README.md) for detailed documentation.
 
 ### Dev Plugin
 
-Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Includes start, code, pr, poll, ci, backport, work, grill-with-docs, to-prd, to-issues, and handoff.
+Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Includes start, code, pr, poll, ci, backport, work, grill-with-docs, to-prd, to-issues, handoff, and qe.
 
 **Skills:**
 - **`/dev:backport`** - Backport a merged PR to release branches. Detects prior bot failures, performs manual cherry-picks from a fork matching bot conventions, and handles JIRA clone tickets. Derives target branches from fixVersions.
@@ -33,6 +33,7 @@ Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Incl
 - **`/dev:handoff`** - Compact the current conversation into a handoff document for another agent to pick up.
 - **`/dev:poll`** - Stateful PR poller: tracks GitHub Actions CI, CodeRabbit, Codecov, and human reviews across polls. Loops with adaptive backoff internally. Run via the Bash tool with run_in_background: true so the platform notifies the agent on exit.
 - **`/dev:pr`** - Create a pull request with the correct title format, filled-in description template, and JIRA reference. Handles fork workflow with fallback ladder. Validates the PR title against the CI-enforced regex before creating.
+- **`/dev:qe`** - Create a test plan for a PROJQUAY JIRA ticket, validate it with the user, then execute each scenario as manual verification. Covers acceptance criteria, real-user workflows, edge cases, and cross-feature regression.
 - **`/dev:rebase`** - Systematically rebase a branch onto its upstream target. Use when a feature branch has fallen behind, needs conflict resolution, requires commit cleanup before merge, or when a PR review requests a rebase. Handles complex multi-commit branches with many conflicts via incremental strategies.
 - **`/dev:start`** - Begin work on a JIRA ticket. Assigns the ticket, creates a feature branch, checks if backporting is needed, and loads the relevant agent_docs/ for the ticket's area.
 - **`/dev:to-issues`** - Break a plan, spec, or PRD into independently-grabbable local issue files using tracer-bullet vertical slices. Use when user wants to convert a plan into issues, create implementation tickets, or break down work into issues.

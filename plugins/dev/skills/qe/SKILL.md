@@ -204,7 +204,7 @@ Explicitly list anything the test plan does NOT cover and why:
 
 ## Step 7: Present Test Plan and Get Approval
 
-Present the complete test plan to the user. Use the `superpowers:brainstorming` skill's question-asking approach — walk through the plan section by section:
+Present the complete test plan to the user. Walk through the plan section by section, presenting each category and asking for feedback before moving on:
 
 1. Present the AC scenarios first — these are non-negotiable coverage
 2. Present real-user scenarios — ask if the user sees workflows that were missed

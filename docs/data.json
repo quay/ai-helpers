@@ -21,6 +21,11 @@
           "description": "Backport a merged PR to release branches. Detects prior bot failures, performs manual cherry-picks from a fork matching bot conventions, and handles JIRA clone tickets. Derives target branches from fixVersions."
         },
         {
+          "name": "caveman",
+          "id": "caveman",
+          "description": ">- Ultra-compressed communication mode. Use concise, direct prose while preserving technical accuracy, required structure, evidence, code, commands, and errors."
+        },
+        {
           "name": "ci",
           "id": "ci",
           "description": "Quick CI status check for a pull request. Shows pass/fail/pending status for all GitHub Actions jobs and other CI checks."

@@ -1,6 +1,6 @@
 ---
 name: caveman
-description: >-
+description: >
   Force short user-facing triage comments and retro summaries. Keep structured
   JSON and proposal evidence complete. Ban filler, hedging, and repetition.
 ---
@@ -60,9 +60,9 @@ Insufficient: need <one fact>.
 > move forward, could you please confirm whether this reproduces on the latest
 > release?
 
-**After (~14 words):**
+**After (~16 words):**
 
-> Insufficient: need confirmation this reproduces on latest release.
+> Insufficient: need confirmation this fails on latest release.
 >
 > Does this still fail on the latest release?
 
@@ -70,11 +70,16 @@ Insufficient: need <one fact>.
 
 **Limit:** ≤ 80 words. Prefer ≤ 5 bullets.
 
+Caveman owns `summary` length, tone, and presentation (bullets, which links to
+include, what to omit). Keep any mandatory `retro-analysis` notes that belong in
+`summary` (for example, skipped duplicates) — but do not retell proposal bodies.
+
 **Shape:**
 
 1. One lead line: main finding **or** `No meaningful improvements found.`
-2. Then bullets: one theme each; optional one link per theme.
-3. Stop. Do not retell the whole workflow.
+2. Then bullets: one theme each; optional one real Markdown link per theme.
+3. Point at proposals; do not paste `what_happened` / `proposed_change` into `summary`.
+4. Stop. Do not retell the whole workflow.
 
 **Do not shorten** anything inside `proposals[]`:
 
@@ -96,11 +101,11 @@ Those fields belong to the `retro-analysis` skill. A long proposal body + short
 > examining the logs in detail, the main theme is missing error handling in the
 > API client. See proposal 1 below for details.
 
-**After (~25 words):**
+**After (~20 words):**
 
 > Main gap: API client error handling (proposal 1).
 >
-> - Code agent needed 2 runs after review changes — [run](url)
+> - Code agent needed 2 runs after review changes — [workflow run](https://github.com/example/repo/actions/runs/123456789)
 
 ## Labels and other skills
 
@@ -112,4 +117,5 @@ Those fields belong to the `retro-analysis` skill. A long proposal body + short
 - `comment` or `summary` starts with “Thanks”, “I've”, or “This retro…”
 - `comment` > 40 words or `summary` > 80 words
 - `summary` retells triage → code → review instead of pointing at proposals
+- `summary` duplicates proposal text instead of linking to filed proposals
 - You shortened `what_happened` / `proposed_change` to “be brief”

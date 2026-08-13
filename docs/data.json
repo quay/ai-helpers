@@ -23,7 +23,7 @@
         {
           "name": "caveman",
           "id": "caveman",
-          "description": ">- Ultra-compressed communication mode. Use concise, direct prose while preserving technical accuracy, required structure, evidence, code, commands, and errors."
+          "description": "Force short user-facing triage comments and retro summaries. Keep structured JSON and proposal evidence complete. Ban filler, hedging, and repetition."
         },
         {
           "name": "ci",

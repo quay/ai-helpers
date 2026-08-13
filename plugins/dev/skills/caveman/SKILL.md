@@ -1,118 +1,115 @@
 ---
 name: caveman
 description: >-
-  Ultra-compressed communication mode for user-facing prose only. Applies to
-  triage issue comments and retro summaries while preserving full structured
-  output, evidence, and stock skill requirements.
+  Force short user-facing triage comments and retro summaries. Keep structured
+  JSON and proposal evidence complete. Ban filler, hedging, and repetition.
 ---
 
 # Caveman
 
-Use concise, direct prose. Remove filler, pleasantries, repetition, and hedging.
-Prefer short sentences and bullets. State each fact once.
+**Job:** Make the text humans read short. Keep the structured data complete.
 
-Caveman is a **communication overlay**, not a replacement for stock skills. It
-compresses designated user-facing fields only. Everything else stays governed by
-the agent definition and bundled skills (`retro-analysis`, `issue-labels`, etc.).
+Humans read two things:
 
-## Preserve correctness
+| Agent | Field humans read | Must be short |
+|-------|-------------------|---------------|
+| Triage | `comment` (issue comment) | Yes — hard limit below |
+| Retro | `summary` (issue/PR comment) | Yes — hard limit below |
 
-- Keep all required JSON keys and schema-valid structure.
-- Keep decisions, evidence, labels, reasons, and actionable details.
-- Keep code, commands, identifiers, numbers, units, and exact error strings unchanged.
-- Never omit or weaken `not`, `never`, `no`, `only`, or `except`.
-- Do not compress prose when doing so could make sequence, ownership, risk, or meaning ambiguous.
+Everything else in the JSON is for machines and later agents. Do **not** shorten
+it to satisfy Caveman.
 
-No greetings. No decorative prose. No tool-call narration. Use normal prose for
-security warnings, irreversible actions, and ambiguity-sensitive instructions.
+## Hard rules (always)
 
-## Field ownership (what Caveman may compress)
+1. No greetings, thanks, apologies, or “I reviewed…” narration.
+2. No hedging: drop *might*, *seems*, *looks like*, *possibly*, *I think*, *could be*.
+3. No repeating the issue title, body, or stack traces the reader already sees.
+4. Prefer bullets over paragraphs. Prefer one clause over three.
+5. Keep exact error strings, IDs, commands, and numbers unchanged when you must cite them.
+6. Never drop `not` / `never` / `only` / `except` if that changes meaning.
+7. Security warnings and irreversible-action instructions stay normal prose (do not over-compress).
 
-| Agent | Compress | Do not compress |
-|-------|----------|-----------------|
-| **Triage** | `comment` (GitHub issue comment the reporter reads) | `action`, `reasoning`, `label_actions`, clarity scores, all other JSON fields |
-| **Retro** | `summary` (markdown posted on the originating issue/PR) | Every field inside each `proposals[]` object: `what_happened`, `what_could_go_better`, `proposed_change`, `validation_criteria`, `target_repo`, `title` |
+## Triage: shorten `comment` only
 
-If a stock skill or agent definition requires detail in a field Caveman does not
-own, follow that skill. Caveman never overrides mandatory steps (duplicate-issue
-checks, label discovery, timeline evidence in proposals).
+**Limit:** ≤ 40 words. Prefer ≤ 2 short sentences or 2 bullets.
 
-## Works with stock skills
+**Do not shorten:** `action`, `reasoning`, `label_actions`, scores, or any other JSON field.
 
-### `retro-analysis`
+### Templates (use these shapes)
 
-That skill owns investigation depth and proposal quality. It requires:
+**Sufficient:**
 
-- Chronological `what_happened` with markdown links to runs, logs, and comments.
-- Honest uncertainty in `what_could_go_better`.
-- Specific, implementable `proposed_change` and measurable `validation_criteria`.
-- A `summary` that may include filtered duplicates and high-level takeaways.
+```text
+Sufficient: <one-line why>. Next: <ready-to-code / waiting on X>.
+```
 
-**Precedence:** `retro-analysis` wins on all proposal fields. Caveman wins **only**
-on `summary` length and tone. Do not shorten proposals to make the retro feel
-brief — a long retro with a short summary is the intended outcome.
+**Insufficient (ask one question):**
 
-### `issue-labels`
+```text
+Insufficient: need <one fact>.
 
-That skill owns `label_actions` discovery and recommendations. Caveman does not
-change label logic or skip labeling steps. If the triage `comment` mentions
-labels, keep it to one line; put the full recommendation in `label_actions`.
+<one specific question the reporter can answer>
+```
 
-## Triage output
+### Before → after
 
-Keep the structured result complete. Compress **only** the user-facing `comment`:
-
-- State decision (`sufficient` / `insufficient`), the single most important reason, and the next action.
-- One clarifying question when `action` is `insufficient` — no preamble.
-- Do not repeat the issue title, stack traces, or analysis already visible in `reasoning`.
-
-**Before (verbose comment):**
+**Before (~55 words):**
 
 > Thanks for filing this! I've reviewed the issue and the linked logs. It looks
 > like the failure might be related to the cache configuration. Before we can
 > move forward, could you please confirm whether this reproduces on the latest
 > release?
 
-**After (Caveman comment):**
+**After (~14 words):**
 
-> Insufficient: need confirmation this reproduces on the latest release before triage can proceed.
+> Insufficient: need confirmation this reproduces on latest release.
+>
+> Does this still fail on the latest release?
 
-## Retro output
+## Retro: shorten `summary` only
 
-Keep evidence and improvement proposals complete per `retro-analysis`. Compress
-**only** `summary`:
+**Limit:** ≤ 80 words. Prefer ≤ 5 bullets.
 
-- Lead with the main finding or "no meaningful improvements found."
-- One bullet per theme; link to key runs or issues.
-- Do not restate workflow history that lives in `what_happened` or that the reader
-  can inspect in Actions.
+**Shape:**
 
-**Before (verbose summary):**
+1. One lead line: main finding **or** `No meaningful improvements found.`
+2. Then bullets: one theme each; optional one link per theme.
+3. Stop. Do not retell the whole workflow.
+
+**Do not shorten** anything inside `proposals[]`:
+
+- `what_happened` — keep the timeline and links
+- `what_could_go_better` — keep uncertainty and reasoning
+- `proposed_change` — keep concrete file/config changes
+- `validation_criteria` — keep measurable checks
+- `title`, `target_repo`
+
+Those fields belong to the `retro-analysis` skill. A long proposal body + short
+`summary` is success. A short proposal body is failure.
+
+### Before → after
+
+**Before (~70 words):**
 
 > This retro traced the full workflow from triage through code and review. The
 > code agent ran twice because the first review requested changes. After
 > examining the logs in detail, the main theme is missing error handling in the
 > API client. See proposal 1 below for details.
 
-**After (Caveman summary):**
+**After (~25 words):**
 
-> Main gap: API client error handling (see proposal 1). Code agent needed two
-> runs after review requested changes — [run link].
+> Main gap: API client error handling (proposal 1).
+>
+> - Code agent needed 2 runs after review changes — [run](url)
 
-## Rollout and validation
+## Labels and other skills
 
-When adopting Caveman org-wide:
+- `issue-labels` owns `label_actions`. Put label detail there, not in `comment`.
+- Caveman never skips duplicate-issue checks, label discovery, or proposal quality steps.
 
-1. **Enable on triage first** — comments are the highest-signal, lowest-risk surface.
-2. **Add retro second** — validate that `summary` shrinks while proposal word count
-   and link count stay stable or grow.
-3. **Measure, don't guess:** compare word counts and link counts before/after on
-   the same repo; a retro that loads Caveman but grows only in `summary` length
-   means the overlay is not applied to the right field.
+## Fail checks (rewrite if you hit these)
 
-## Anti-patterns
-
-- Compressing `what_happened` to satisfy a "be brief" instinct — breaks retro value.
-- Duplicating proposal text in `summary` because Caveman was not applied to proposals.
-- Replacing links with vague references ("see the failed run") — keep links in
-  proposals; `summary` may use one anchor link per theme.
+- `comment` or `summary` starts with “Thanks”, “I've”, or “This retro…”
+- `comment` > 40 words or `summary` > 80 words
+- `summary` retells triage → code → review instead of pointing at proposals
+- You shortened `what_happened` / `proposed_change` to “be brief”

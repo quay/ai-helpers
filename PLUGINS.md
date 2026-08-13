@@ -26,6 +26,7 @@ Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Incl
 
 **Skills:**
 - **`/dev:backport`** - Backport a merged PR to release branches. Detects prior bot failures, performs manual cherry-picks from a fork matching bot conventions, and handles JIRA clone tickets. Derives target branches from fixVersions.
+- **`/dev:caveman`** - >- Ultra-compressed communication mode. Use concise, direct prose while preserving technical accuracy, required structure, evidence, code, commands, and errors.
 - **`/dev:ci`** - Quick CI status check for a pull request. Shows pass/fail/pending status for all GitHub Actions jobs and other CI checks.
 - **`/dev:code`** - Implement changes following project conventions. Reads AGENTS.md and area-specific docs, then guides implementation, quality checks (pre-commit, tests), and commit with proper message format.
 - **`/dev:eli5`** - Explain a concept simply with code snippets and concrete examples. Use when the user says 'eli5', 'explain like I'm 5', 'break this down for me', 'how does X work', or asks for a simplified explanation of a technical concept. Targets a senior engineer who wants clarity, not condescension.

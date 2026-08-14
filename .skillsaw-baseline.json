@@ -1,8 +1,64 @@
 {
   "version": "1",
-  "generated_by": "skillsaw 0.14.1",
-  "generated_at": "2026-06-30T18:37:57.331542+00:00",
+  "generated_by": "skillsaw 0.18.0",
+  "generated_at": "2026-08-14T00:56:47.091423+00:00",
   "violations": [
+    {
+      "fingerprint": "9d6b45664b2defb0",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/dev/skills/qe/SKILL.md",
+      "line": 142,
+      "message": "Weak language (hedging): 'Try to' \u2014 Remove 'try to' \u2014 state the action directly",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "9c4484bdae2f53c9",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/dev/skills/qe/SKILL.md",
+      "line": 156,
+      "message": "Weak language (vagueness): 'gracefully' \u2014 Replace 'gracefully' with specific error handling behavior",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "687498377529695a",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/dev/skills/qe/SKILL.md",
+      "line": 160,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "5b8849ea9567790c",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/dev/skills/qe/SKILL.md",
+      "line": 173,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "83cea2c602724abc",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/dev/skills/qe/SKILL.md",
+      "line": 187,
+      "message": "Weak language (vagueness): 'gracefully' \u2014 Replace 'gracefully' with specific error handling behavior",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "f1183dba5550fead",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/dev/skills/qe/SKILL.md",
+      "line": 195,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "c0318fab4c16da0a",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/dev/skills/qe/SKILL.md",
+      "line": 196,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
     {
       "fingerprint": "714be043fe0d5eca",
       "rule_id": "context-budget",
@@ -55,6 +111,15 @@
       "message": "Estimated 7,957 tokens exceeds command error limit of 4,000",
       "severity": "error",
       "value": 7957,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "dfe5dd7d7b9cace2",
+      "rule_id": "context-budget",
+      "file_path": "plugins/dev/skills/qe/SKILL.md",
+      "message": "Estimated 4,160 tokens exceeds skill warn limit of 3,000",
+      "severity": "warning",
+      "value": 4160,
       "baseline_mode": "ceiling"
     }
   ]

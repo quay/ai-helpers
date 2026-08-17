@@ -22,20 +22,21 @@ See [plugins/cve/README.md](plugins/cve/README.md) for detailed documentation.
 
 ### Dev Plugin
 
-Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Includes start, code, pr, poll, ci, backport, work, grill-with-docs, to-prd, to-issues, and handoff.
+Ralph Loop development lifecycle: ticket assignment through merge-ready PR. Includes start, code, pr, poll, ci, backport, work, grill-with-docs, to-prd, to-issues, handoff, and qe.
 
 **Skills:**
 - **`/dev:backport`** - Backport a merged PR to release branches. Detects prior bot failures, performs manual cherry-picks from a fork matching bot conventions, and handles JIRA clone tickets. Derives target branches from fixVersions.
-- **`/dev:caveman`** - >- Ultra-compressed communication mode. Use concise, direct prose while preserving technical accuracy, required structure, evidence, code, commands, and errors.
+- **`/dev:caveman`** - Force short user-facing triage comments and retro summaries. Keep structured JSON and proposal evidence complete. Ban filler, hedging, and repetition.
 - **`/dev:ci`** - Quick CI status check for a pull request. Shows pass/fail/pending status for all GitHub Actions jobs and other CI checks.
 - **`/dev:code`** - Implement changes following project conventions. Reads AGENTS.md and area-specific docs, then guides implementation, quality checks (pre-commit, tests), and commit with proper message format.
-- **`/dev:debug-playwright`** - Debug Playwright E2E test failures from GitHub Actions CI runs. Downloads artifacts, categorizes failures (flaky/real/infra), correlates with backend logs and Jaeger traces, and offers fixes.
 - **`/dev:eli5`** - Explain a concept simply with code snippets and concrete examples. Use when the user says 'eli5', 'explain like I'm 5', 'break this down for me', 'how does X work', or asks for a simplified explanation of a technical concept. Targets a senior engineer who wants clarity, not condescension.
 - **`/dev:grill-with-docs`** - Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates documentation (CONTEXT.md, ADRs) inline as decisions crystallise. Use when user wants to stress-test a plan against their project's language and documented decisions.
 - **`/dev:handoff`** - Compact the current conversation into a handoff document for another agent to pick up.
 - **`/dev:poll`** - Stateful PR poller: tracks GitHub Actions CI, CodeRabbit, Codecov, and human reviews across polls. Loops with adaptive backoff internally. Run via the Bash tool with run_in_background: true so the platform notifies the agent on exit.
 - **`/dev:pr`** - Create a pull request with the correct title format, filled-in description template, and JIRA reference. Handles fork workflow with fallback ladder. Validates the PR title against the CI-enforced regex before creating.
+- **`/dev:qe`** - Create a test plan for a PROJQUAY JIRA ticket, validate it with the user, then execute each scenario as manual verification. Covers acceptance criteria, real-user workflows, edge cases, and cross-feature regression.
 - **`/dev:quay-retro-signal-filter`** - >- Use with the retro agent when deciding whether workflow observations are actionable proposals. Filters process-only noise and deduplicates proposals by root cause while preserving concrete production, security, CI, and recurring contributor failures.
+- **`/dev:rebase`** - Systematically rebase a branch onto its upstream target. Use when a feature branch has fallen behind, needs conflict resolution, requires commit cleanup before merge, or when a PR review requests a rebase. Handles complex multi-commit branches with many conflicts via incremental strategies.
 - **`/dev:start`** - Begin work on a JIRA ticket. Assigns the ticket, creates a feature branch, checks if backporting is needed, and loads the relevant agent_docs/ for the ticket's area.
 - **`/dev:to-issues`** - Break a plan, spec, or PRD into independently-grabbable local issue files using tracer-bullet vertical slices. Use when user wants to convert a plan into issues, create implementation tickets, or break down work into issues.
 - **`/dev:to-prd`** - Turn the current conversation context into a PRD and save it as a local markdown file. Use when user wants to create a PRD from the current context.
@@ -51,6 +52,7 @@ See [plugins/dev/README.md](plugins/dev/README.md) for detailed documentation.
 JIRA operations (view, assign, transition, check-version) and planning commands (epics, stories, estimates, quarterly plans).
 
 **Skills:**
+- **`/jira:acli`** - "Reference for using the acli (Atlassian CLI) to interact with JIRA issues. Covers searching with JQL, creating, viewing, editing, transitioning, assigning, commenting, linking, cloning, and bulk operations. Use when performing any JIRA issue operation via acli from the command line. Provides patterns for output parsing with jq, ADF-formatted descriptions and comments, custom field handling via REST fallback, and bulk JQL-targeted mutations."
 - **`/jira:ticket`** - Create, view, or update a JIRA ticket. Supports create, edit, view, assign, transition, check-version, set-version, and clone operations via acli CLI.
 
 **Commands:**

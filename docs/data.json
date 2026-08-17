@@ -66,6 +66,11 @@
           "description": "Create a pull request with the correct title format, filled-in description template, and JIRA reference. Handles fork workflow with fallback ladder. Validates the PR title against the CI-enforced regex before creating."
         },
         {
+          "name": "quay-retro-signal-filter",
+          "id": "quay-retro-signal-filter",
+          "description": ">- Use with the retro agent when deciding whether workflow observations are actionable proposals. Filters process-only noise and deduplicates proposals by root cause while preserving concrete production, security, CI, and recurring contributor failures."
+        },
+        {
           "name": "start",
           "id": "start",
           "description": "Begin work on a JIRA ticket. Assigns the ticket, creates a feature branch, checks if backporting is needed, and loads the relevant agent_docs/ for the ticket's area."

@@ -68,7 +68,7 @@
         {
           "name": "quay-retro-signal-filter",
           "id": "quay-retro-signal-filter",
-          "description": ">- Use with the retro agent when deciding whether workflow observations are actionable proposals. Filters process-only noise and deduplicates proposals by root cause while preserving concrete production, security, CI, and recurring contributor failures."
+          "description": "Use with the retro agent when deciding whether workflow observations are actionable proposals. Filters process-only noise and deduplicates proposals by root cause while preserving concrete production, security, CI, and recurring contributor failures."
         },
         {
           "name": "rebase",

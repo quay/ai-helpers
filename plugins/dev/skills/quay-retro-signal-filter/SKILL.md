@@ -1,10 +1,6 @@
 ---
 name: quay-retro-signal-filter
-description: >-
-  Use with the retro agent when deciding whether workflow observations are
-  actionable proposals. Filters process-only noise and deduplicates proposals
-  by root cause while preserving concrete production, security, CI, and
-  recurring contributor failures.
+description: Use with the retro agent when deciding whether workflow observations are actionable proposals. Filters process-only noise and deduplicates proposals by root cause while preserving concrete production, security, CI, and recurring contributor failures.
 ---
 
 # Quay Retro Signal Filter
@@ -74,7 +70,7 @@ failure mechanism. Before writing the final JSON:
 Before writing `$FULLSEND_OUTPUT_DIR/agent-result.json`, verify:
 
 - Every proposal has a concrete production, security, recurring-CI, or
-  repeated-contributor impact, unless it is outside the excluded categories.
+  repeated-contributor impact.
 - No proposal is solely a CodeRabbit/path-instruction, documentation,
   isolated-process, style/naming, one-off-cleanup, duplicate, not-planned, or
   superseded finding.

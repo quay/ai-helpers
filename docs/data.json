@@ -66,6 +66,11 @@
           "description": "Create a test plan for a PROJQUAY JIRA ticket, validate it with the user, then execute each scenario as manual verification. Covers acceptance criteria, real-user workflows, edge cases, and cross-feature regression."
         },
         {
+          "name": "quay-retro-signal-filter",
+          "id": "quay-retro-signal-filter",
+          "description": "Use with the retro agent when deciding whether workflow observations are actionable proposals. Filters process-only noise and deduplicates proposals by root cause while preserving concrete production, security, CI, and recurring contributor failures."
+        },
+        {
           "name": "rebase",
           "id": "rebase",
           "description": "Systematically rebase a branch onto its upstream target. Use when a feature branch has fallen behind, needs conflict resolution, requires commit cleanup before merge, or when a PR review requests a rebase. Handles complex multi-commit branches with many conflicts via incremental strategies."
